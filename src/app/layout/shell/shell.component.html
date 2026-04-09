@@ -1,0 +1,113 @@
+<div class="shell-wrapper" [class.sidebar-mini]="!sidebarAbierto()">
+
+  <!-- ── SIDEBAR ──────────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">SIGOP</span>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sidebar-nav">
+      @for (item of navItems; track item.label) {
+        @if (!item.hijos) {
+          <!-- Item simple -->
+          <a class="nav-item"
+             [routerLink]="item.ruta"
+             routerLinkActive="active"
+             [matTooltip]="!sidebarAbierto() ? item.label : ''"
+             matTooltipPosition="right">
+            <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+            <span class="nav-label">{{ item.label }}</span>
+          </a>
+        } @else {
+          <!-- Item con submenú -->
+          <div class="nav-group">
+            <button class="nav-item nav-group-toggle"
+                    (click)="toggleSubmenu(item.label)"
+                    [class.open]="submenuAbierto() === item.label"
+                    [matTooltip]="!sidebarAbierto() ? item.label : ''"
+                    matTooltipPosition="right">
+              <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+              <span class="nav-label">{{ item.label }}</span>
+              <mat-icon class="chevron">expand_more</mat-icon>
+            </button>
+
+            <div class="nav-submenu"
+                 [class.expanded]="submenuAbierto() === item.label && sidebarAbierto()">
+              @for (hijo of item.hijos; track hijo.label) {
+                @if (puedeVer(hijo)) {
+                  <a class="nav-subitem"
+                     [routerLink]="hijo.ruta"
+                     routerLinkActive="active">
+                    <mat-icon class="nav-icon">{{ hijo.icon }}</mat-icon>
+                    <span>{{ hijo.label }}</span>
+                  </a>
+                }
+              }
+            </div>
+          </div>
+        }
+      }
+    </nav>
+
+    <!-- Footer sidebar -->
+    <div class="sidebar-footer">
+      <button class="nav-item logout-btn" (click)="logout()"
+              [matTooltip]="!sidebarAbierto() ? 'Cerrar sesión' : ''"
+              matTooltipPosition="right">
+        <mat-icon class="nav-icon">logout</mat-icon>
+        <span class="nav-label">Cerrar sesión</span>
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ── CONTENIDO ────────────────────────────────────────── -->
+  <div class="shell-content">
+
+    <!-- Toolbar -->
+    <header class="toolbar">
+      <button class="toggle-btn" (click)="toggleSidebar()">
+        <mat-icon>{{ sidebarAbierto() ? 'menu_open' : 'menu' }}</mat-icon>
+      </button>
+
+      <div class="toolbar-spacer"></div>
+
+      <!-- Avatar + menú usuario -->
+      <button class="user-menu-btn" [matMenuTriggerFor]="userMenu">
+        <div class="avatar">{{ iniciales }}</div>
+        <div class="user-info">
+          <span class="user-name">{{ auth.nombreCompleto() }}</span>
+          <span class="user-role">
+            {{ primerRol }}
+          </span>
+        </div>
+        <mat-icon class="chevron-user">expand_more</mat-icon>
+      </button>
+
+      <mat-menu #userMenu="matMenu" xPosition="before">
+        <div class="menu-user-header">
+          <div class="avatar avatar-lg">{{ iniciales }}</div>
+          <div>
+            <div class="fw-bold">{{ auth.nombreCompleto() }}</div>
+            <div class="text-muted small">{{ auth.usuario()?.email }}</div>
+          </div>
+        </div>
+        <mat-divider />
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Cerrar sesión</span>
+        </button>
+      </mat-menu>
+    </header>
+
+    <!-- Router outlet -->
+    <main class="main-content">
+      <router-outlet />
+    </main>
+
+  </div>
+</div>

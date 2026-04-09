@@ -1,0 +1,79 @@
+<div class="login-wrapper">
+
+  <!-- Panel izquierdo decorativo -->
+  <div class="login-brand">
+    <div class="brand-content">
+      <div class="brand-logo-img">
+        <img src="assets/logo_login.png" width="400px" alt="SIGOP" />
+      </div>
+      <div class="brand-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel derecho formulario -->
+  <div class="login-form-panel">
+    <div class="form-card fade-in-up">
+
+      <div class="form-header">
+        <h2>Bienvenido</h2>
+        <p>Ingresá tus credenciales para continuar</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <mat-icon matPrefix>email</mat-icon>
+          <input matInput formControlName="email" type="email"
+                 placeholder="usuario@empresa.com" autocomplete="email">
+          @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
+            <mat-error>El email es requerido</mat-error>
+          }
+          @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
+            <mat-error>Ingresá un email válido</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Contraseña</mat-label>
+          <mat-icon matPrefix>lock</mat-icon>
+          <input matInput formControlName="password"
+                 [type]="verPassword() ? 'text' : 'password'"
+                 autocomplete="current-password">
+          <button mat-icon-button matSuffix type="button"
+                  (click)="verPassword.set(!verPassword())">
+            <mat-icon>{{ verPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (form.get('password')?.hasError('required') && form.get('password')?.touched) {
+            <mat-error>La contraseña es requerida</mat-error>
+          }
+          @if (form.get('password')?.hasError('minlength') && form.get('password')?.touched) {
+            <mat-error>Mínimo 6 caracteres</mat-error>
+          }
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit"
+                class="btn-login" [disabled]="cargando()">
+          @if (cargando()) {
+            <mat-spinner diameter="20" />
+            <span>Ingresando...</span>
+          } @else {
+            <mat-icon>login</mat-icon>
+            <span>Ingresar</span>
+          }
+        </button>
+
+      </form>
+
+      <div class="form-footer">
+        <span>SIGOP &copy; {{ year }}</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>

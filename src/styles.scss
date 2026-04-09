@@ -1,0 +1,184 @@
+// ─────────────────────────────────────────────────────────────
+//  SIGOP — Global Styles
+//  Paleta: Rosa #E6347B · Verde claro #47AF74 · Verde oscuro #28764F
+// ─────────────────────────────────────────────────────────────
+
+@use '@angular/material' as mat;
+
+// ── Paleta rosa ──────────────────────────────────────────────
+$sigop-pink: (
+  50:  #fce9f1,
+  100: #f7c8db,
+  200: #f1a4c3,
+  300: #eb7fab,
+  400: #e75f97,
+  500: #E6347B,
+  600: #d42e70,
+  700: #be2663,
+  800: #a81f57,
+  900: #7f1241,
+  contrast: (
+    50:  rgba(0,0,0,.87),
+    100: rgba(0,0,0,.87),
+    200: rgba(0,0,0,.87),
+    300: rgba(0,0,0,.87),
+    400: white,
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+// ── Paleta verde ─────────────────────────────────────────────
+$sigop-green: (
+  50:  #e8f6ee,
+  100: #c6e8d5,
+  200: #a0d9ba,
+  300: #79ca9e,
+  400: #5dbf89,
+  500: #47AF74,
+  600: #3d9e65,
+  700: #328a54,
+  800: #28764F,
+  900: #175235,
+  contrast: (
+    50:  rgba(0,0,0,.87),
+    100: rgba(0,0,0,.87),
+    200: rgba(0,0,0,.87),
+    300: rgba(0,0,0,.87),
+    400: rgba(0,0,0,.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+// ── Tema Angular Material ─────────────────────────────────────
+$sigop-primary:   mat.m2-define-palette($sigop-pink, 500, 300, 700);
+$sigop-accent:    mat.m2-define-palette($sigop-green, 500, 300, 800);
+$sigop-warn:      mat.m2-define-palette(mat.$m2-red-palette);
+
+$sigop-theme: mat.m2-define-light-theme((
+  color: (
+    primary: $sigop-primary,
+    accent:  $sigop-accent,
+    warn:    $sigop-warn,
+  ),
+  typography: mat.m2-define-typography-config(
+    $font-family: "'Nunito', sans-serif",
+  ),
+  density: 0,
+));
+
+@include mat.all-component-themes($sigop-theme);
+
+// ── Variables CSS globales ────────────────────────────────────
+:root {
+  --color-primary:        #E6347B;
+  --color-primary-light:  #f1a4c3;
+  --color-primary-dark:   #a81f57;
+  --color-accent:         #47AF74;
+  --color-accent-dark:    #28764F;
+  --color-warn:           #f44336;
+
+  --sidebar-width:        260px;
+  --sidebar-mini:         68px;
+  --toolbar-height:       64px;
+
+  --bg-page:              #f4f6f9;
+  --bg-card:              #ffffff;
+  --text-primary:         #1a1a2e;
+  --text-secondary:       #64748b;
+  --border-color:         #e2e8f0;
+
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:  0 4px 16px rgba(0,0,0,.10);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,.12);
+
+  --radius-sm:  6px;
+  --radius-md:  12px;
+  --radius-lg:  20px;
+
+  --transition: 280ms cubic-bezier(.4,0,.2,1);
+}
+
+// ── Reset & base ──────────────────────────────────────────────
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+// ── Scrollbar ─────────────────────────────────────────────────
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-primary-light); }
+
+// ── Utilidades ────────────────────────────────────────────────
+.page-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.chip-rol {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+
+  &.ADMIN      { background: #fce9f1; color: #a81f57; }
+  &.SUPERVISOR { background: #e8f6ee; color: #28764F; }
+  &.OPERADOR   { background: #e8f0fe; color: #1a56db; }
+}
+
+.badge-activo {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  &.activo   { background: #e8f6ee; color: #28764F; }
+  &.inactivo { background: #fee2e2; color: #b91c1c; }
+}
+
+// ── Material overrides ────────────────────────────────────────
+.mat-mdc-raised-button.mat-primary { letter-spacing: .5px; font-weight: 700; }
+
+.mat-mdc-form-field {
+  .mdc-text-field--outlined .mdc-notched-outline__leading,
+  .mdc-text-field--outlined .mdc-notched-outline__notch,
+  .mdc-text-field--outlined .mdc-notched-outline__trailing {
+    border-color: var(--border-color) !important;
+  }
+}
+
+.mat-mdc-snack-bar-container {
+  &.snack-success .mdc-snackbar__surface { background: #28764F; }
+  &.snack-error   .mdc-snackbar__surface { background: #b91c1c; }
+}
+
+// ── Animaciones ───────────────────────────────────────────────
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up { animation: fadeInUp .35s ease both; }

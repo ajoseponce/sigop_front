@@ -1,0 +1,173 @@
+.login-wrapper {
+  display: flex;
+  min-height: 100vh;
+
+  // ── Panel izquierdo ───────────────────────────────────────
+  .login-brand {
+    flex: 1;
+    background: linear-gradient(145deg, var(--color-primary) 0%, var(--color-primary-dark) 60%, #6b0f35 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+
+    .brand-content {
+      text-align: center;
+      z-index: 2;
+      position: relative;
+    }
+
+    .brand-logo-img {
+      width: 220px;
+      max-width: 70%;
+      filter: drop-shadow(0 6px 24px rgba(0,0,0,0.25));
+      position: relative;
+      z-index: 2;
+    }
+
+    .brand-logo {
+      width: 96px;
+      height: 96px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, .15);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, .3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+
+      .logo-icon {
+        font-size: 48px;
+        font-weight: 800;
+        color: white;
+        line-height: 1;
+      }
+    }
+
+    .brand-name {
+      font-size: 42px;
+      font-weight: 800;
+      color: white;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+    }
+
+    .brand-desc {
+      color: rgba(255, 255, 255, .75);
+      font-size: 15px;
+      max-width: 280px;
+      line-height: 1.6;
+    }
+
+    // Formas decorativas
+    .brand-shapes {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .06);
+
+      &-1 {
+        width: 320px;
+        height: 320px;
+        top: -80px;
+        right: -80px;
+      }
+
+      &-2 {
+        width: 200px;
+        height: 200px;
+        bottom: 60px;
+        left: -60px;
+        background: rgba(71, 175, 116, .2);
+      }
+
+      &-3 {
+        width: 120px;
+        height: 120px;
+        bottom: 200px;
+        right: 40px;
+        background: rgba(255, 255, 255, .08);
+      }
+    }
+  }
+
+  // ── Panel derecho ─────────────────────────────────────────
+  .login-form-panel {
+    width: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-page);
+    padding: 40px 24px;
+
+    @media (max-width: 768px) {
+      width: 100%;
+    }
+  }
+
+  .form-card {
+    width: 100%;
+    max-width: 400px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 40px 36px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+  }
+
+  .form-header {
+    margin-bottom: 32px;
+
+    h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+  }
+
+  .full-width {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .btn-login {
+    width: 100%;
+    height: 48px;
+    margin-top: 16px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 12px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    mat-spinner {
+      --mdc-circular-progress-active-indicator-color: white;
+    }
+  }
+
+  .form-footer {
+    margin-top: 28px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+}

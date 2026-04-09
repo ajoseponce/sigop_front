@@ -1,0 +1,182 @@
+<div class="page-container fade-in-up">
+  <div class="page-header">
+    <div>
+      <h1>Empresas</h1>
+      <p>Gestión de empresas</p>
+    </div>
+
+    <button mat-raised-button color="primary" (click)="abrirModal()">
+      <mat-icon>add</mat-icon>
+      Nueva empresa
+    </button>
+  </div>
+
+  <div class="table-card card">
+    <table mat-table [dataSource]="empresas()">
+
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef>Razón social</th>
+        <td mat-cell *matCellDef="let empresa">
+          {{ empresa.razonSocial || '-' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="cuit">
+        <th mat-header-cell *matHeaderCellDef>CUIT</th>
+        <td mat-cell *matCellDef="let empresa">
+          {{ empresa.cuit || '-' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <td mat-cell *matCellDef="let empresa">
+          {{ empresa.email || '-' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="telefono">
+        <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+        <td mat-cell *matCellDef="let empresa">
+          {{ empresa.telefono || '-' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <td mat-cell *matCellDef="let empresa">
+          <mat-chip [class.chip-active]="empresa.activo" [class.chip-inactive]="!empresa.activo">
+            {{ empresa.activo ? 'Activo' : 'Inactivo' }}
+          </mat-chip>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let empresa">
+          <button mat-icon-button matTooltip="Editar" (click)="abrirModal(empresa)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" matTooltip="Eliminar" (click)="eliminar(empresa)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr mat-row *matRowDef="let row; columns: columnas;"></tr>
+    </table>
+
+    @if (empresas().length === 0 && !cargando()) {
+      <div class="empty-state">
+        <mat-icon>apartment</mat-icon>
+        <p>No hay empresas registradas</p>
+      </div>
+    }
+  </div>
+</div>
+
+@if (modalOpen()) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editando() ? 'Editar empresa' : 'Nueva empresa' }}</h2>
+        <button mat-icon-button (click)="cerrarModal()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="modal-form">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Razón social</mat-label>
+            <input matInput formControlName="razonSocial" />
+            @if (form.get('razonSocial')?.hasError('required') && form.get('razonSocial')?.touched) {
+              <mat-error>La razón social es requerida</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre fantasía</mat-label>
+            <input matInput formControlName="nombreFantasia" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>CUIT</mat-label>
+            <input matInput formControlName="cuit" />
+            @if (form.get('cuit')?.hasError('required') && form.get('cuit')?.touched) {
+              <mat-error>El CUIT es requerido</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" />
+            @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
+              <mat-error>Email inválido</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Teléfono</mat-label>
+            <input matInput formControlName="telefono" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Estado</mat-label>
+            <mat-select formControlName="estado">
+              @for (item of estados; track item.value) {
+                <mat-option [value]="item.value">{{ item.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Dirección</mat-label>
+            <input matInput formControlName="direccion" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Ciudad</mat-label>
+            <input matInput formControlName="ciudad" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Provincia</mat-label>
+            <input matInput formControlName="provincia" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>País</mat-label>
+            <input matInput formControlName="pais" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Representante legal ID</mat-label>
+            <input matInput type="number" formControlName="representanteLegalId" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Representante técnico ID</mat-label>
+            <input matInput type="number" formControlName="representanteTecnicoId" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Activo</mat-label>
+            <mat-select formControlName="activo">
+              <mat-option [value]="true">Sí</mat-option>
+              <mat-option [value]="false">No</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="modal-actions">
+          <button mat-stroked-button type="button" (click)="cerrarModal()">Cancelar</button>
+          <button mat-raised-button color="primary" type="submit">
+            {{ editando() ? 'Guardar cambios' : 'Crear empresa' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -1,0 +1,191 @@
+<div class="page-container fade-in-up">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1>Usuarios</h1>
+      <p>Gestión de usuarios del sistema</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="abrirModal()">
+      <mat-icon>person_add</mat-icon>
+      Nuevo usuario
+    </button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card table-card">
+    @if (cargando()) {
+      <div class="loading-center">
+        <mat-spinner diameter="40" />
+      </div>
+    } @else {
+      <table mat-table [dataSource]="usuarios()" class="w-full">
+
+        <!-- Nombre -->
+        <ng-container matColumnDef="nombre">
+          <th mat-header-cell *matHeaderCellDef>Usuario</th>
+          <td mat-cell *matCellDef="let u">
+            <div class="user-cell">
+              <div class="user-avatar">
+                {{ (u.perfil?.nombre?.[0] ?? '') + (u.perfil?.apellido?.[0] ?? '') }}
+              </div>
+              <div>
+                <div class="user-name">{{ u.perfil?.nombre }} {{ u.perfil?.apellido }}</div>
+                <div class="user-email">{{ u.email }}</div>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Email oculto en mobile -->
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef class="hide-mobile">Email</th>
+          <td mat-cell *matCellDef="let u" class="hide-mobile">{{ u.email }}</td>
+        </ng-container>
+
+        <!-- Área -->
+        <ng-container matColumnDef="area">
+          <th mat-header-cell *matHeaderCellDef class="hide-tablet">Área</th>
+          <td mat-cell *matCellDef="let u" class="hide-tablet">
+            {{ u.perfil?.area?.nombre ?? '—' }}
+          </td>
+        </ng-container>
+
+        <!-- Roles -->
+        <ng-container matColumnDef="roles">
+          <th mat-header-cell *matHeaderCellDef>Roles</th>
+          <td mat-cell *matCellDef="let u">
+            <div class="roles-list">
+              @for (r of u.roles; track r.id) {
+                <span class="chip-rol" [class]="r.nombre">{{ r.nombre }}</span>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Estado -->
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef class="hide-tablet">Estado</th>
+          <td mat-cell *matCellDef="let u" class="hide-tablet">
+            <span class="badge-activo" [class.activo]="u.activo" [class.inactivo]="!u.activo">
+              <span class="dot"></span>
+              {{ u.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Acciones -->
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let u">
+            <div class="actions">
+              <button mat-icon-button (click)="abrirModal(u)" matTooltip="Editar">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button (click)="toggleActivo(u)"
+                      [matTooltip]="u.activo ? 'Desactivar' : 'Activar'">
+                <mat-icon>{{ u.activo ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="eliminar(u)" matTooltip="Eliminar">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+        <tr mat-row *matRowDef="let row; columns: columnas;"></tr>
+      </table>
+
+      @if (usuarios().length === 0) {
+        <div class="empty-state">
+          <mat-icon>people_outline</mat-icon>
+          <p>No hay usuarios registrados</p>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Modal crear/editar -->
+@if (modalOpen()) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <h2>{{ editando() ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
+        <button mat-icon-button (click)="cerrarModal()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="modal-form">
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre">
+            @if (form.get('nombre')?.hasError('required') && form.get('nombre')?.touched) {
+              <mat-error>Requerido</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Apellido</mat-label>
+            <input matInput formControlName="apellido">
+            @if (form.get('apellido')?.hasError('required') && form.get('apellido')?.touched) {
+              <mat-error>Requerido</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        @if (!editando()) {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" type="email">
+            @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
+              <mat-error>Requerido</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Contraseña</mat-label>
+            <input matInput formControlName="password" type="password">
+            @if (form.get('password')?.hasError('minlength') && form.get('password')?.touched) {
+              <mat-error>Mínimo 8 caracteres</mat-error>
+            }
+          </mat-form-field>
+        }
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Área</mat-label>
+            <mat-select formControlName="areaId">
+              <mat-option [value]="null">Sin área</mat-option>
+              @for (a of areas(); track a.id) {
+                <mat-option [value]="a.id">{{ a.nombre }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Roles</mat-label>
+            <mat-select formControlName="rolesIds" multiple>
+              @for (r of roles(); track r.id) {
+                <mat-option [value]="r.id">{{ r.nombre }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="modal-actions">
+          <button mat-stroked-button type="button" (click)="cerrarModal()">Cancelar</button>
+          <button mat-raised-button color="primary" type="submit">
+            {{ editando() ? 'Guardar cambios' : 'Crear usuario' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}

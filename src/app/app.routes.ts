@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { loginGuard } from './core/guards/login.guard';
+import { ObraWizardComponent } from './features/obras/obra-wizard/obra-wizard.component';
 
 export const routes: Routes = [
   {
@@ -44,6 +45,11 @@ export const routes: Routes = [
         path: 'admin/empresas',
         loadComponent: () =>
           import('./features/empresas/empresas.component').then(m => m.EmpresasComponent),
+      },
+      {
+        path: 'obras/nueva',
+        loadComponent: () =>
+          import('./features/obras/obra-wizard/obra-wizard.component').then(m => m.ObraWizardComponent),
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],

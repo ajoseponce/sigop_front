@@ -1,0 +1,122 @@
+<form [formGroup]="form" class="obra-form">
+  <div class="form-header">
+    <h2>Datos base de la obra</h2>
+    <p>Completá la información inicial de la obra.</p>
+  </div>
+
+  <!-- IDENTIFICACIÓN -->
+  <div class="form-section">
+    <h3>Identificación</h3>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Expediente madre</label>
+        <input type="text" formControlName="expediente" />
+      </div>
+
+      <div class="form-field">
+        <label>Año</label>
+        <input type="number" formControlName="anio" />
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Nombre de la obra</label>
+        <input type="text" formControlName="nombre" />
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Fecha de emisión</label>
+        <input type="date" formControlName="fechaEmision" />
+      </div>
+    </div>
+  </div>
+
+  <!-- UBICACIÓN -->
+  <div class="form-section">
+    <h3>Ubicación</h3>
+
+    <div class="form-grid form-grid-3">
+      <div class="form-field">
+        <label>Departamento</label>
+        <input formControlName="departamento" />
+      </div>
+
+      <div class="form-field">
+        <label>Municipio</label>
+        <input formControlName="municipio" />
+      </div>
+
+      <div class="form-field">
+        <label>Sección</label>
+        <input formControlName="seccion" />
+      </div>
+    </div>
+
+    <div class="form-grid form-grid-3">
+      <div class="form-field">
+        <label>Manzana</label>
+        <input formControlName="manzana" />
+      </div>
+
+      <div class="form-field">
+        <label>Parcela</label>
+        <input formControlName="parcela" />
+      </div>
+
+      <div class="form-field">
+        <label>Calles</label>
+        <input formControlName="calles" />
+      </div>
+    </div>
+
+
+    
+  </div>
+
+  <!-- DATOS ECONÓMICOS -->
+  <div class="form-section">
+    <h3>Datos económicos</h3>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Presupuesto oficial</label>
+        <input type="number" formControlName="presupuestoOficial" />
+      </div>
+
+      <div class="form-field">
+        <label>Anticipo financiero (%)</label>
+        <input type="number" formControlName="anticipo" />
+      </div>
+    </div>
+  </div>
+
+  <!-- TIPO OBRA -->
+  <div class="form-section">
+    <h3>Tipo de obra</h3>
+
+    <div class="form-grid">
+      <mat-form-field appearance="outline" class="full-width">
+
+        <input type="text" matInput [formControl]="tipoObraSearch" [matAutocomplete]="autoTipoObra" />
+
+        <mat-autocomplete #autoTipoObra="matAutocomplete">
+          @for (tipo of tiposObraFiltrados; track tipo.id) {
+          <mat-option [value]="tipo.nombre" (onSelectionChange)="seleccionarTipoObra(tipo)">
+            {{ tipo.nombre }}
+          </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn-primary" (click)="save()">
+      Guardar y continuar
+    </button>
+  </div>
+</form>

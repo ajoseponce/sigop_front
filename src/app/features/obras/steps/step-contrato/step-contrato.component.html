@@ -1,0 +1,148 @@
+<form [formGroup]="form" class="contrato-form">
+  <div class="form-header">
+    <h2>Adjudicación</h2>
+    <p>Cargá los datos de licitación, empresa adjudicada y contrato.</p>
+  </div>
+
+  <div class="form-section">
+    <h3>Datos de apertura</h3>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Fecha de apertura</label>
+        <input type="date" formControlName="fechaApertura" />
+      </div>
+
+      <div class="form-field">
+        <label>N° de licitación / concurso</label>
+        <input type="text" formControlName="numeroLicitacion" />
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3>Empresa</h3>
+
+    <div class="form-grid">
+  <mat-form-field appearance="outline" class="full-width">
+    
+
+    <input
+      matInput
+      type="text"
+      [formControl]="empresaSearch"
+      [matAutocomplete]="autoEmpresa"
+      placeholder="Buscar empresa..."
+    />
+
+    <mat-autocomplete #autoEmpresa="matAutocomplete">
+      @for (empresa of empresasFiltradas; track empresa.id) {
+        <mat-option
+          [value]="empresa.razonSocial || empresa.nombreFantasia"
+          (click)="seleccionarEmpresa(empresa)"
+        >
+          {{ empresa.razonSocial || empresa.nombreFantasia }}
+        </mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+</div>
+  </div>
+
+  <div class="form-section">
+    <h3>Responsables</h3>
+
+
+<div class="form-grid form-grid-2">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Responsable legal</mat-label>
+    <input
+      matInput
+      type="text"
+      [formControl]="responsableLegalSearch"
+      [matAutocomplete]="autoResponsableLegal"
+      placeholder="Buscar por apellido, nombre o DNI"
+    />
+
+    <mat-autocomplete #autoResponsableLegal="matAutocomplete">
+      @for (persona of personasFiltradasLegal; track persona.id) {
+        <mat-option
+          [value]="persona.apellido + ' ' + persona.nombre"
+          (click)="seleccionarResponsableLegal(persona)"
+        >
+          {{ persona.apellido }} {{ persona.nombre }} - DNI {{ persona.dni }}
+        </mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Responsable técnico</mat-label>
+
+    <input
+      matInput
+      type="text"
+      [formControl]="responsableTecnicoSearch"
+      [matAutocomplete]="autoResponsableTecnico"
+      placeholder="Buscar por apellido, nombre o DNI"
+    />
+
+    <mat-autocomplete #autoResponsableTecnico="matAutocomplete">
+      @for (persona of personasFiltradasTecnico; track persona.id) {
+        <mat-option
+          [value]="persona.apellido + ' ' + persona.nombre"
+          (click)="seleccionarResponsableTecnico(persona)"
+        >
+          {{ persona.apellido }} {{ persona.nombre }} - DNI {{ persona.dni }}
+        </mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+</div>
+  </div>
+
+  <div class="form-section">
+    <h3>Oferta y contrato</h3>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Presupuesto adjudicado</label>
+        <input type="number" formControlName="presupuestoAdjudicado" />
+      </div>
+
+      <div class="form-field">
+        <label>Plazo de obra en días</label>
+        <input type="number" formControlName="plazoObraDias" />
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Fecha de contrato</label>
+        <input type="date" formControlName="fechaContrato" />
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3>Documentación aprobatoria</h3>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Decreto / Resolución de adjudicación N°</label>
+        <input type="text" formControlName="decretoAdjudicacion" />
+      </div>
+
+      <div class="form-field">
+        <label>Decreto / Resolución de contrato N°</label>
+        <input type="text" formControlName="decretoContrato" />
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn-primary" (click)="save()">
+      Guardar adjudicación
+    </button>
+  </div>
+</form>

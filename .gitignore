@@ -1,0 +1,28 @@
+# Angular
+.angular/
+dist/
+tmp/
+out-tsc/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-lock.yaml
+
+# Environment
+.env
+
+# Logs
+logs
+*.log
+
+# OS (Mac)
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Build cache
+.cache/

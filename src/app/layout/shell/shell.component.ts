@@ -42,6 +42,10 @@ export class ShellComponent {
       { label: 'Personas', icon: 'badge', ruta: '/admin/personas', roles: ['ADMIN', 'SUPERVISOR'] },
       { label: 'Empresas', icon: 'apartment', ruta: '/admin/empresas', roles: ['ADMIN', 'SUPERVISOR'] },
     ]},
+    { label: 'Obras', icon: 'engineering', hijos: [
+      { label: 'Nueva Obra',  icon: 'local_shipping',         ruta: '/obras/nueva', roles: ['ADMIN','SUPERVISOR'] },
+      
+    ]},
   ];
 
   submenuAbierto = signal<string | null>(null);

@@ -1,0 +1,68 @@
+<form [formGroup]="form" class="certificacion-form">
+  <div class="form-header">
+    <h2>Certificación</h2>
+    <p>Cargá certificados de anticipo, básicos o redeterminados.</p>
+  </div>
+
+  <div class="form-section">
+    <h3>Datos del certificado</h3>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>N° certificado</label>
+        <input type="text" formControlName="numeroCertificado" />
+      </div>
+
+      <div class="form-field">
+        <label>Expediente</label>
+        <input type="text" formControlName="expediente" />
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Descripción</label>
+      <input type="text" formControlName="descripcion" />
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3>Montos</h3>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Monto bruto</label>
+        <input type="number" formControlName="montoBruto" />
+      </div>
+
+      <div class="form-field">
+        <label>Deducción anticipo financiero</label>
+        <input type="number" formControlName="deduccionAnticipo" />
+      </div>
+
+      <div class="form-field">
+        <label>Deducción fondo de reparo</label>
+        <input type="number" formControlName="deduccionFondoReparo" />
+      </div>
+
+      <div class="form-field">
+        <label>Monto neto</label>
+        <input type="number" formControlName="montoNeto" />
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3>Seguimiento</h3>
+
+    <div class="form-field">
+      <label>Ubicación del expediente</label>
+      <input type="text" formControlName="ubicacionExpediente" />
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn-primary" (click)="save()">
+      Guardar certificación
+    </button>
+  </div>
+</form>

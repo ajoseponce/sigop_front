@@ -1,0 +1,49 @@
+<form [formGroup]="form" class="ejecucion-form">
+  <div class="form-header">
+    <h2>Ejecución</h2>
+    <p>Cargá los datos iniciales de la ejecución de obra.</p>
+  </div>
+
+  <div class="form-section">
+    <h3>Inspector designado</h3>
+
+    <div class="form-grid form-grid-3">
+      <div class="form-field">
+        <label>Nombre</label>
+        <input type="text" formControlName="inspectorNombre" />
+      </div>
+
+      <div class="form-field">
+        <label>DNI</label>
+        <input type="text" formControlName="inspectorDni" />
+      </div>
+
+      <div class="form-field">
+        <label>Matrícula</label>
+        <input type="text" formControlName="inspectorMatricula" />
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3>Inicio de obra</h3>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Fecha de replanteo / inicio</label>
+        <input type="date" formControlName="fechaReplanteo" />
+      </div>
+
+      <div class="form-field">
+        <label>Observaciones</label>
+        <input type="text" formControlName="observaciones" />
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn-primary" (click)="save()">
+      Guardar ejecución
+    </button>
+  </div>
+</form>

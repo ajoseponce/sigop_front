@@ -29,17 +29,23 @@
 
   <div class="step-content">
     @if (currentStep === 1) {
-    <app-step-datos-basicos >
-    </app-step-datos-basicos>
+    <app-step-datos-basicos
+    [obra]="obra"
+    [obraId]="obraId"
+    (obraSaved)="saveObra($event)">
+  </app-step-datos-basicos>
     }
 
     @if (currentStep === 2) {
-    <app-step-contrato [obraId]="obraId">
-    </app-step-contrato>
+   <app-step-contrato
+  [obraId]="obraId"
+  [obra]="obra"
+  (adjudicacionCreated)="saveAdjudicacion($event)">
+</app-step-contrato>
 
     }
     @if (currentStep === 3) {
-    <app-step-ejecucion [obraId]="obraId"></app-step-ejecucion>
+    <app-step-ejecucion [obraId]="obraId" [obra]="obra" (ejecucionSaved)="currentStep = 4"></app-step-ejecucion>
     }
     @if (currentStep === 4) {
     <app-step-certificacion [obraId]="obraId"></app-step-certificacion>

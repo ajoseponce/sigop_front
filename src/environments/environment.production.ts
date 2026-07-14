@@ -1,4 +1,5 @@
+// environment.production.ts
 export const environment = {
   production: true,
-  apiUrl: '/api/v1',
+  apiUrl: 'https://sigopback.jpsistemas.com/api/v1'
 };

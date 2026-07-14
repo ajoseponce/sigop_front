@@ -1,14 +1,18 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { loginGuard } from './core/guards/login.guard';
-import { ObraWizardComponent } from './features/obras/obra-wizard/obra-wizard.component';
-
 export const routes: Routes = [
   {
     path: 'login',
     canActivate: [loginGuard],
     loadComponent: () =>
       import('./features/auth/login/login.component').then(m => m.LoginComponent),
+  },
+  {
+    path: 'obras/:id/caratula',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/obras/obra-caratula/obra-caratula.component').then(m => m.ObraCaratulaComponent),
   },
   {
     path: '',
@@ -47,7 +51,37 @@ export const routes: Routes = [
           import('./features/empresas/empresas.component').then(m => m.EmpresasComponent),
       },
       {
+        path: 'panol',
+        redirectTo: 'panol/movimientos',
+        pathMatch: 'full',
+      },
+      {
+        path: 'panol/movimientos',
+        loadComponent: () =>
+          import('./features/panol/panol-movimientos.component').then(m => m.PanolMovimientosComponent),
+      },
+      {
+        path: 'panol/categorias',
+        loadComponent: () =>
+          import('./features/panol/panol.component').then(m => m.PanolComponent),
+      },
+      {
+        path: 'panol/materiales',
+        loadComponent: () =>
+          import('./features/panol/panol-materiales.component').then(m => m.PanolMaterialesComponent),
+      },
+      {
         path: 'obras/nueva',
+        loadComponent: () =>
+          import('./features/obras/obra-wizard/obra-wizard.component').then(m => m.ObraWizardComponent),
+      },
+      {
+        path: 'obras',
+        loadComponent: () =>
+          import('./features/obras/obras-list/obras-list.component').then(m => m.ObrasListComponent),
+      },
+      {
+        path: 'obras/:id/editar',
         loadComponent: () =>
           import('./features/obras/obra-wizard/obra-wizard.component').then(m => m.ObraWizardComponent),
       },

@@ -1,0 +1,186 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+  }
+
+  p {
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+}
+
+.summary-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary-item {
+  min-width: 150px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.summary-value {
+  display: block;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.summary-label {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.panel {
+  padding: 18px;
+  border-radius: var(--radius-sm);
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  p {
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  padding-bottom: 16px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+
+  button {
+    height: 56px;
+    white-space: nowrap;
+  }
+}
+
+.field-grow {
+  flex: 1 1 260px;
+}
+
+.field-state {
+  width: 130px;
+}
+
+.field-quantity {
+  width: 130px;
+}
+
+.field-code {
+  width: 170px;
+}
+
+.field-category,
+.filter-field {
+  width: 250px;
+}
+
+.stock-checkbox {
+  height: 56px;
+  display: flex;
+  align-items: center;
+}
+
+.filter-field {
+  margin-bottom: -16px;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.materials-table {
+  max-height: 620px;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.actions-cell {
+  width: 96px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.stock-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  max-width: 360px;
+}
+
+.stock-detail {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.empty-state {
+  padding: 48px 20px;
+  color: var(--text-secondary);
+  text-align: center;
+
+  mat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 48px;
+    opacity: .35;
+  }
+
+  p {
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 760px) {
+  .summary-row,
+  .form-row,
+  .panel-header {
+    flex-direction: column;
+  }
+
+  .summary-item,
+  .field-state,
+  .field-quantity,
+  .field-code,
+  .field-category,
+  .filter-field,
+  .stock-checkbox,
+  .form-row button {
+    width: 100%;
+  }
+}

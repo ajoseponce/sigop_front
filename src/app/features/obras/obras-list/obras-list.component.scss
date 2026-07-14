@@ -1,0 +1,35 @@
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+
+  h1 { font-size: 26px; font-weight: 800; }
+  p  { color: var(--text-secondary); font-size: 14px; }
+}
+
+.table-card { overflow: hidden; }
+
+.mat-mdc-row:hover { background: #fdf5f9; }
+
+.empty-state {
+  padding: 60px; text-align: center; color: var(--text-secondary);
+
+  mat-icon { font-size: 48px; width: 48px; height: 48px; opacity: .3; }
+  p { margin-top: 12px; }
+}
+
+.badge-activo {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+
+  &.activo {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  &.inactivo {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+}

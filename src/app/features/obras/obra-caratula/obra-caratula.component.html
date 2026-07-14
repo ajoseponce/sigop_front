@@ -1,0 +1,86 @@
+<div class="print-actions">
+  <button mat-stroked-button type="button" (click)="volver()">
+    <mat-icon>arrow_back</mat-icon>
+    Volver
+  </button>
+  <button mat-raised-button color="primary" type="button" (click)="imprimir()" [disabled]="!obra()">
+    <mat-icon>print</mat-icon>
+    Imprimir / PDF
+  </button>
+</div>
+
+@if (cargando()) {
+  <div class="state">
+    <mat-spinner diameter="36"></mat-spinner>
+    <p>Cargando carátula...</p>
+  </div>
+} @else if (error()) {
+  <div class="state error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error() }}</p>
+  </div>
+} @else {
+  @if (obra(); as o) {
+    <main class="sheet">
+      <div class="side-rule"></div>
+
+      <section class="cover">
+        <header class="institution">
+          <img src="assets/logo_login.png" alt="SIGOP" class="seal" />
+          <p>Municipalidad de Posadas</p>
+          <p>Provincia de Misiones</p>
+          <strong>Secretaría de Planificación Estratégica y Territorial</strong>
+          <strong>Sistema Integral de Gestión de Obras Públicas</strong>
+        </header>
+
+        <div class="rule"></div>
+
+        <section class="main-title">
+          <p>CARÁTULA DE OBRA</p>
+          <h1>{{ o.tipoObra.nombre }}</h1>
+          <h2>Nº {{ o.numeroObra || '................' }} - Expte. Nº {{ o.expediente }} / {{ o.anioEmision }}</h2>
+        </section>
+
+        <section class="obra-data">
+          <p><span>OBRA:</span> {{ o.nombre }}</p>
+          <p><span>UBICACIÓN:</span> {{ ubicacion() || 'Sin ubicación cargada' }}</p>
+        </section>
+
+        <div class="rule"></div>
+
+        <section class="summary-grid">
+          <article>
+            <span>Empresa</span>
+            <strong>{{ o.empresa.razonSocial }}</strong>
+            <small>CUIT {{ o.empresa.cuit }}</small>
+          </article>
+          <article>
+            <span>Sistema de contratación</span>
+            <strong>{{ o.sistemaContratacion.replaceAll('_', ' ') }}</strong>
+          </article>
+          <article>
+            <span>Contrato</span>
+            <strong>{{ contratoOriginal()?.numeroContrato || 'Sin cargar' }}</strong>
+            <small>Firma: {{ formatoFecha(contratoOriginal()?.fechaFirma) }}</small>
+          </article>
+          <article>
+            <span>Monto contractual</span>
+            <strong>{{ formatoMoneda(contratoOriginal()?.montoDelta) }}</strong>
+            <small>Plazo: {{ contratoOriginal()?.plazoObraDias || 'Sin cargar' }} días</small>
+          </article>
+        </section>
+
+        <section class="opening-row">
+          <div class="field-box"></div>
+          <div class="field-box"></div>
+          <p>FECHA DE IMPRESIÓN</p>
+          <p>FIRMA / SELLO</p>
+        </section>
+
+        <footer>
+          <img src="assets/logo_login.png" alt="SIGOP" />
+        </footer>
+      </section>
+    </main>
+  }
+}

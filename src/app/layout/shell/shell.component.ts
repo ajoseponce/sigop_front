@@ -44,7 +44,12 @@ export class ShellComponent {
     ]},
     { label: 'Obras', icon: 'engineering', hijos: [
       { label: 'Nueva Obra',  icon: 'local_shipping',         ruta: '/obras/nueva', roles: ['ADMIN','SUPERVISOR'] },
-      
+      { label: 'Lista de Obras',  icon: 'list',         ruta: '/obras', roles: ['ADMIN','SUPERVISOR'] },
+    ]},
+    { label: 'Pañol', icon: 'inventory_2', roles: ['ADMIN','SUPERVISOR'], hijos: [
+      { label: 'Ingresos y egresos', icon: 'sync_alt', ruta: '/panol/movimientos', roles: ['ADMIN','SUPERVISOR'] },
+      { label: 'Categorías de recursos', icon: 'category', ruta: '/panol/categorias', roles: ['ADMIN','SUPERVISOR'] },
+      { label: 'Recursos y materiales', icon: 'inventory', ruta: '/panol/materiales', roles: ['ADMIN','SUPERVISOR'] },
     ]},
   ];
 
@@ -70,6 +75,14 @@ get primerRol(): string {
   puedeVer(item: NavItem): boolean {
     if (!item.roles?.length) return true;
     return item.roles.some(r => this.auth.tieneRol(r));
+  }
+
+  submenuVisible(item: NavItem): boolean {
+    return this.submenuAbierto() === item.label || this.grupoActivo(item);
+  }
+
+  grupoActivo(item: NavItem): boolean {
+    return item.hijos?.some(hijo => hijo.ruta && this.router.url.startsWith(hijo.ruta)) ?? false;
   }
 
   logout() {

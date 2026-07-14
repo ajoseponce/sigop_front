@@ -1,0 +1,138 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+  }
+
+  p {
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+}
+
+.summary-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary-item {
+  min-width: 150px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.summary-value {
+  display: block;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.summary-label {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.panol-layout {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.85fr) minmax(520px, 1.35fr);
+  gap: 16px;
+  align-items: start;
+
+  &.single {
+    grid-template-columns: minmax(0, 920px);
+  }
+}
+
+.panel {
+  padding: 18px;
+  border-radius: var(--radius-sm);
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  p {
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+}
+
+.form-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-bottom: 16px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+
+  button {
+    height: 56px;
+    white-space: nowrap;
+  }
+}
+
+.field-grow {
+  flex: 1 1 220px;
+}
+
+.field-state {
+  width: 130px;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.actions-cell {
+  width: 96px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 1180px) {
+  .panol-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .summary-row,
+  .form-row,
+  .panel-header {
+    flex-direction: column;
+  }
+
+  .summary-item,
+  .field-state,
+  .form-row button {
+    width: 100%;
+  }
+}

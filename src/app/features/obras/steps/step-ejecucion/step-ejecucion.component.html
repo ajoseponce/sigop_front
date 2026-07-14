@@ -41,6 +41,53 @@
     </div>
   </div>
 
+  <div class="form-section">
+    <h3>Eventos de obra</h3>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Neutralización</label>
+        <input type="date" formControlName="fechaNeutralizacion" />
+      </div>
+
+      <div class="form-field">
+        <label>Reinicio</label>
+        <input type="date" formControlName="fechaReinicio" />
+      </div>
+    </div>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Ampliación de plazo</label>
+        <input type="date" formControlName="fechaAmpliacionPlazo" />
+      </div>
+
+      <div class="form-field">
+        <label>Rescisión de contrato</label>
+        <input type="date" formControlName="fechaRescision" />
+      </div>
+    </div>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Recepción provisoria</label>
+        <input type="date" formControlName="fechaRecepcionProvisoria" />
+      </div>
+
+      <div class="form-field">
+        <label>Recepción definitiva</label>
+        <input type="date" formControlName="fechaRecepcionDefinitiva" />
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Modificación (itemizado)</label>
+        <textarea matInput rows="3" formControlName="modificacion"></textarea>
+      </div>
+    </div>
+  </div>
+
   <div class="form-actions">
     <button type="button" class="btn-primary" (click)="save()">
       Guardar ejecución

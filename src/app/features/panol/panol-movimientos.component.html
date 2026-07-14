@@ -1,0 +1,346 @@
+<div class="page-container fade-in-up">
+  <div class="page-header">
+    <div>
+      <h1>Ingresos y egresos</h1>
+      <p>Registro rápido de movimientos de materiales del pañol</p>
+    </div>
+  </div>
+
+  <section class="panel card movement-panel">
+    <form [formGroup]="movimientoForm" (ngSubmit)="guardarMovimiento()">
+      <div class="movement-toolbar">
+        <div class="type-switch" aria-label="Tipo de movimiento">
+          <button
+            type="button"
+            class="type-option"
+            [class.active]="tipoActual() === 'EGRESO'"
+            (click)="cambiarTipo('EGRESO')">
+            <mat-icon>logout</mat-icon>
+            Egreso
+          </button>
+          <button
+            type="button"
+            class="type-option"
+            [class.active]="tipoActual() === 'INGRESO'"
+            (click)="cambiarTipo('INGRESO')">
+            <mat-icon>login</mat-icon>
+            Ingreso
+          </button>
+        </div>
+
+        <div class="toolbar-actions">
+          <button mat-stroked-button type="button" (click)="agregarFila()">
+            <mat-icon>add</mat-icon>
+            Renglón
+          </button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="guardando()">
+            <mat-icon>save</mat-icon>
+            Registrar
+          </button>
+        </div>
+      </div>
+
+      <div class="header-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>N° O/E</mat-label>
+          <input matInput formControlName="numeroOrden">
+          @if (movimientoForm.get('numeroOrden')?.hasError('required') && movimientoForm.get('numeroOrden')?.touched) {
+            <mat-error>Requerido</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha</mat-label>
+          <input matInput type="date" formControlName="fecha">
+        </mat-form-field>
+
+        @if (tipoActual() === 'EGRESO') {
+          <mat-form-field appearance="outline" class="wide-field">
+            <mat-label>Destino</mat-label>
+            <input matInput formControlName="destino">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Autoriza</mat-label>
+            <input matInput formControlName="autoriza">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Retira</mat-label>
+            <input matInput formControlName="retira">
+          </mat-form-field>
+        }
+
+        @if (esIngreso()) {
+          <mat-form-field appearance="outline">
+            <mat-label>Trae al pañol</mat-label>
+            <input matInput formControlName="traeAlPanol">
+          </mat-form-field>
+
+          <div class="lookup-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Buscar egreso O/E</mat-label>
+              <input matInput formControlName="egresoOrigenNumeroOrden">
+            </mat-form-field>
+            <button mat-stroked-button type="button" (click)="buscarEgreso()" [disabled]="buscandoEgreso()">
+              <mat-icon>manage_search</mat-icon>
+              Traer stockeables
+            </button>
+          </div>
+        }
+      </div>
+
+      <div class="table-wrap">
+        <table mat-table [dataSource]="filas()" class="w-full movement-table">
+          <ng-container matColumnDef="seleccionado">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let fila">
+              <mat-checkbox
+                [checked]="fila.seleccionado"
+                (change)="cambiarSeleccion(fila.uid, $event.checked)"
+                matTooltip="Incluir renglón">
+              </mat-checkbox>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="material">
+            <th mat-header-cell *matHeaderCellDef>Material</th>
+            <td mat-cell *matCellDef="let fila">
+              @if (fila.bloqueado) {
+                <div class="material-fixed">
+                  <strong>{{ fila.materialNombre }}</strong>
+                  <span>{{ fila.categoriaNombre }}</span>
+                </div>
+              } @else {
+                <mat-form-field appearance="outline" class="table-field material-field">
+                  <mat-label>Material</mat-label>
+                  <mat-select [value]="fila.materialId" (valueChange)="cambiarMaterial(fila.uid, $event)">
+                    @for (material of materialesActivos(); track material.id) {
+                      <mat-option [value]="material.id">
+                        {{ material.nombre }} · {{ material.categoriaNombre }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="stock">
+            <th mat-header-cell *matHeaderCellDef>Stock</th>
+            <td mat-cell *matCellDef="let fila">
+              <div class="stock-cell">
+                <span class="badge-activo" [class.activo]="fila.stockeable" [class.inactivo]="!fila.stockeable">
+                  {{ fila.stockeable ? 'Stockeable' : 'No stockeable' }}
+                </span>
+                @if (fila.cantidadMax) {
+                  <span class="stock-detail">Pend. {{ fila.cantidadMax }}</span>
+                } @else {
+                  <span class="stock-detail">Disp. {{ fila.stockDisponible }}</span>
+                }
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="cantidad">
+            <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+            <td mat-cell *matCellDef="let fila">
+              <mat-form-field appearance="outline" class="table-field qty-field">
+                <mat-label>Cant.</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  min="0"
+                  [max]="fila.cantidadMax ?? null"
+                  [value]="fila.cantidad"
+                  (input)="cambiarCantidad(fila.uid, $any($event.target).value)">
+              </mat-form-field>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="observacion">
+            <th mat-header-cell *matHeaderCellDef>Observación</th>
+            <td mat-cell *matCellDef="let fila">
+              <mat-form-field appearance="outline" class="table-field obs-field">
+                <mat-label>Obs.</mat-label>
+                <input
+                  matInput
+                  [value]="fila.observacion"
+                  (input)="cambiarObservacion(fila.uid, $any($event.target).value)">
+              </mat-form-field>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let fila" class="actions-cell">
+              <button mat-icon-button type="button" color="warn" (click)="quitarFila(fila.uid)" matTooltip="Quitar">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnasFilas"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnasFilas;"></tr>
+        </table>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel card">
+    <div class="panel-header">
+      <div>
+        <h2>Movimientos</h2>
+        <p>Consulta de ingresos y egresos registrados</p>
+      </div>
+    </div>
+
+    <form [formGroup]="filtroForm" class="filters-row" (ngSubmit)="aplicarFiltros()">
+      <mat-form-field appearance="outline">
+        <mat-label>Desde</mat-label>
+        <input matInput type="date" formControlName="fechaDesde">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Hasta</mat-label>
+        <input matInput type="date" formControlName="fechaHasta">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo</mat-label>
+        <mat-select formControlName="tipo">
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="EGRESO">Egreso</mat-option>
+          <mat-option value="INGRESO">Ingreso</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit">
+        <mat-icon>search</mat-icon>
+        Buscar
+      </button>
+      <button mat-stroked-button type="button" (click)="limpiarFiltros()">
+        <mat-icon>close</mat-icon>
+        Limpiar
+      </button>
+    </form>
+
+    <div class="table-wrap">
+      <table mat-table [dataSource]="movimientos()" class="w-full">
+        <ng-container matColumnDef="tipo">
+          <th mat-header-cell *matHeaderCellDef>Tipo</th>
+          <td mat-cell *matCellDef="let movimiento">
+            <span class="movement-badge" [class.ingreso]="movimiento.tipo === 'INGRESO'">
+              {{ tipoLabel(movimiento.tipo) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="fecha">
+          <th mat-header-cell *matHeaderCellDef>Fecha</th>
+          <td mat-cell *matCellDef="let movimiento">{{ movimiento.fecha | date:'dd/MM/yyyy' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="orden">
+          <th mat-header-cell *matHeaderCellDef>O/E</th>
+          <td mat-cell *matCellDef="let movimiento">{{ movimiento.numeroOrden }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="responsable">
+          <th mat-header-cell *matHeaderCellDef>Responsable</th>
+          <td mat-cell *matCellDef="let movimiento">{{ responsableMovimiento(movimiento) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="items">
+          <th mat-header-cell *matHeaderCellDef>Materiales</th>
+          <td mat-cell *matCellDef="let movimiento">
+            {{ movimiento.detalles.length }} renglón/es
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let movimiento" class="actions-cell">
+            <button mat-icon-button type="button" (click)="abrirDetalle(movimiento)" matTooltip="Ver renglones">
+              <mat-icon>search</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columnasMovimientos"></tr>
+        <tr mat-row *matRowDef="let row; columns: columnasMovimientos;"></tr>
+      </table>
+
+      @if (movimientos().length === 0 && !cargando()) {
+        <div class="empty-state">
+          <mat-icon>manage_search</mat-icon>
+          <p>No hay movimientos para los filtros seleccionados</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <ng-template #detalleMovimientoDialog>
+    @if (movimientoDetalle(); as movimiento) {
+      <div class="dialog-header">
+        <div>
+          <h2 mat-dialog-title>{{ tipoLabel(movimiento.tipo) }} O/E {{ movimiento.numeroOrden }}</h2>
+          <p>{{ movimiento.fecha | date:'dd/MM/yyyy' }}</p>
+        </div>
+        <button mat-icon-button mat-dialog-close aria-label="Cerrar">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <mat-dialog-content>
+        <div class="detail-meta">
+          @if (movimiento.tipo === 'EGRESO') {
+            <span><strong>Destino:</strong> {{ movimiento.destino || '-' }}</span>
+            <span><strong>Autoriza:</strong> {{ movimiento.autoriza || '-' }}</span>
+            <span><strong>Retira:</strong> {{ movimiento.retira || '-' }}</span>
+          } @else {
+            <span><strong>Trae al pañol:</strong> {{ movimiento.traeAlPanol || '-' }}</span>
+          }
+        </div>
+
+        <div class="table-wrap">
+          <table mat-table [dataSource]="movimiento.detalles" class="w-full detail-table">
+            <ng-container matColumnDef="material">
+              <th mat-header-cell *matHeaderCellDef>Material</th>
+              <td mat-cell *matCellDef="let detalle">{{ detalle.materialNombre }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="categoria">
+              <th mat-header-cell *matHeaderCellDef>Categoría</th>
+              <td mat-cell *matCellDef="let detalle">{{ detalle.categoriaNombre }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="cantidad">
+              <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+              <td mat-cell *matCellDef="let detalle">{{ detalle.cantidad }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="estado">
+              <th mat-header-cell *matHeaderCellDef>Estado</th>
+              <td mat-cell *matCellDef="let detalle">
+                @if (movimiento.tipo === 'EGRESO' && detalle.stockeable) {
+                  <span class="stock-detail">Pend. {{ detalle.cantidadPendiente }}</span>
+                } @else {
+                  <span class="stock-detail">-</span>
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="observacion">
+              <th mat-header-cell *matHeaderCellDef>Observación</th>
+              <td mat-cell *matCellDef="let detalle">{{ detalle.observacion || '-' }}</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnasDetalle"></tr>
+            <tr mat-row *matRowDef="let row; columns: columnasDetalle;"></tr>
+          </table>
+        </div>
+      </mat-dialog-content>
+    }
+  </ng-template>
+</div>

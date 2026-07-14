@@ -6,23 +6,31 @@ out-tsc/
 
 # Node
 node_modules/
-npm-debug.log
-yarn-error.log
-pnpm-lock.yaml
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Environment
+# Environments
 .env
+.env.local
+.env.*.local
 
-# Logs
-logs
-*.log
-
-# OS (Mac)
+# OS
 .DS_Store
+Thumbs.db
 
 # IDE
 .vscode/
 .idea/
 
-# Build cache
+# Local agent config file (no versionar)
+AGENTS_SIGOP.md
+agent_sigop.md
+
+# Logs
+logs/
+*.log
+
+# Cache
 .cache/

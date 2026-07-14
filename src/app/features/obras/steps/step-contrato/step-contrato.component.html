@@ -18,6 +18,13 @@
         <input type="text" formControlName="numeroLicitacion" />
       </div>
     </div>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Mes base</label>
+        <input type="text" [value]="mesBase" disabled />
+      </div>
+    </div>
   </div>
 
   <div class="form-section">
@@ -113,6 +120,27 @@
       <div class="form-field">
         <label>Plazo de obra en días</label>
         <input type="number" formControlName="plazoObraDias" />
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Oferta itemizada</label>
+        <textarea matInput rows="4" formControlName="ofertaItemizada"></textarea>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Plan de trabajo</label>
+        <textarea matInput rows="4" formControlName="planTrabajo"></textarea>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Estructura de ponderación</label>
+        <textarea matInput rows="4" formControlName="estructuraPonderacion"></textarea>
       </div>
     </div>
 

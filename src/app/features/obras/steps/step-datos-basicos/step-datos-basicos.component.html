@@ -27,6 +27,23 @@
       </div>
     </div>
 
+    <div class="form-grid form-grid-2">
+      <div class="form-field">
+        <label>Número de obra</label>
+        <input type="text" [value]="numeroObra" disabled />
+      </div>
+
+      <div class="form-field">
+        <label>Sistema de contratación</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-select formControlName="sistemaContratacion">
+            <mat-option value="UNIDAD_DE_MEDIDA">Unidad de medida</mat-option>
+            <mat-option value="AJUSTE_ALZADO">Ajuste alzado</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
     <div class="form-grid">
       <div class="form-field">
         <label>Fecha de emisión</label>
@@ -84,12 +101,12 @@
     <div class="form-grid form-grid-2">
       <div class="form-field">
         <label>Presupuesto oficial</label>
-        <input type="number" formControlName="presupuestoOficial" />
+        <input type="number" min="0" formControlName="presupuestoOficial" />
       </div>
 
       <div class="form-field">
         <label>Anticipo financiero (%)</label>
-        <input type="number" formControlName="anticipo" />
+        <input type="number" min="0" max="100" formControlName="anticipo" />
       </div>
     </div>
   </div>

@@ -31,16 +31,31 @@ jobs:
         run: npm run build
 
       - name: Configure SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
+          test -n "$SSH_HOST" || (echo "Missing SSH_HOST secret" && exit 1)
+          test -n "$SSH_PRIVATE_KEY" || (echo "Missing SSH_PRIVATE_KEY secret" && exit 1)
+          PORT="${SSH_PORT:-5129}"
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "$PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
 
       - name: Deploy on server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" << 'EOF'
+          test -n "$SSH_HOST" || (echo "Missing SSH_HOST secret" && exit 1)
+          test -n "$SSH_USER" || (echo "Missing SSH_USER secret" && exit 1)
+          test -n "${{ secrets.FRONT_PATH }}" || (echo "Missing FRONT_PATH secret" && exit 1)
+          PORT="${SSH_PORT:-5129}"
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "$SSH_USER@$SSH_HOST" << 'EOF'
             set -e
             cd "${{ secrets.FRONT_PATH }}"
             git fetch origin dev

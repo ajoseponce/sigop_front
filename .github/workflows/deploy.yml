@@ -55,11 +55,13 @@ jobs:
           test -n "$SSH_USER" || (echo "Missing SSH_USER secret" && exit 1)
           test -n "${{ secrets.FRONT_PATH }}" || (echo "Missing FRONT_PATH secret" && exit 1)
           PORT="${SSH_PORT:-5129}"
+          tar -czf frontend-dist.tgz -C dist/sigop-frontend .
+          scp -i ~/.ssh/deploy_key -P "$PORT" frontend-dist.tgz "$SSH_USER@$SSH_HOST:/tmp/sigop_front_deploy.tgz"
           ssh -i ~/.ssh/deploy_key -p "$PORT" "$SSH_USER@$SSH_HOST" << 'EOF'
             set -e
-            cd "${{ secrets.FRONT_PATH }}"
-            git fetch origin dev
-            git reset --hard origin/dev
-            npm ci
-            npm run build
+            DEPLOY_DIR="${{ secrets.FRONT_PATH }}"
+            mkdir -p "$DEPLOY_DIR"
+            find "$DEPLOY_DIR" -mindepth 1 -maxdepth 1 ! -name '.htaccess' -exec rm -rf {} +
+            tar -xzf /tmp/sigop_front_deploy.tgz -C "$DEPLOY_DIR"
+            rm -f /tmp/sigop_front_deploy.tgz
           EOF

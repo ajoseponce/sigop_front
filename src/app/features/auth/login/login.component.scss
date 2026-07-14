@@ -169,5 +169,14 @@
     text-align: center;
     color: var(--text-secondary);
     font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    .footer-version {
+      font-weight: 700;
+      opacity: .7;
+    }
   }
 }

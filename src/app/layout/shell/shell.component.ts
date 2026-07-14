@@ -64,6 +64,7 @@ export class ShellComponent implements OnInit {
 
   sidebarAbierto = signal(true);
   navItems = signal<NavItem[]>(DEFAULT_NAV_ITEMS);
+  appVersion = '1.0.1';
 
   submenuAbierto = signal<string | null>(null);
 

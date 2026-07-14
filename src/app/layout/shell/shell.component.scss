@@ -196,6 +196,21 @@ $transition:   var(--transition);
     color: #dc2626;
     &:hover { background: #fee2e2; }
   }
+
+  .app-version {
+    margin-top: 4px;
+    padding: 0 12px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    opacity: .65;
+    white-space: nowrap;
+    transition: opacity $transition;
+
+    .shell-wrapper.sidebar-mini & {
+      opacity: 0;
+    }
+  }
 }
 
 // ── CONTENIDO ─────────────────────────────────────────────────

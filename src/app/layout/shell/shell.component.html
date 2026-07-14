@@ -11,7 +11,7 @@
 
     <!-- Nav -->
     <nav class="sidebar-nav">
-      @for (item of navItems; track item.label) {
+      @for (item of navItems(); track item.label) {
         @if (!item.hijos) {
           @if (puedeVer(item)) {
             <!-- Item simple -->

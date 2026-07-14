@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../core/services/api.service';
@@ -16,7 +17,7 @@ import { ApiService } from '../../core/services/api.service';
   imports: [
     CommonModule, ReactiveFormsModule,
     MatTableModule, MatButtonModule, MatIconModule,
-    MatFormFieldModule, MatInputModule,
+    MatFormFieldModule, MatInputModule, MatSelectModule,
     MatSnackBarModule, MatTooltipModule,
   ],
   template: `
@@ -43,6 +44,10 @@ import { ApiService } from '../../core/services/api.service';
           <span class="badge-activo" [class.activo]="area.activo" [class.inactivo]="!area.activo">
             {{ area.activo ? 'Activa' : 'Inactiva' }}
           </span>
+          <div class="area-meta">
+            <span><mat-icon>verified_user</mat-icon>{{ area.roles?.length ?? 0 }} roles</span>
+            <span><mat-icon>menu</mat-icon>{{ area.pantallas?.length ?? 0 }} menús</span>
+          </div>
         </div>
         <div class="area-actions">
           <button mat-icon-button (click)="abrirModal(area)" matTooltip="Editar">
@@ -82,6 +87,24 @@ import { ApiService } from '../../core/services/api.service';
           <mat-label>Descripción</mat-label>
           <textarea matInput formControlName="descripcion" rows="3"></textarea>
         </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Roles permitidos</mat-label>
+          <mat-select formControlName="rolesIds" multiple>
+            @for (rol of roles(); track rol.id) {
+              <mat-option [value]="rol.id">{{ rol.nombre }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Menús visibles</mat-label>
+          <mat-select formControlName="pantallasIds" multiple>
+            @for (pantalla of pantallas(); track pantalla.id) {
+              <mat-option [value]="pantalla.id">
+                {{ pantalla.padre ? pantalla.padre.nombre + ' / ' : '' }}{{ pantalla.nombre }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
         <div class="modal-actions">
           <button mat-stroked-button type="button" (click)="cerrarModal()">Cancelar</button>
           <button mat-raised-button color="primary" type="submit">
@@ -105,6 +128,9 @@ import { ApiService } from '../../core/services/api.service';
       mat-icon{color:var(--color-accent-dark)} }
     .area-info { flex:1; h3{font-size:15px;font-weight:700;margin-bottom:4px}
       p{font-size:13px;color:var(--text-secondary);margin-bottom:8px} }
+    .area-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;color:var(--text-secondary);font-size:12px;
+      span{display:inline-flex;align-items:center;gap:4px}
+      mat-icon{font-size:16px;width:16px;height:16px}}
     .area-actions { display:flex;flex-direction:column }
     .empty-state{grid-column:1/-1;padding:60px;text-align:center;color:var(--text-secondary);
       mat-icon{font-size:48px;width:48px;height:48px;opacity:.3} p{margin-top:12px}}
@@ -125,6 +151,8 @@ export class AreasComponent implements OnInit {
   private fb    = inject(FormBuilder);
 
   areas     = signal<any[]>([]);
+  roles     = signal<any[]>([]);
+  pantallas = signal<any[]>([]);
   cargando  = signal(false);
   modalOpen = signal(false);
   editando  = signal<any | null>(null);
@@ -132,9 +160,19 @@ export class AreasComponent implements OnInit {
   form = this.fb.group({
     nombre:      ['', [Validators.required, Validators.minLength(2)]],
     descripcion: [''],
+    rolesIds: [[] as number[]],
+    pantallasIds: [[] as number[]],
   });
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() {
+    this.cargarCatalogos();
+    this.cargar();
+  }
+
+  cargarCatalogos() {
+    this.api.get<any[]>('roles').subscribe({ next: roles => this.roles.set(roles) });
+    this.api.get<any[]>('pantallas').subscribe({ next: pantallas => this.pantallas.set(pantallas) });
+  }
 
   cargar() {
     this.cargando.set(true);
@@ -146,8 +184,15 @@ export class AreasComponent implements OnInit {
 
   abrirModal(area?: any) {
     this.editando.set(area ?? null);
-    this.form.reset();
-    if (area) this.form.patchValue({ nombre: area.nombre, descripcion: area.descripcion });
+    this.form.reset({ nombre: '', descripcion: '', rolesIds: [], pantallasIds: [] });
+    if (area) {
+      this.form.patchValue({
+        nombre: area.nombre,
+        descripcion: area.descripcion,
+        rolesIds: area.rolesIds ?? area.roles?.map((rol: any) => rol.id) ?? [],
+        pantallasIds: area.pantallasIds ?? area.pantallas?.map((pantalla: any) => pantalla.id) ?? [],
+      });
+    }
     this.modalOpen.set(true);
   }
 

@@ -333,7 +333,7 @@ export class PanolMovimientosComponent implements OnInit {
       fecha: raw.fecha,
       detalle: null,
       destino: this.tipoActual() === 'EGRESO' ? this.valor(raw.destino) : null,
-      autoriza: this.tipoActual() === 'EGRESO' ? this.valor(raw.autoriza) : null,
+      autoriza: this.valor(raw.autoriza),
       retira: this.tipoActual() === 'EGRESO' ? this.valor(raw.retira) : null,
       traeAlPanol: this.tipoActual() === 'INGRESO' ? this.valor(raw.traeAlPanol) : null,
       egresoOrigenNumeroOrden:

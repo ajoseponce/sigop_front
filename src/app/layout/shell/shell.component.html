@@ -103,6 +103,10 @@
           </div>
         </div>
         <mat-divider />
+        <button mat-menu-item (click)="abrirCambioPassword()">
+          <mat-icon>lock_reset</mat-icon>
+          <span>Cambiar contraseña</span>
+        </button>
         <button mat-menu-item (click)="logout()">
           <mat-icon>logout</mat-icon>
           <span>Cerrar sesión</span>

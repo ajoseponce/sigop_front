@@ -1,11 +1,17 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 
@@ -52,7 +58,7 @@ type MenuApiItem = {
   imports: [
     CommonModule, RouterOutlet, RouterLink, RouterLinkActive,
     MatIconModule, MatButtonModule, MatTooltipModule,
-    MatMenuModule, MatDividerModule,
+    MatMenuModule, MatDividerModule, MatDialogModule,
   ],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss'],
@@ -61,10 +67,11 @@ export class ShellComponent implements OnInit {
   auth   = inject(AuthService);
   router = inject(Router);
   private api = inject(ApiService);
+  private dialog = inject(MatDialog);
 
   sidebarAbierto = signal(true);
   navItems = signal<NavItem[]>(DEFAULT_NAV_ITEMS);
-  appVersion = '1.0.2';
+  appVersion = '1.0.3';
 
   submenuAbierto = signal<string | null>(null);
 
@@ -140,8 +147,146 @@ get primerRol(): string {
     this.auth.logout();
   }
 
+  abrirCambioPassword() {
+    this.dialog.open(CambiarPasswordDialogComponent, {
+      width: '420px',
+      maxWidth: 'calc(100vw - 32px)',
+      autoFocus: 'first-tabbable',
+    }).afterClosed().subscribe(cambiada => {
+      if (cambiada) this.auth.limpiarSesion();
+    });
+  }
+
   get iniciales(): string {
     const n = this.auth.nombreCompleto();
     return n.split(' ').map(p => p[0]).slice(0,2).join('').toUpperCase();
+  }
+}
+
+@Component({
+  selector: 'app-cambiar-password-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSnackBarModule,
+  ],
+  template: `
+    <h2 mat-dialog-title>Cambiar contraseña</h2>
+
+    <mat-dialog-content>
+      <form class="password-form" [formGroup]="form" (ngSubmit)="guardar()">
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña actual</mat-label>
+          <input matInput type="password" formControlName="passwordActual" autocomplete="current-password">
+          @if (form.get('passwordActual')?.hasError('required') && form.get('passwordActual')?.touched) {
+            <mat-error>Ingresá tu contraseña actual</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Nueva contraseña</mat-label>
+          <input matInput type="password" formControlName="passwordNueva" autocomplete="new-password">
+          @if (form.get('passwordNueva')?.hasError('required') && form.get('passwordNueva')?.touched) {
+            <mat-error>Ingresá la nueva contraseña</mat-error>
+          }
+          @if (form.get('passwordNueva')?.hasError('minlength') && form.get('passwordNueva')?.touched) {
+            <mat-error>Mínimo 8 caracteres</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Repetir nueva contraseña</mat-label>
+          <input matInput type="password" formControlName="passwordRepetida" autocomplete="new-password">
+          @if (form.get('passwordRepetida')?.hasError('required') && form.get('passwordRepetida')?.touched) {
+            <mat-error>Repetí la nueva contraseña</mat-error>
+          }
+          @if (form.hasError('passwordMismatch') && form.get('passwordRepetida')?.touched) {
+            <mat-error>Las contraseñas no coinciden</mat-error>
+          }
+        </mat-form-field>
+      </form>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button mat-button type="button" [disabled]="cargando()" (click)="cerrar()">Cancelar</button>
+      <button mat-flat-button color="primary" type="button" [disabled]="cargando()" (click)="guardar()">
+        <mat-icon>lock_reset</mat-icon>
+        Cambiar
+      </button>
+    </mat-dialog-actions>
+  `,
+  styles: [`
+    .password-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 4px;
+    }
+
+    mat-dialog-actions button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+  `],
+})
+export class CambiarPasswordDialogComponent {
+  private fb = inject(FormBuilder);
+  private auth = inject(AuthService);
+  private snack = inject(MatSnackBar);
+  private dialogRef = inject(MatDialogRef<CambiarPasswordDialogComponent>);
+
+  cargando = signal(false);
+
+  form = this.fb.group({
+    passwordActual: ['', [Validators.required]],
+    passwordNueva: ['', [Validators.required, Validators.minLength(8)]],
+    passwordRepetida: ['', [Validators.required]],
+  }, { validators: this.passwordsIguales });
+
+  cerrar() {
+    this.dialogRef.close(false);
+  }
+
+  guardar() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const { passwordActual, passwordNueva } = this.form.getRawValue();
+    this.cargando.set(true);
+    this.auth.cambiarPassword({
+      passwordActual: passwordActual ?? '',
+      passwordNueva: passwordNueva ?? '',
+    }).pipe(finalize(() => this.cargando.set(false))).subscribe({
+      next: () => {
+        this.snack.open('Contraseña actualizada. Iniciá sesión nuevamente.', 'Cerrar', {
+          duration: 3500,
+        });
+        this.dialogRef.close(true);
+      },
+      error: err => {
+        const msg = Array.isArray(err?.error?.message)
+          ? err.error.message.join(', ')
+          : err?.error?.message ?? 'No se pudo cambiar la contraseña';
+        this.snack.open(msg, 'Cerrar', {
+          duration: 4000,
+          panelClass: 'snack-error',
+        });
+      },
+    });
+  }
+
+  private passwordsIguales(form: AbstractControl) {
+    const nueva = form.get('passwordNueva')?.value;
+    const repetida = form.get('passwordRepetida')?.value;
+    return nueva && repetida && nueva !== repetida ? { passwordMismatch: true } : null;
   }
 }

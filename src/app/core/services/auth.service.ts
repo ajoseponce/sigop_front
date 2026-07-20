@@ -51,6 +51,13 @@ export class AuthService {
     this.limpiarSesion();
   }
 
+  cambiarPassword(dto: { passwordActual: string; passwordNueva: string }) {
+    return this.http.patch<ApiResponse<{ message: string }>>(
+      `${environment.apiUrl}/usuarios/cambiar-password`,
+      dto,
+    ).pipe(map(res => res.data));
+  }
+
   limpiarSesion() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USUARIO_KEY);

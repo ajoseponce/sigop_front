@@ -16,13 +16,21 @@
     <div class="step-item" [class.active]="currentStep === 3"
       (click)="goToStep(3)">
       <div class="step-circle">3</div>
+      <div class="step-label">Cómputo</div>
+    </div>
+
+    <div class="step-line"></div>
+
+    <div class="step-item" [class.active]="currentStep === 4"
+      (click)="goToStep(4)">
+      <div class="step-circle">4</div>
       <div class="step-label">Ejecución</div>
     </div>
 
     <div class="step-line"></div>
 
-    <div class="step-item" [class.active]="currentStep === 4" (click)="goToStep(4)">
-      <div class="step-circle">4</div>
+    <div class="step-item" [class.active]="currentStep === 5" (click)="goToStep(5)">
+      <div class="step-circle">5</div>
       <div class="step-label">Certificación</div>
     </div>
   </div>
@@ -45,9 +53,16 @@
 
     }
     @if (currentStep === 3) {
-    <app-step-ejecucion [obraId]="obraId" [obra]="obra" (ejecucionSaved)="currentStep = 4"></app-step-ejecucion>
+    <app-step-rubros
+      [obraId]="obraId"
+      [obra]="obra"
+      (rubrosSaved)="rubrosGuardados()">
+    </app-step-rubros>
     }
     @if (currentStep === 4) {
+    <app-step-ejecucion [obraId]="obraId" [obra]="obra" (ejecucionSaved)="currentStep = 5"></app-step-ejecucion>
+    }
+    @if (currentStep === 5) {
     <app-step-certificacion [obraId]="obraId"></app-step-certificacion>
     }
   </div>

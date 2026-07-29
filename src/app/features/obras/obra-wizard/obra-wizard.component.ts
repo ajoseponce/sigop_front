@@ -3,6 +3,7 @@ import { StepDatosBasicosComponent } from '../steps/step-datos-basicos/step-dato
 import { StepContratoComponent } from '../steps/step-contrato/step-contrato.component';
 import { StepEjecucionComponent } from '../steps/step-ejecucion/step-ejecucion.component';
 import { StepCertificacionComponent } from '../steps/step-certificacion/step-certificacion.component';
+import { StepRubrosComponent } from '../steps/step-rubros/step-rubros.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from 'src/app/core/services/api.service';
 import { ActivatedRoute } from '@angular/router';
@@ -11,7 +12,7 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'app-obra-wizard',
   standalone: true,
-  imports: [StepDatosBasicosComponent, StepContratoComponent, StepEjecucionComponent, StepCertificacionComponent],
+  imports: [StepDatosBasicosComponent, StepContratoComponent, StepRubrosComponent, StepEjecucionComponent, StepCertificacionComponent],
   templateUrl: './obra-wizard.component.html',
   styleUrl: './obra-wizard.component.scss',
 })
@@ -89,7 +90,20 @@ export class ObraWizardComponent {
   }
 
   goToStep(step: number): void {
+    if (step > 1 && !this.obraId) {
+      this.snack.open('Primero tenés que guardar los datos básicos de la obra', 'Cerrar', {
+        duration: 3000,
+      });
+      return;
+    }
     this.currentStep = step;
+  }
+
+  rubrosGuardados(): void {
+    this.currentStep = 4;
+    if (this.obraId) {
+      this.cargarObra(this.obraId);
+    }
   }
 
   saveObra(payload: any): void {

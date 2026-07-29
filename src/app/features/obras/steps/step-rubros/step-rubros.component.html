@@ -1,0 +1,118 @@
+<section class="rubros-step">
+  <header class="step-header">
+    <div>
+      <span class="eyebrow">Oferta itemizada</span>
+      <h2>Cómputo y presupuesto</h2>
+      <p>Organizá los trabajos de la obra por rubros e ítems.</p>
+    </div>
+    <button type="button" class="button secondary" (click)="agregarRubro()" [disabled]="!tieneContrato">
+      <mat-icon>add</mat-icon>
+      Agregar rubro
+    </button>
+  </header>
+
+  @if (!tieneContrato) {
+    <div class="empty-state">
+      <mat-icon>assignment_late</mat-icon>
+      <div>
+        <strong>Primero completá la adjudicación</strong>
+        <p>El contrato original es necesario para asociar los rubros y sus ítems.</p>
+      </div>
+    </div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      <div formArrayName="rubros" class="rubros-list">
+        @for (rubro of rubros.controls; track rubro; let rubroIndex = $index) {
+          <article class="rubro-card" [formGroupName]="rubroIndex">
+            <div class="rubro-heading">
+              <label class="ref-field">
+                <span>Rubro</span>
+                <input formControlName="rubroRef" maxlength="20" aria-label="Número de rubro" />
+              </label>
+              <label class="name-field">
+                <span>Descripción del rubro</span>
+                <input formControlName="nombre" maxlength="255" placeholder="Ej.: Trabajos preliminares" />
+              </label>
+              <div class="rubro-summary">
+                <span>Total rubro</span>
+                <strong>{{ totalRubro(rubroIndex) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</strong>
+                <small>{{ incidenciaRubro(rubroIndex) | number:'1.2-2':'es-AR' }}% incidencia</small>
+              </div>
+              <button type="button" class="icon-button danger" (click)="eliminarRubro(rubroIndex)"
+                aria-label="Eliminar rubro" title="Eliminar rubro">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+
+            <div class="table-scroll">
+              <div class="budget-table">
+                <div class="table-row table-head">
+                  <span>Ítem</span>
+                  <span>Descripción</span>
+                  <span>Unidad</span>
+                  <span>Cantidad</span>
+                  <span>Precio unitario</span>
+                  <span>Parcial ítem</span>
+                  <span></span>
+                </div>
+
+                <div formArrayName="items">
+                  @for (item of itemsDe(rubroIndex).controls; track item; let itemIndex = $index) {
+                    <div class="table-row" [formGroupName]="itemIndex">
+                      <input formControlName="itemRef" maxlength="20" aria-label="Referencia del ítem" />
+                      <input formControlName="nombre" maxlength="255" placeholder="Trabajo a realizar"
+                        aria-label="Descripción del ítem" />
+                      <input formControlName="unidad" maxlength="50" placeholder="un, m², gl"
+                        aria-label="Unidad" />
+                      <input type="number" formControlName="cantidad" min="0.0001" step="0.0001"
+                        aria-label="Cantidad" />
+                      <div class="money-input">
+                        <span>$</span>
+                        <input type="number" formControlName="precioUnitario" min="0" step="0.01"
+                          aria-label="Precio unitario" />
+                      </div>
+                      <strong class="subtotal">
+                        {{ subtotalItem(rubroIndex, itemIndex) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}
+                      </strong>
+                      <button type="button" class="icon-button" (click)="eliminarItem(rubroIndex, itemIndex)"
+                        aria-label="Eliminar ítem" title="Eliminar ítem">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="add-item" (click)="agregarItem(rubroIndex)">
+              <mat-icon>add</mat-icon>
+              Agregar ítem al rubro
+            </button>
+          </article>
+        }
+      </div>
+
+      @if (rubros.length === 0) {
+        <div class="empty-state compact">
+          <mat-icon>format_list_bulleted_add</mat-icon>
+          <div>
+            <strong>Todavía no hay rubros cargados</strong>
+            <p>Agregá el primer rubro para comenzar el presupuesto.</p>
+          </div>
+        </div>
+      }
+
+      <footer class="budget-footer">
+        <div>
+          <span>Precio total de la obra</span>
+          <strong>{{ totalGeneral | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</strong>
+          <small>{{ rubros.length }} rubro{{ rubros.length === 1 ? '' : 's' }}</small>
+        </div>
+        <button type="submit" class="button primary" [disabled]="guardando || rubros.length === 0">
+          <mat-icon>save</mat-icon>
+          {{ guardando ? 'Guardando...' : 'Guardar y continuar' }}
+        </button>
+      </footer>
+    </form>
+  }
+</section>

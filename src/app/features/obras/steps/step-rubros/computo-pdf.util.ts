@@ -53,7 +53,7 @@ function sanitizeFilename(value: string): string {
 
 export function crearComputoPdf(data: ComputoPdfData): jsPDF {
   const doc = new jsPDF({
-    orientation: 'landscape',
+    orientation: 'portrait',
     unit: 'mm',
     format: 'a4',
   });
@@ -181,8 +181,8 @@ export function crearComputoPdf(data: ComputoPdfData): jsPDF {
     theme: 'grid',
     styles: {
       font: 'helvetica',
-      fontSize: 7.2,
-      cellPadding: 1.5,
+      fontSize: 5.8,
+      cellPadding: 1.2,
       lineColor: [53, 59, 67],
       lineWidth: 0.25,
       textColor: [25, 29, 34],
@@ -195,16 +195,17 @@ export function crearComputoPdf(data: ComputoPdfData): jsPDF {
       fontStyle: 'bold',
       halign: 'center',
       lineWidth: 0.35,
+      fontSize: 6,
     },
     columnStyles: {
-      0: { cellWidth: 15, halign: 'center' },
-      1: { cellWidth: 101 },
-      2: { cellWidth: 16, halign: 'center' },
-      3: { cellWidth: 22 },
-      4: { cellWidth: 34 },
-      5: { cellWidth: 34 },
-      6: { cellWidth: 34 },
-      7: { cellWidth: 21 },
+      0: { cellWidth: 10, halign: 'center' },
+      1: { cellWidth: 64 },
+      2: { cellWidth: 11, halign: 'center' },
+      3: { cellWidth: 15 },
+      4: { cellWidth: 24 },
+      5: { cellWidth: 24 },
+      6: { cellWidth: 25 },
+      7: { cellWidth: 17 },
     },
     rowPageBreak: 'avoid',
     didDrawPage: () => {

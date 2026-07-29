@@ -56,6 +56,7 @@ export class StepDatosBasicosComponent implements OnChanges {
 
     departamento: ['04', { disabled: true }],
     municipio: ['54', { disabled: true }],
+    localidad: [''],
     seccion: [''],
     manzana: [''],
     parcela: [''],
@@ -109,7 +110,7 @@ export class StepDatosBasicosComponent implements OnChanges {
 
       departamento: raw.departamento,
       municipio: raw.municipio,
-      localidad: raw.municipio,
+      localidad: raw.localidad,
 
       seccion: raw.seccion,
       manzana: raw.manzana,
@@ -119,8 +120,6 @@ export class StepDatosBasicosComponent implements OnChanges {
       presupuestoOficial,
       porcentajeAnticipo,
     };
-    console.log('PAYLOAD FINAL', payload);
-
     this.obraSaved.emit(payload);
   }
   tipoObraSearch = this.fb.control('');
@@ -146,7 +145,6 @@ export class StepDatosBasicosComponent implements OnChanges {
 }
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log('OBRA PARA EDITAR', this.obra);
     if (changes['obra'] && this.obra) {
       const tipoObraId = this.obra.tipoObra?.id ?? this.obra.tipoObraId;
       const tipoObraNombre = this.obra.tipoObra?.nombre ?? null;
@@ -156,8 +154,17 @@ export class StepDatosBasicosComponent implements OnChanges {
         nombre: this.obra.nombre,
         expediente: this.obra.expediente,
         anio: this.obra.anioEmision,
-        fechaEmision: this.obra.fechaEmision,
+        fechaEmision: this.toDateInput(this.obra.fechaEmision),
         sistemaContratacion: this.obra.sistemaContratacion ?? 'UNIDAD_DE_MEDIDA',
+        departamento: this.obra.departamento ?? '04',
+        municipio: this.obra.municipio ?? '54',
+        localidad: this.obra.localidad ?? '',
+        seccion: this.obra.seccion ?? '',
+        manzana: this.obra.manzana ?? '',
+        parcela: this.obra.parcela ?? '',
+        calles: this.obra.calles ?? '',
+        presupuestoOficial: this.obra.presupuestoOficial ?? null,
+        anticipo: this.obra.porcentajeAnticipo ?? null,
       });
 
       if (tipoObraNombre) {
@@ -176,6 +183,16 @@ export class StepDatosBasicosComponent implements OnChanges {
         }
       }
     }
+  }
+
+  private toDateInput(value: string | Date | null | undefined): string {
+    if (!value) {
+      return '';
+    }
+
+    return value instanceof Date
+      ? value.toISOString().slice(0, 10)
+      : String(value).slice(0, 10);
   }
 
   private mostrarFormularioInvalido(): void {

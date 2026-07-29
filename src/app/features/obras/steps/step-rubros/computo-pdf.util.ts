@@ -165,8 +165,8 @@ export function crearComputoPdf(data: ComputoPdfData): jsPDF {
   });
 
   autoTable(doc, {
-    startY: 28,
-    margin: { top: 28, right: 10, bottom: 13, left: 10 },
+    startY: 36,
+    margin: { top: 36, right: 10, bottom: 13, left: 10 },
     head: [[
       'ÍTEM',
       'RUBRO',
@@ -212,17 +212,17 @@ export function crearComputoPdf(data: ComputoPdfData): jsPDF {
       const pageWidth = doc.internal.pageSize.getWidth();
       doc.setDrawColor(45, 52, 61);
       doc.setLineWidth(0.35);
-      doc.rect(10, 7, pageWidth - 20, 9);
+      doc.rect(10, 15, pageWidth - 20, 9);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
-      doc.text(data.nombreObra.toUpperCase(), pageWidth / 2, 12.7, {
+      doc.text(data.nombreObra.toUpperCase(), pageWidth / 2, 20.7, {
         align: 'center',
       });
       doc.setFontSize(9);
-      doc.text('CÓMPUTO Y PRESUPUESTO', pageWidth / 2, 21.5, {
+      doc.text('CÓMPUTO Y PRESUPUESTO', pageWidth / 2, 29.5, {
         align: 'center',
       });
-      doc.line(10, 24, pageWidth - 10, 24);
+      doc.line(10, 32, pageWidth - 10, 32);
     },
   });
 

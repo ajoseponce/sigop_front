@@ -98,6 +98,7 @@ export class StepContratoComponent implements OnInit , OnChanges{
         this.personas.set(data);
         this.personasFiltradasLegal = data;
         this.personasFiltradasTecnico = data;
+        this.actualizarNombresResponsables();
 
         this.cargando.set(false);
       },
@@ -124,25 +125,26 @@ export class StepContratoComponent implements OnInit , OnChanges{
       }
 
       this.form.patchValue({
-        fechaApertura: contrato.vigenciaDesde,
+        fechaApertura: this.toDateInput(contrato.vigenciaDesde),
         numeroLicitacion: contrato.numeroContrato,
         empresaId: this.obra.empresa?.id ?? null,
-        responsableLegalId: null,
-        responsableTecnicoId: null,
+        responsableLegalId: contrato.responsableLegalId ?? null,
+        responsableTecnicoId: contrato.responsableTecnicoId ?? null,
         presupuestoAdjudicado: contrato.montoDelta,
         plazoObraDias: contrato.plazoObraDias ?? null,
         ofertaItemizada: contrato.ofertaItemizada ?? '',
         planTrabajo: contrato.planTrabajo ?? '',
         estructuraPonderacion: contrato.estructuraPonderacion ?? '',
-        fechaContrato: contrato.fechaFirma,
-        decretoAdjudicacion: contrato.descripcion ?? '',
-        decretoContrato: '',
+        fechaContrato: this.toDateInput(contrato.fechaFirma),
+        decretoAdjudicacion: contrato.decretoAdjudicacion ?? contrato.descripcion ?? '',
+        decretoContrato: contrato.decretoContrato ?? '',
       });
 
       this.empresaSearch.setValue(
         this.obra.empresa?.razonSocial ?? this.obra.empresa?.nombreFantasia ?? '',
         { emitEvent: false }
       );
+      this.actualizarNombresResponsables();
     }
   }
 
@@ -278,13 +280,16 @@ export class StepContratoComponent implements OnInit , OnChanges{
       montoPresupuestoOficial: raw.presupuestoAdjudicado || undefined,
       fechaPresupuesto: raw.fechaContrato || undefined,
       descripcion: raw.decretoAdjudicacion || raw.decretoContrato || undefined,
+      responsableLegalId: raw.responsableLegalId,
+      responsableTecnicoId: raw.responsableTecnicoId,
+      decretoAdjudicacion: raw.decretoAdjudicacion || undefined,
+      decretoContrato: raw.decretoContrato || undefined,
       plazoObraDias: raw.plazoObraDias,
       ofertaItemizada: raw.ofertaItemizada || undefined,
       planTrabajo: raw.planTrabajo || undefined,
       estructuraPonderacion: raw.estructuraPonderacion || undefined,
     };
 
-    console.log('PAYLOAD ADJUDICACIÓN', payload);
     this.adjudicacionCreated.emit(payload);
   }
 
@@ -308,5 +313,35 @@ export class StepContratoComponent implements OnInit , OnChanges{
         panelClass: 'snack-error',
       },
     );
+  }
+
+  private actualizarNombresResponsables(): void {
+    const responsableLegalId = this.form.get('responsableLegalId')?.value;
+    const responsableTecnicoId = this.form.get('responsableTecnicoId')?.value;
+    const responsableLegal = this.personas().find((persona) => persona.id === responsableLegalId);
+    const responsableTecnico = this.personas().find((persona) => persona.id === responsableTecnicoId);
+
+    this.responsableLegalSearch.setValue(
+      responsableLegal
+        ? `${responsableLegal.apellido ?? ''} ${responsableLegal.nombre ?? ''}`.trim()
+        : '',
+      { emitEvent: false },
+    );
+    this.responsableTecnicoSearch.setValue(
+      responsableTecnico
+        ? `${responsableTecnico.apellido ?? ''} ${responsableTecnico.nombre ?? ''}`.trim()
+        : '',
+      { emitEvent: false },
+    );
+  }
+
+  private toDateInput(value: string | Date | null | undefined): string {
+    if (!value) {
+      return '';
+    }
+
+    return value instanceof Date
+      ? value.toISOString().slice(0, 10)
+      : String(value).slice(0, 10);
   }
 }

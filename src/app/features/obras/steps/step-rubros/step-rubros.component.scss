@@ -19,6 +19,12 @@
   margin-bottom: 24px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .eyebrow {
   color: #b86b2a;
   font-size: 12px;
@@ -297,6 +303,11 @@ input.ng-invalid.ng-touched {
   .step-header,
   .rubro-heading,
   .budget-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .header-actions {
     align-items: stretch;
     flex-direction: column;
   }

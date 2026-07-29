@@ -5,6 +5,7 @@ import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } fr
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from 'src/app/core/services/api.service';
+import { descargarComputoPdf } from './computo-pdf.util';
 
 registerLocaleData(localeEsAr);
 
@@ -29,6 +30,7 @@ interface ContratoObra {
 }
 
 interface ObraConRubros {
+  nombre?: string;
   contratos?: ContratoObra[];
 }
 
@@ -174,6 +176,22 @@ export class StepRubrosComponent implements OnChanges {
           { duration: 4000 },
         );
       },
+    });
+  }
+
+  descargarPdf(): void {
+    if (this.form.invalid || this.rubros.length === 0) {
+      this.form.markAllAsTouched();
+      this.snack.open('Completá los rubros e ítems antes de generar el PDF', 'Cerrar', {
+        duration: 3500,
+      });
+      return;
+    }
+
+    const payload = this.crearPayload();
+    descargarComputoPdf({
+      nombreObra: this.obra?.nombre?.trim() || 'Obra',
+      rubros: payload.rubros,
     });
   }
 

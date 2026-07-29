@@ -5,10 +5,17 @@
       <h2>Cómputo y presupuesto</h2>
       <p>Organizá los trabajos de la obra por rubros e ítems.</p>
     </div>
-    <button type="button" class="button secondary" (click)="agregarRubro()" [disabled]="!tieneContrato">
-      <mat-icon>add</mat-icon>
-      Agregar rubro
-    </button>
+    <div class="header-actions">
+      <button type="button" class="button secondary" (click)="descargarPdf()"
+        [disabled]="!tieneContrato || rubros.length === 0">
+        <mat-icon>picture_as_pdf</mat-icon>
+        Descargar PDF
+      </button>
+      <button type="button" class="button secondary" (click)="agregarRubro()" [disabled]="!tieneContrato">
+        <mat-icon>add</mat-icon>
+        Agregar rubro
+      </button>
+    </div>
   </header>
 
   @if (!tieneContrato) {

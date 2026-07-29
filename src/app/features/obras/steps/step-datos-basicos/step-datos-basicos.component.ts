@@ -56,7 +56,6 @@ export class StepDatosBasicosComponent implements OnChanges {
 
     departamento: ['04', { disabled: true }],
     municipio: ['54', { disabled: true }],
-    localidad: [''],
     seccion: [''],
     manzana: [''],
     parcela: [''],
@@ -110,7 +109,6 @@ export class StepDatosBasicosComponent implements OnChanges {
 
       departamento: raw.departamento,
       municipio: raw.municipio,
-      localidad: raw.localidad,
 
       seccion: raw.seccion,
       manzana: raw.manzana,
@@ -158,7 +156,6 @@ export class StepDatosBasicosComponent implements OnChanges {
         sistemaContratacion: this.obra.sistemaContratacion ?? 'UNIDAD_DE_MEDIDA',
         departamento: this.obra.departamento ?? '04',
         municipio: this.obra.municipio ?? '54',
-        localidad: this.obra.localidad ?? '',
         seccion: this.obra.seccion ?? '',
         manzana: this.obra.manzana ?? '',
         parcela: this.obra.parcela ?? '',

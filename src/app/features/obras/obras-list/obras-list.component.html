@@ -14,11 +14,6 @@
   <div class="card table-card">
     <table mat-table [dataSource]="obras">
 
-      <ng-container matColumnDef="id">
-        <th mat-header-cell *matHeaderCellDef>ID</th>
-        <td mat-cell *matCellDef="let o">{{ o.id }}</td>
-      </ng-container>
-
       <ng-container matColumnDef="nombre">
         <th mat-header-cell *matHeaderCellDef>Nombre</th>
         <td mat-cell *matCellDef="let o">{{ o.nombre }}</td>
@@ -26,21 +21,29 @@
 
       <ng-container matColumnDef="expediente">
         <th mat-header-cell *matHeaderCellDef>Expediente</th>
-        <td mat-cell *matCellDef="let o">{{ o.expediente ?? '—' }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="municipio">
-        <th mat-header-cell *matHeaderCellDef>Municipio</th>
-        <td mat-cell *matCellDef="let o">{{ o.municipio ?? '—' }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="estado">
-        <th mat-header-cell *matHeaderCellDef>Estado</th>
         <td mat-cell *matCellDef="let o">
-          <span class="badge-activo activo">
-            {{ o.estado ?? 'Cargada' }}
-          </span>
+          {{ o.expediente ? o.expediente + '-' + o.anioEmision : '—' }}
         </td>
+      </ng-container>
+
+      <ng-container matColumnDef="empresa">
+        <th mat-header-cell *matHeaderCellDef>Empresa</th>
+        <td mat-cell *matCellDef="let o">{{ o.empresa?.razonSocial ?? '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="sistemaContratacion">
+        <th mat-header-cell *matHeaderCellDef>Forma de contratación</th>
+        <td mat-cell *matCellDef="let o">{{ formatoContratacion(o.sistemaContratacion) }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="numeroObra">
+        <th mat-header-cell *matHeaderCellDef>Número de obra</th>
+        <td mat-cell *matCellDef="let o">{{ o.numeroObra ?? '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="anioEmision">
+        <th mat-header-cell *matHeaderCellDef>Año</th>
+        <td mat-cell *matCellDef="let o">{{ o.anioEmision ?? '—' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="acciones">

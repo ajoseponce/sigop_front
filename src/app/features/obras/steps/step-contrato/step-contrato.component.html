@@ -114,26 +114,16 @@
     <div class="form-grid form-grid-2">
       <div class="form-field">
         <label>Presupuesto adjudicado</label>
-        <input type="number" formControlName="presupuestoAdjudicado" />
+        <input
+          type="text"
+          [value]="form.get('presupuestoAdjudicado')?.value | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR'"
+          readonly
+        />
       </div>
 
       <div class="form-field">
         <label>Plazo de obra en días</label>
         <input type="number" formControlName="plazoObraDias" />
-      </div>
-    </div>
-
-    <div class="form-grid">
-      <div class="form-field">
-        <label>Oferta itemizada</label>
-        <textarea matInput rows="4" formControlName="ofertaItemizada"></textarea>
-      </div>
-    </div>
-
-    <div class="form-grid">
-      <div class="form-field">
-        <label>Plan de trabajo</label>
-        <textarea matInput rows="4" formControlName="planTrabajo"></textarea>
       </div>
     </div>
 

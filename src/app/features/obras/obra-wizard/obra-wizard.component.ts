@@ -26,6 +26,25 @@ export class ObraWizardComponent {
   obraId: number | null = null;
   obra: any = null;
 
+  get totalComputo(): number {
+    const contrato = this.obra?.contratos?.find((item: any) => item.tipo === 'ORIGINAL')
+      ?? this.obra?.contratos?.[0];
+
+    return (contrato?.rubros ?? []).reduce(
+      (totalRubros: number, rubro: any) => totalRubros + (rubro.items ?? []).reduce(
+        (totalItems: number, item: any) =>
+          totalItems + Number(item.cantidad ?? 0) * Number(item.precioUnitario ?? 0),
+        0,
+      ),
+      0,
+    );
+  }
+
+  get computoExcedeLimite(): boolean {
+    const presupuestoOficial = Number(this.obra?.presupuestoOficial ?? 0);
+    return presupuestoOficial > 0 && this.totalComputo > presupuestoOficial * 1.2;
+  }
+
   ngOnInit(): void {
 
     const id = this.route.snapshot.paramMap.get('id');

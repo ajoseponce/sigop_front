@@ -6,7 +6,9 @@
   p  { color: var(--text-secondary); font-size: 14px; }
 }
 
-.table-card { overflow: hidden; }
+.table-card { overflow-x: auto; }
+
+table { min-width: 980px; }
 
 .mat-mdc-row:hover { background: #fdf5f9; }
 

@@ -7,9 +7,20 @@
 
     <div class="step-line"></div>
 
-    <div class="step-item" [class.active]="currentStep === 2" (click)="goToStep(2)">
-      <div class="step-circle">2</div>
-      <div class="step-label">Adjudicación</div>
+    <div class="step-item" [class.active]="currentStep === 2" [class.invalid]="computoExcedeLimite"
+      (click)="goToStep(2)">
+      <div class="step-circle">
+        2
+        @if (computoExcedeLimite) {
+          <span class="step-alert" aria-label="El cómputo supera el límite permitido">!</span>
+        }
+      </div>
+      <div class="step-label">
+        Adjudicación
+        @if (computoExcedeLimite) {
+          <span class="error-chip">Cómputo inválido</span>
+        }
+      </div>
     </div>
     <div class="step-line"></div>
 
@@ -24,13 +35,21 @@
     <div class="step-item" [class.active]="currentStep === 4"
       (click)="goToStep(4)">
       <div class="step-circle">4</div>
+      <div class="step-label">Plan de trabajo</div>
+    </div>
+
+    <div class="step-line"></div>
+
+    <div class="step-item" [class.active]="currentStep === 5"
+      (click)="goToStep(5)">
+      <div class="step-circle">5</div>
       <div class="step-label">Ejecución</div>
     </div>
 
     <div class="step-line"></div>
 
-    <div class="step-item" [class.active]="currentStep === 5" (click)="goToStep(5)">
-      <div class="step-circle">5</div>
+    <div class="step-item" [class.active]="currentStep === 6" (click)="goToStep(6)">
+      <div class="step-circle">6</div>
       <div class="step-label">Certificación</div>
     </div>
   </div>
@@ -60,10 +79,17 @@
     </app-step-rubros>
     }
     @if (currentStep === 4) {
-    <app-step-ejecucion [obraId]="obraId" [obra]="obra" (ejecucionSaved)="currentStep = 5"></app-step-ejecucion>
+      <section class="plan-placeholder">
+        <h2>Plan de trabajo</h2>
+        <p>Esta sección está preparada para incorporar la carga del plan de trabajo.</p>
+        <button type="button" (click)="goToStep(5)">Continuar a ejecución</button>
+      </section>
     }
     @if (currentStep === 5) {
-    <app-step-certificacion [obraId]="obraId"></app-step-certificacion>
+    <app-step-ejecucion [obraId]="obraId" [obra]="obra" (ejecucionSaved)="currentStep = 6"></app-step-ejecucion>
+    }
+    @if (currentStep === 6) {
+    <app-step-certificacion [obraId]="obraId" [obra]="obra"></app-step-certificacion>
     }
   </div>
 </div>

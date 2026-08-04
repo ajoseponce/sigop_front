@@ -130,10 +130,8 @@ export class StepContratoComponent implements OnInit , OnChanges{
         empresaId: this.obra.empresa?.id ?? null,
         responsableLegalId: contrato.responsableLegalId ?? null,
         responsableTecnicoId: contrato.responsableTecnicoId ?? null,
-        presupuestoAdjudicado: contrato.montoDelta,
+        presupuestoAdjudicado: this.totalComputo(contrato) ?? contrato.montoDelta,
         plazoObraDias: contrato.plazoObraDias ?? null,
-        ofertaItemizada: contrato.ofertaItemizada ?? '',
-        planTrabajo: contrato.planTrabajo ?? '',
         estructuraPonderacion: contrato.estructuraPonderacion ?? '',
         fechaContrato: this.toDateInput(contrato.fechaFirma),
         decretoAdjudicacion: contrato.decretoAdjudicacion ?? contrato.descripcion ?? '',
@@ -229,8 +227,6 @@ export class StepContratoComponent implements OnInit , OnChanges{
 
     presupuestoAdjudicado: [null, Validators.required],
     plazoObraDias: [null, Validators.required],
-    ofertaItemizada: [''],
-    planTrabajo: [''],
     estructuraPonderacion: [''],
 
     fechaContrato: ['', Validators.required],
@@ -285,8 +281,6 @@ export class StepContratoComponent implements OnInit , OnChanges{
       decretoAdjudicacion: raw.decretoAdjudicacion || undefined,
       decretoContrato: raw.decretoContrato || undefined,
       plazoObraDias: raw.plazoObraDias,
-      ofertaItemizada: raw.ofertaItemizada || undefined,
-      planTrabajo: raw.planTrabajo || undefined,
       estructuraPonderacion: raw.estructuraPonderacion || undefined,
     };
 
@@ -333,6 +327,21 @@ export class StepContratoComponent implements OnInit , OnChanges{
         : '',
       { emitEvent: false },
     );
+  }
+
+  private totalComputo(contrato: any): number | null {
+    const items = (contrato?.rubros ?? []).flatMap((rubro: any) => rubro.items ?? []);
+    if (items.length === 0) {
+      return null;
+    }
+
+    const total = items.reduce(
+      (total: number, item: any) =>
+        total + Number(item.cantidad ?? 0) * Number(item.precioUnitario ?? 0),
+      0,
+    );
+
+    return Math.round((total + Number.EPSILON) * 100) / 100;
   }
 
   private toDateInput(value: string | Date | null | undefined): string {

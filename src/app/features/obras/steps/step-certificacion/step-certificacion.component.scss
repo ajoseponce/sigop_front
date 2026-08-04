@@ -1,119 +1,58 @@
-:host {
-  display: block;
-  width: 100%;
-}
-
-/* CONTENEDOR */
-.obra-form {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* HEADER */
-.form-header h2 {
-  margin: 0 0 8px;
-  font-size: 26px;
-  font-weight: 700;
-  color: #111827;
-}
-
-.form-header p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 14px;
-}
-
-/* SECCIONES */
-.form-section {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 20px;
-  background: #ffffff;
-}
-
-.form-section h3 {
-  margin-bottom: 16px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-}
-
-/* GRID */
-.form-grid {
-  display: grid;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.form-grid-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.form-grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-/* CAMPOS */
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-field label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-}
-
-/* INPUT + SELECT + TEXTAREA */
-.form-field input,
-.form-field select,
-.form-field textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-  outline: none;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-  background: #fff;
-}
-
-/* FOCO */
-.form-field input:focus,
-.form-field select:focus,
-.form-field textarea:focus {
-  border-color: #111827;
-  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.1);
-}
-
-/* HOVER */
-.form-field input:hover,
-.form-field select:hover,
-.form-field textarea:hover {
-  border-color: #9ca3af;
-}
-
-/* BOTÓN */
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.btn-primary {
-  background: #111827;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
+:host { display: block; width: 100%; }
+.certificacion-form { display: flex; flex-direction: column; gap: 20px; }
+.form-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.form-header h2 { margin: 0 0 6px; font-size: 26px; color: #111827; }
+.form-header p { margin: 0; color: #6b7280; }
+.estado-medicion { display: flex; align-items: flex-end; flex-direction: column; gap: 8px; }
+.estado-medicion > strong { color: #111827; font-size: 16px; }
+.estado-obra { padding: 7px 11px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.estado-obra.inactiva { background: #fef3c7; color: #92400e; }
+.datos-periodo { display: flex; align-items: center; gap: 32px; padding: 18px; border: 1px solid #e5e7eb; border-radius: 12px; background: #f9fafb; }
+.datos-periodo > div { display: flex; flex-direction: column; gap: 4px; }
+.datos-periodo span, .datos-periodo small { color: #6b7280; font-size: 12px; }
+.datos-periodo strong { color: #111827; text-transform: capitalize; }
+.datos-periodo small { margin-left: auto; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field label { font-size: 13px; font-weight: 650; color: #374151; }
+.form-field input { padding: 10px 11px; border: 1px solid #d1d5db; border-radius: 8px; font: inherit; box-sizing: border-box; }
+.form-field input:focus, td input:focus { outline: 2px solid rgba(37, 99, 235, .18); border-color: #2563eb; }
+.tabla-wrap { overflow-x: auto; border: 1px solid #d1d5db; border-radius: 10px; background: #fff; }
+table { width: 100%; min-width: 1020px; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 9px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
+th { background: #f3f4f6; color: #374151; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; text-align: left; }
+th.numero, td.numero { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+th.actual { background: #dbeafe; color: #1d4ed8; }
+tr.rubro td { background: #e5e7eb; color: #111827; font-weight: 750; text-transform: uppercase; }
+td.calculado { background: #f9fafb; color: #4b5563; }
+td.celda-input { width: 120px; background: #eff6ff; }
+td input { width: 105px; padding: 8px; text-align: right; border: 1px solid #93c5fd; border-radius: 7px; background: white; font: inherit; font-weight: 700; box-sizing: border-box; }
+td.excede { color: #b91c1c; background: #fee2e2; font-weight: 700; }
+.estado-vacio { padding: 38px; text-align: center; border: 1px dashed #d1d5db; border-radius: 10px; color: #6b7280; }
+.form-actions { display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+.form-actions small { color: #6b7280; }
+.btn-primary { border: 0; border-radius: 9px; padding: 11px 18px; background: #111827; color: white; font-weight: 700; cursor: pointer; }
+.btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+.acciones-medicion { display: flex; justify-content: flex-end; gap: 8px; }
+.btn-siguiente { border: 1px solid #111827; border-radius: 9px; padding: 11px 18px; background: #fff; color: #111827; font-weight: 700; cursor: pointer; }
+.certificados { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.certificados h3 { margin: 0 0 4px; color: #111827; }
+.certificados article { display: flex; justify-content: space-between; gap: 20px; padding: 15px 17px; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; }
+.certificados article > div:first-child { display: flex; flex-direction: column; gap: 4px; }
+.certificados article span { color: #6b7280; font-size: 12px; }
+.resumen-montos { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 15px; }
+.resumen-montos span { display: flex; flex-direction: column; text-align: right; }
+.resumen-montos b { color: #111827; font-size: 13px; }
+.btn-imprimir { align-self: center; border: 1px solid #111827; border-radius: 8px; padding: 8px 12px; background: #fff; color: #111827; font-weight: 700; cursor: pointer; }
+.botones-impresion { display: flex; align-items: center; gap: 8px; }
+.btn-imprimir.principal { background: #111827; color: #fff; }
+.historial-fojas { padding-top: 16px; border-top: 1px solid #e5e7eb; }
+.historial-fojas h3 { margin: 0 0 10px; }
+.historial-fojas > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.historial-fojas span { padding: 6px 10px; border-radius: 999px; background: #e5e7eb; color: #374151; font-size: 12px; font-weight: 700; }
+@media (max-width: 900px) {
+  .datos-periodo { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .datos-periodo small { margin-left: 0; }
+  .certificados article, .form-actions { align-items: stretch; flex-direction: column; }
+  .resumen-montos { justify-content: flex-start; }
+  .resumen-montos span { text-align: left; }
 }

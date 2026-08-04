@@ -28,13 +28,23 @@ export class ObrasListComponent implements OnInit {
   cargando = false;
 
   columnas: string[] = [
-    'id',
     'nombre',
     'expediente',
-    'municipio',
-    'estado',
+    'empresa',
+    'sistemaContratacion',
+    'numeroObra',
+    'anioEmision',
     'acciones',
   ];
+
+  formatoContratacion(value: string | null | undefined): string {
+    const formatos: Record<string, string> = {
+      UNIDAD_DE_MEDIDA: 'Unidad de medida',
+      AJUSTE_ALZADO: 'Ajuste alzado',
+    };
+
+    return value ? formatos[value] ?? value.replaceAll('_', ' ') : '—';
+  }
 
   ngOnInit(): void {
     this.cargarObras();

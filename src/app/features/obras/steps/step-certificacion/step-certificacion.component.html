@@ -1,68 +1,152 @@
-<form [formGroup]="form" class="certificacion-form">
+<form [formGroup]="form" class="certificacion-form" (ngSubmit)="guardarYGenerar()">
   <div class="form-header">
-    <h2>Certificación</h2>
-    <p>Cargá certificados de anticipo, básicos o redeterminados.</p>
-  </div>
-
-  <div class="form-section">
-    <h3>Datos del certificado</h3>
-
-    <div class="form-grid form-grid-2">
-      <div class="form-field">
-        <label>N° certificado</label>
-        <input type="text" formControlName="numeroCertificado" />
-      </div>
-
-      <div class="form-field">
-        <label>Expediente</label>
-        <input type="text" formControlName="expediente" />
-      </div>
+    <div>
+      <h2>Foja de medición</h2>
+      <p>Ingresá solamente la cantidad ejecutada en el período. El sistema calcula el resto.</p>
     </div>
-
-    <div class="form-field">
-      <label>Descripción</label>
-      <input type="text" formControlName="descripcion" />
+    <div class="estado-medicion">
+      <strong>Foja N° {{ numeroFojaActual }}</strong>
+      <span class="estado-obra" [class.inactiva]="obra?.estado !== 'ACTIVA'">
+        {{ obra?.estado === 'ACTIVA' ? 'Obra activa' : 'La obra debe estar activa' }}
+      </span>
     </div>
   </div>
 
-  <div class="form-section">
-    <h3>Montos</h3>
-
-    <div class="form-grid form-grid-2">
-      <div class="form-field">
-        <label>Monto bruto</label>
-        <input type="number" formControlName="montoBruto" />
-      </div>
-
-      <div class="form-field">
-        <label>Deducción anticipo financiero</label>
-        <input type="number" formControlName="deduccionAnticipo" />
-      </div>
-
-      <div class="form-field">
-        <label>Deducción fondo de reparo</label>
-        <input type="number" formControlName="deduccionFondoReparo" />
-      </div>
-
-      <div class="form-field">
-        <label>Monto neto</label>
-        <input type="number" formControlName="montoNeto" />
-      </div>
+  <section class="datos-periodo" aria-label="Datos automáticos de la medición">
+    <div>
+      <span>Período</span>
+      <strong>{{ form.controls.periodo.value | date:'MMMM yyyy':'UTC':'es-AR' }}</strong>
     </div>
-  </div>
-
-  <div class="form-section">
-    <h3>Seguimiento</h3>
-
-    <div class="form-field">
-      <label>Ubicación del expediente</label>
-      <input type="text" formControlName="ubicacionExpediente" />
+    <div>
+      <span>Fecha de medición</span>
+      <strong>{{ form.controls.fechaMedicion.value | date:'dd/MM/yyyy':'UTC':'es-AR' }}</strong>
     </div>
-  </div>
+    <small>Estos datos se asignan automáticamente. Solo se carga la cantidad actual.</small>
+  </section>
+
+  @if (cargando) {
+    <div class="estado-vacio">Cargando ítems y mediciones anteriores…</div>
+  } @else if (rubros.length === 0) {
+    <div class="estado-vacio">La obra todavía no tiene rubros e ítems cargados.</div>
+  } @else {
+    <div class="tabla-wrap" formArrayName="items">
+      <table>
+        <thead>
+          <tr>
+            <th>Ítem</th>
+            <th>Designación</th>
+            <th>Un.</th>
+            <th class="numero">Contratado</th>
+            <th class="numero">Anterior</th>
+            <th class="numero actual">Actual</th>
+            <th class="numero">Acumulado</th>
+            <th class="numero">Monto actual</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (rubro of rubros; track rubro.id) {
+            <tr class="rubro">
+              <td>{{ rubro.rubroRef }}</td>
+              <td colspan="7">{{ rubro.nombre }}</td>
+            </tr>
+            @for (item of rubro.items; track item.id) {
+              <tr>
+                <td>{{ item.itemRef }}</td>
+                <td>{{ item.nombre }}</td>
+                <td>{{ item.unidad }}</td>
+                <td class="numero">{{ numero(item.cantidad) | number:'1.0-4':'es-AR' }}</td>
+                <td class="numero calculado">{{ anterior(item.id) | number:'1.0-4':'es-AR' }}</td>
+                <td class="numero celda-input">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.0001"
+                    [formControlName]="indiceItem(item.id)"
+                    aria-label="Cantidad actual"
+                  />
+                </td>
+                <td
+                  class="numero calculado"
+                  [class.excede]="acumulado(item.id, indiceItem(item.id)) > numero(item.cantidad)"
+                >
+                  {{ acumulado(item.id, indiceItem(item.id)) | number:'1.0-4':'es-AR' }}
+                </td>
+                <td class="numero calculado">
+                  {{ montoActual(item, indiceItem(item.id)) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 
   <div class="form-actions">
-    <button type="button" class="btn-primary" (click)="save()">
-      Guardar certificación
-    </button>
+    <small>Anterior, acumulado y montos se calculan automáticamente.</small>
+    <div class="acciones-medicion">
+      @if (preparandoSiguiente) {
+        <button type="button" class="btn-siguiente" (click)="crearSiguienteFoja()">
+          Crear siguiente foja N° {{ numeroFojaActual }}
+        </button>
+      } @else {
+        @if (editandoCertificado) {
+          <button type="button" class="btn-siguiente" (click)="cancelarEdicion()">Cancelar edición</button>
+        }
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="guardando || cargando || obra?.estado !== 'ACTIVA' || rubros.length === 0"
+        >
+          {{ guardando ? 'Guardando…' : (editandoCertificado ? 'Guardar cambios de foja N° ' : 'Guardar foja N° ') + numeroFojaActual }}
+        </button>
+      }
+    </div>
   </div>
+
+  @if (certificados.length > 0) {
+    <section class="certificados">
+      <h3>Certificados generados</h3>
+      @for (certificado of certificados; track certificado.id) {
+        @if (certificado.tipo === 'OBRA' && certificado.estado !== 'ANULADO') {
+          <article>
+            <div>
+              <strong>Certificado N° {{ certificado.numero }}</strong>
+              <span>{{ certificado.periodo | date:'MMMM yyyy':'UTC':'es-AR' }}</span>
+            </div>
+            <div class="resumen-montos">
+              <span>Bruto <b>{{ numero(certificado.montoBruto) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
+              <span>Anticipo <b>-{{ numero(certificado.deduccionAnticipo) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
+              <span>Fondo reparo <b>-{{ numero(certificado.deduccionFondoReparo) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
+              <span>Neto <b>{{ numero(certificado.montoFinal) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
+              <div class="botones-impresion">
+                @if (puedeEditar(certificado)) {
+                  <button type="button" class="btn-imprimir" (click)="editarFoja(certificado)">
+                    Editar foja
+                  </button>
+                }
+                <button type="button" class="btn-imprimir" (click)="imprimirFoja(certificado)">
+                  Imprimir foja de medición
+                </button>
+                <button type="button" class="btn-imprimir principal" (click)="imprimirCertificado(certificado)">
+                  Imprimir certificado
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      }
+    </section>
+  }
+
+  @if (fojas.length > 0) {
+    <section class="historial-fojas">
+      <h3>Fojas guardadas</h3>
+      <div>
+        @for (foja of fojas; track foja.id) {
+          <span>Foja N° {{ foja.numeroFoja.toString().padStart(2, '0') }}</span>
+        }
+      </div>
+    </section>
+  }
 </form>

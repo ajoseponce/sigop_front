@@ -6,6 +6,12 @@
       <p>Organizá los trabajos de la obra por rubros e ítems.</p>
     </div>
     <div class="header-actions">
+      <input #excelInput class="file-input" type="file" accept=".xlsx" (change)="importarExcel($event)" />
+      <button type="button" class="button secondary" (click)="excelInput.click()"
+        [disabled]="!tieneContrato || importando">
+        <mat-icon>upload_file</mat-icon>
+        {{ importando ? 'Importando...' : 'Importar Excel' }}
+      </button>
       <button type="button" class="button secondary" (click)="descargarPdf()"
         [disabled]="!tieneContrato || rubros.length === 0">
         <mat-icon>picture_as_pdf</mat-icon>
@@ -27,6 +33,16 @@
       </div>
     </div>
   } @else {
+    <div class="import-help">
+      <mat-icon>table_view</mat-icon>
+      <div>
+        <strong>Formato admitido</strong>
+        <span>ÍTEM · DESIGNACIÓN · UN · CANT · PRECIO UNITARIO</span>
+        @if (archivoSeleccionado) {
+          <small>Último archivo: {{ archivoSeleccionado }}</small>
+        }
+      </div>
+    </div>
     <form [formGroup]="form" (ngSubmit)="guardar()">
       <div formArrayName="rubros" class="rubros-list">
         @for (rubro of rubros.controls; track rubro; let rubroIndex = $index) {

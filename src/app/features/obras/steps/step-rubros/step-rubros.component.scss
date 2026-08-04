@@ -25,6 +25,24 @@
   gap: 10px;
 }
 
+.file-input { display: none; }
+
+.import-help {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -8px 0 20px;
+  padding: 12px 14px;
+  border: 1px solid #d6dde6;
+  border-radius: 9px;
+  background: #f8fafc;
+  color: #344054;
+}
+
+.import-help mat-icon { color: #217346; }
+.import-help > div { display: grid; gap: 2px; }
+.import-help span, .import-help small { color: #667085; font-size: 12px; }
+
 .eyebrow {
   color: #b86b2a;
   font-size: 12px;

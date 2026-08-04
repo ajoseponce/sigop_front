@@ -70,6 +70,8 @@ export class StepRubrosComponent implements OnChanges {
   });
 
   guardando = false;
+  importando = false;
+  archivoSeleccionado = '';
 
   get rubros(): FormArray<FormGroup> {
     return this.form.controls.rubros;
@@ -193,6 +195,46 @@ export class StepRubrosComponent implements OnChanges {
       nombreObra: this.obra?.nombre?.trim() || 'Obra',
       rubros: payload.rubros,
     });
+  }
+
+  importarExcel(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || !this.obraId || !this.tieneContrato) {
+      input.value = '';
+      return;
+    }
+    if (!file.name.toLowerCase().endsWith('.xlsx')) {
+      this.snack.open('Seleccioná un archivo Excel con extensión .xlsx', 'Cerrar', { duration: 4000 });
+      input.value = '';
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    this.importando = true;
+    this.archivoSeleccionado = file.name;
+    this.api.post<RubroObra[]>(`obras/${this.obraId}/rubros/import`, formData).subscribe({
+      next: (rubros) => {
+        this.rubros.clear();
+        rubros.slice().sort((a, b) => a.orden - b.orden)
+          .forEach((rubro) => this.rubros.push(this.crearRubro(rubro)));
+        this.importando = false;
+        this.snack.open(
+          `Excel importado: ${rubros.length} rubros y ${rubros.reduce((total, rubro) => total + rubro.items.length, 0)} ítems`,
+          'Cerrar',
+          { duration: 5000 },
+        );
+      },
+      error: (error) => {
+        this.importando = false;
+        const message = Array.isArray(error?.error?.message)
+          ? error.error.message.join(' · ')
+          : error?.error?.message;
+        this.snack.open(message || 'No se pudo importar el archivo Excel', 'Cerrar', { duration: 7000 });
+      },
+    });
+    input.value = '';
   }
 
   private cargarRubrosExistentes(): void {

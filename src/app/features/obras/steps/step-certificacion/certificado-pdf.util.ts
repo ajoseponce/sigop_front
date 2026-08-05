@@ -33,6 +33,7 @@ export interface MedicionPdfData {
   expediente?: string;
   anioEmision?: number;
   empresa?: string;
+  porcentajeAnticipo: string;
   montoBruto: string | null;
   deduccionAnticipo: string | null;
   deduccionFondoReparo: string | null;
@@ -169,7 +170,7 @@ export function crearCertificadoPdf(data: MedicionPdfData): jsPDF {
   doc.setFontSize(8);
   doc.text(`TOTAL CONTRATO  $ ${money.format(totalContrato(data))}`, 145, y, { align: 'right' });
   doc.text(`TOTAL GENERAL  $ ${money.format(n(data.montoBruto))}`, 284, y, { align: 'right' });
-  doc.text(`ANTICIPO FINANCIERO 30%  - $ ${money.format(n(data.deduccionAnticipo))}`, 284, y + 6, { align: 'right' });
+  doc.text(`ANTICIPO FINANCIERO ${money.format(n(data.porcentajeAnticipo))}%  - $ ${money.format(n(data.deduccionAnticipo))}`, 284, y + 6, { align: 'right' });
   doc.text(`FONDO DE REPARO 6%  - $ ${money.format(n(data.deduccionFondoReparo))}`, 284, y + 12, { align: 'right' });
   doc.setFontSize(10);
   doc.text(`SUMA A PAGAR EN EL PRESENTE CERTIFICADO  $ ${money.format(n(data.montoFinal))}`, 284, y + 20, { align: 'right' });

@@ -48,6 +48,7 @@ interface Certificado {
   periodo: string | null;
   fojaId: number | null;
   estado: 'BORRADOR' | 'APROBADO' | 'ANULADO';
+  porcentajeAnticipoSnapshot: string;
   montoBruto: string | null;
   deduccionAnticipo: string | null;
   deduccionFondoReparo: string | null;
@@ -278,6 +279,7 @@ export class StepCertificacionComponent implements OnChanges {
       expediente: this.obra?.expediente,
       anioEmision: this.obra?.anioEmision,
       empresa: this.obra?.empresa?.razonSocial,
+      porcentajeAnticipo: certificado.porcentajeAnticipoSnapshot,
       montoBruto: certificado.montoBruto,
       deduccionAnticipo: certificado.deduccionAnticipo,
       deduccionFondoReparo: certificado.deduccionFondoReparo,

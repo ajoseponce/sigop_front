@@ -8,7 +8,7 @@
     <div class="header-actions">
       <input #excelInput class="file-input" type="file" accept=".xlsx" (change)="importarExcel($event)" />
       <button type="button" class="button secondary" (click)="excelInput.click()"
-        [disabled]="!tieneContrato || importando">
+        [disabled]="!tieneContrato || importando || computoBloqueado">
         <mat-icon>upload_file</mat-icon>
         {{ importando ? 'Importando...' : 'Importar Excel' }}
       </button>
@@ -17,7 +17,7 @@
         <mat-icon>picture_as_pdf</mat-icon>
         Descargar PDF
       </button>
-      <button type="button" class="button secondary" (click)="agregarRubro()" [disabled]="!tieneContrato">
+      <button type="button" class="button secondary" (click)="agregarRubro()" [disabled]="!tieneContrato || computoBloqueado">
         <mat-icon>add</mat-icon>
         Agregar rubro
       </button>
@@ -33,6 +33,15 @@
       </div>
     </div>
   } @else {
+    @if (computoBloqueado) {
+      <div class="empty-state compact">
+        <mat-icon>lock</mat-icon>
+        <div>
+          <strong>Cómputo bloqueado</strong>
+          <p>Ya existe una foja de medición o un certificado para esta obra.</p>
+        </div>
+      </div>
+    }
     <div class="import-help">
       <mat-icon>table_view</mat-icon>
       <div>
@@ -131,7 +140,7 @@
           <strong>{{ totalGeneral | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</strong>
           <small>{{ rubros.length }} rubro{{ rubros.length === 1 ? '' : 's' }}</small>
         </div>
-        <button type="submit" class="button primary" [disabled]="guardando || rubros.length === 0">
+        <button type="submit" class="button primary" [disabled]="guardando || rubros.length === 0 || computoBloqueado">
           <mat-icon>save</mat-icon>
           {{ guardando ? 'Guardando...' : 'Guardar y continuar' }}
         </button>

@@ -1,7 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { StepDatosBasicosComponent } from '../steps/step-datos-basicos/step-datos-basicos.component';
 import { StepContratoComponent } from '../steps/step-contrato/step-contrato.component';
-import { StepEjecucionComponent } from '../steps/step-ejecucion/step-ejecucion.component';
 import { StepCertificacionComponent } from '../steps/step-certificacion/step-certificacion.component';
 import { StepRubrosComponent } from '../steps/step-rubros/step-rubros.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -12,7 +11,7 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'app-obra-wizard',
   standalone: true,
-  imports: [StepDatosBasicosComponent, StepContratoComponent, StepRubrosComponent, StepEjecucionComponent, StepCertificacionComponent],
+  imports: [StepDatosBasicosComponent, StepContratoComponent, StepRubrosComponent, StepCertificacionComponent],
   templateUrl: './obra-wizard.component.html',
   styleUrl: './obra-wizard.component.scss',
 })

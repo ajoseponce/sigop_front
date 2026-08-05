@@ -29,6 +29,11 @@ interface RubroObra {
 interface ContratoObra {
   tipo: string;
   montoDelta?: string;
+  numeroContrato?: string;
+  vigenciaDesde?: string;
+  plazoObraDias?: number;
+  decretoAdjudicacion?: string;
+  decretoContrato?: string;
   rubros: RubroObra[];
 }
 
@@ -37,7 +42,13 @@ interface ObraCertificacion {
   expediente?: string;
   anioEmision?: number;
   estado?: string;
-  empresa?: { razonSocial?: string } | null;
+  seccion?: string;
+  parcela?: string;
+  calles?: string;
+  inspectorNombre?: string;
+  localidad?: string;
+  fechaInicio?: string;
+  empresa?: { razonSocial?: string; cuit?: string } | null;
   contratos?: ContratoObra[];
 }
 
@@ -271,14 +282,29 @@ export class StepCertificacionComponent implements OnChanges {
 
   private datosPdf(certificado: Certificado): MedicionPdfData {
     const foja = this.fojas.find((item) => item.id === certificado.fojaId);
+    const contrato = this.obra?.contratos?.find((item) => item.tipo === 'ORIGINAL')
+      ?? this.obra?.contratos?.[0];
     return {
       numero: certificado.numero,
       numeroFoja: foja?.numeroFoja ?? certificado.numero,
       periodo: certificado.periodo,
+      fechaMedicion: foja?.fechaMedicion,
       nombreObra: this.obra?.nombre ?? 'Obra',
       expediente: this.obra?.expediente,
       anioEmision: this.obra?.anioEmision,
       empresa: this.obra?.empresa?.razonSocial,
+      empresaCuit: this.obra?.empresa?.cuit,
+      numeroContrato: contrato?.numeroContrato,
+      aprobacion: contrato?.decretoContrato ?? contrato?.decretoAdjudicacion,
+      localidad: this.obra?.localidad,
+      fechaInicio: this.obra?.fechaInicio ?? contrato?.vigenciaDesde,
+      plazoObraDias: contrato?.plazoObraDias,
+      ubicacion: [
+        this.obra?.seccion ? `Sección ${this.obra.seccion}` : '',
+        this.obra?.parcela ? `Parcela ${this.obra.parcela}` : '',
+        this.obra?.calles ? `Calles ${this.obra.calles}` : '',
+      ].filter(Boolean).join(' - '),
+      responsableInstitucional: this.obra?.inspectorNombre,
       porcentajeAnticipo: certificado.porcentajeAnticipoSnapshot,
       montoBruto: certificado.montoBruto,
       deduccionAnticipo: certificado.deduccionAnticipo,

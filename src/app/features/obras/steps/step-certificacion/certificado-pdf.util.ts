@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { RowInput, autoTable } from 'jspdf-autotable';
+import { cargarCabeceraInstitucional, dibujarCabeceraInstitucional } from '../../../../shared/pdf/pdf-header.util';
 
 interface PdfItem {
   id: number;
@@ -29,10 +30,19 @@ export interface MedicionPdfData {
   numero: number;
   numeroFoja: number;
   periodo: string | null;
+  fechaMedicion?: string;
   nombreObra: string;
   expediente?: string;
   anioEmision?: number;
   empresa?: string;
+  empresaCuit?: string;
+  numeroContrato?: string;
+  ubicacion?: string;
+  responsableInstitucional?: string;
+  aprobacion?: string;
+  localidad?: string;
+  fechaInicio?: string;
+  plazoObraDias?: number;
   porcentajeAnticipo: string;
   montoBruto: string | null;
   deduccionAnticipo: string | null;
@@ -57,18 +67,159 @@ function periodoTexto(value: string | null): string {
     : 'SIN PERÍODO';
 }
 
-function encabezado(doc: jsPDF, data: MedicionPdfData, titulo: string): void {
+function fechaTexto(value?: string): string {
+  if (!value) return '—';
+  const [year, month, day] = value.slice(0, 10).split('-');
+  return `${day}-${month}-${year}`;
+}
+
+function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): number {
+  const left = 16;
+  const right = 10;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const width = pageWidth - left - right;
+  const splitX = left + 112;
+  const finCabecera = dibujarCabeceraInstitucional(doc, cabecera, left, right);
+  const y = finCabecera + 3;
+
+  doc.setDrawColor(30);
+  doc.setLineWidth(0.35);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text(titulo, 148.5, 13, { align: 'center' });
-  doc.setDrawColor(60);
-  doc.rect(10, 18, 277, 25);
-  doc.setFontSize(9);
-  doc.text(`OBRA: ${data.nombreObra || '—'}`, 13, 24);
-  doc.text(`EXPEDIENTE: ${data.expediente ?? '—'}${data.anioEmision ? `-${data.anioEmision}` : ''}`, 13, 30);
-  doc.text(`FOJA DE MEDICIÓN N° ${String(data.numeroFoja).padStart(2, '0')} - ${periodoTexto(data.periodo)}`, 13, 36);
-  doc.text(`EMPRESA: ${data.empresa ?? '—'}`, 284, 24, { align: 'right' });
-  doc.text(`MONTO DE CONTRATO: $ ${money.format(totalContrato(data))}`, 284, 30, { align: 'right' });
+  doc.setFontSize(8.5);
+
+  doc.rect(left, y, width, 10);
+  doc.text(
+    `FOJA DE MEDICIÓN - Período: ${periodoTexto(data.periodo)} - Fecha de Medición: ${fechaTexto(data.fechaMedicion)}`,
+    left + 2,
+    y + 6.3,
+  );
+
+  doc.rect(left, y + 12, width, 9);
+  doc.text(`Obra: ${data.nombreObra || '—'}`, left + 2, y + 17.7);
+
+  doc.rect(left, y + 23, splitX - left, 43);
+  doc.rect(splitX, y + 23, pageWidth - right - splitX, 43);
+  doc.setFontSize(7.2);
+
+  const labelX = left + 2;
+  const valueX = left + 39;
+  const rowsLeft = [
+    ['Organismo Otorgante', 'MUNICIPALIDAD DE POSADAS'],
+    ['Convenio/Proyecto N°', `${data.expediente ?? '—'}${data.anioEmision ? `-${data.anioEmision}` : ''}`],
+    ['Programa', 'MUNICIPAL'],
+    ['Modo de Ejecución', data.numeroContrato ? `Concurso de Precios ${data.numeroContrato}` : 'Concurso de Precios'],
+    ['Ubicación', data.ubicacion || '—'],
+    ['Responsable Institucional', data.responsableInstitucional || '—'],
+  ];
+  rowsLeft.forEach(([label, value], index) => {
+    const rowY = y + 29 + index * 6;
+    doc.text(label, labelX, rowY);
+    doc.text(doc.splitTextToSize(value, splitX - valueX - 3)[0] ?? '', valueX, rowY);
+  });
+
+  const rightLabelX = splitX + 2;
+  const rightValueX = splitX + 29;
+  const rowsRight = [
+    ['Certificado', `Certificado N° ${data.numero}`],
+    ['Monto Contrato', `$ ${money.format(totalContrato(data))}`],
+    ['Monto Total', `$ ${money.format(n(data.montoBruto))}`],
+    ['Anticipo Financiero', `$ ${money.format(n(data.deduccionAnticipo))}`],
+  ];
+  rowsRight.forEach(([label, value], index) => {
+    const rowY = y + 29 + index * 6;
+    doc.text(label, rightLabelX, rowY);
+    doc.text(value, rightValueX, rowY);
+  });
+  doc.text('Empresa:', rightLabelX, y + 54);
+  doc.text(
+    doc.splitTextToSize(
+      `${data.empresa ?? '—'}${data.empresaCuit ? ` - CUIT: ${data.empresaCuit}` : ''}`,
+      pageWidth - right - rightLabelX - 3,
+    ),
+    rightLabelX,
+    y + 60,
+  );
+
+  return y + 69;
+}
+
+function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: string): number {
+  const finCabecera = dibujarCabeceraInstitucional(doc, cabecera);
+  const ancho = doc.internal.pageSize.getWidth();
+  const left = 10;
+  const right = 10;
+  const width = ancho - left - right;
+  const col1 = left + 94;
+  const col2 = col1 + 96;
+  const y = finCabecera + 3;
+
+  doc.setDrawColor(30);
+  doc.setLineWidth(0.35);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+
+  doc.rect(left, y, width - 28, 9);
+  doc.rect(ancho - right - 28, y, 28, 9);
+  doc.text(
+    `CERTIFICADO BÁSICO DE OBRA N° ${data.numero} / (${periodoTexto(data.periodo)})`,
+    left + 2,
+    y + 5.8,
+  );
+  doc.text('ANEXO I', ancho - right - 14, y + 5.8, { align: 'center' });
+
+  doc.rect(left, y + 11, width, 9);
+  doc.text(`Obra: ${data.nombreObra || '—'}`, left + 2, y + 16.8);
+
+  doc.rect(left, y + 22, col1 - left, 44);
+  doc.rect(col1, y + 22, col2 - col1, 44);
+  doc.rect(col2, y + 22, ancho - right - col2, 44);
+  doc.setFontSize(6.6);
+
+  const drawRows = (
+    rows: Array<[string, string]>,
+    labelX: number,
+    valueX: number,
+    maxWidth: number,
+    startY = y + 28,
+  ) => rows.forEach(([label, value], index) => {
+    const rowY = startY + index * 5.2;
+    doc.text(label, labelX, rowY);
+    doc.text(doc.splitTextToSize(value, maxWidth)[0] ?? '', valueX, rowY);
+  });
+
+  drawRows([
+    ['Organismo Otorgante', 'MUNICIPALIDAD DE POSADAS'],
+    ['Convenio/Proyecto N°', `${data.expediente ?? '—'}${data.anioEmision ? `-${data.anioEmision}` : ''}`],
+    ['Aprobación', data.aprobacion || '—'],
+    ['Programa', 'MUNICIPAL'],
+    ['Localidad', data.localidad || 'Posadas - Misiones'],
+    ['Responsable Institucional', data.responsableInstitucional || '—'],
+    ['Responsable Técnico', '—'],
+  ], left + 2, left + 33, col1 - left - 36);
+
+  drawRows([
+    ['Monto Total', `$ ${money.format(totalContrato(data))}`],
+    ['Monto Provincia / Nación', '—'],
+    ['Monto Municipio', `$ ${money.format(totalContrato(data))}`],
+    ['Modo de Ejecución', data.numeroContrato ? `Concurso de Precios ${data.numeroContrato}` : 'Concurso de Precios'],
+    ['Empresa', data.empresa || '—'],
+    ['CUIT', data.empresaCuit || '—'],
+    ['Monto Contrato Original', `$ ${money.format(totalContrato(data))}`],
+    ['Monto Total Actualizado', `$ ${money.format(totalContrato(data))}`],
+  ], col1 + 2, col1 + 36, col2 - col1 - 39);
+
+  doc.text(`CERTIFICADO BÁSICO DE OBRA N° ${data.numero}`, col2 + 2, y + 28);
+  doc.line(col2, y + 31, ancho - right, y + 31);
+  drawRows([
+    ['Período', periodoTexto(data.periodo)],
+    ['Fecha de Medición', fechaTexto(data.fechaMedicion)],
+    ['Fecha de Inicio', fechaTexto(data.fechaInicio)],
+    ['Plazo de Ejecución', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
+    ['Expediente de la Obra', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
+    ['Expediente del Certificado', '—'],
+  ], col2 + 2, col2 + 34, ancho - right - col2 - 37, y + 36);
+
+  return y + 69;
 }
 
 function totalContrato(data: MedicionPdfData): number {
@@ -106,45 +257,42 @@ function bodyConRubros(data: MedicionPdfData, certificado: boolean): RowInput[] 
   return rows;
 }
 
-export function crearFojaPdf(data: MedicionPdfData): jsPDF {
+export async function crearFojaPdf(data: MedicionPdfData): Promise<jsPDF> {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.text(`FOJA DE MEDICIÓN N° ${String(data.numeroFoja).padStart(2, '0')}`, 105, 13, { align: 'center' });
-  doc.setDrawColor(60);
-  doc.rect(10, 18, 190, 27);
-  doc.setFontSize(8);
-  doc.text(`OBRA: ${data.nombreObra || '—'}`, 13, 24);
-  doc.text(`EXPEDIENTE: ${data.expediente ?? '—'}${data.anioEmision ? `-${data.anioEmision}` : ''}`, 13, 30);
-  doc.text(`PERÍODO: ${periodoTexto(data.periodo)}`, 13, 36);
-  doc.text(`EMPRESA: ${data.empresa ?? '—'}`, 197, 24, { align: 'right' });
-  doc.text(`MONTO DE CONTRATO: $ ${money.format(totalContrato(data))}`, 197, 30, { align: 'right' });
+  const cabecera = await cargarCabeceraInstitucional();
+  const inicioTabla = encabezadoFoja(doc, data, cabecera);
   autoTable(doc, {
-    startY: 47,
+    startY: inicioTabla,
+    margin: { top: inicioTabla, left: 16, right: 10 },
     head: [['Ítem', 'Designación', 'Un.', 'Cant.', 'Anterior', 'Actual', 'Acumulado']],
     body: bodyConRubros(data, false),
     theme: 'grid',
     styles: { fontSize: 8, cellPadding: 1.8 },
     headStyles: { fillColor: [55, 65, 81], textColor: 255, halign: 'center' },
     columnStyles: {
-      0: { cellWidth: 14 }, 1: { cellWidth: 85 }, 2: { cellWidth: 12, halign: 'center' },
+      0: { cellWidth: 14 }, 1: { cellWidth: 78 }, 2: { cellWidth: 12, halign: 'center' },
       3: { cellWidth: 20, halign: 'right' }, 4: { cellWidth: 20, halign: 'right' },
       5: { cellWidth: 20, halign: 'right', fillColor: [219, 234, 254] },
       6: { cellWidth: 20, halign: 'right' },
+    },
+    didDrawPage: ({ pageNumber }) => {
+      if (pageNumber > 1) encabezadoFoja(doc, data, cabecera);
     },
   });
   return doc;
 }
 
-export function descargarFojaPdf(data: MedicionPdfData): void {
-  crearFojaPdf(data).save(`foja-medicion-${String(data.numeroFoja).padStart(2, '0')}.pdf`);
+export async function descargarFojaPdf(data: MedicionPdfData): Promise<void> {
+  (await crearFojaPdf(data)).save(`foja-medicion-${String(data.numeroFoja).padStart(2, '0')}.pdf`);
 }
 
-export function crearCertificadoPdf(data: MedicionPdfData): jsPDF {
+export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF> {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  encabezado(doc, data, `CERTIFICADO N° ${String(data.numero).padStart(2, '0')}`);
+  const cabecera = await cargarCabeceraInstitucional();
+  const inicioTabla = encabezadoCertificado(doc, data, cabecera);
   autoTable(doc, {
-    startY: 47,
+    startY: inicioTabla,
+    margin: { top: inicioTabla },
     head: [[
       'Ítem', 'Designación', 'Un.', 'Cant.', 'Precio unit.', 'Monto ítem',
       'Cant. anterior', 'Cant. actual', 'Cant. acum.',
@@ -162,6 +310,9 @@ export function crearCertificadoPdf(data: MedicionPdfData): jsPDF {
       8: { cellWidth: 18, halign: 'right' }, 9: { cellWidth: 25, halign: 'right' },
       10: { cellWidth: 25, halign: 'right' }, 11: { cellWidth: 25, halign: 'right' },
     },
+    didDrawPage: ({ pageNumber }) => {
+      if (pageNumber > 1) encabezadoCertificado(doc, data, cabecera);
+    },
   });
 
   const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 60;
@@ -177,6 +328,6 @@ export function crearCertificadoPdf(data: MedicionPdfData): jsPDF {
   return doc;
 }
 
-export function descargarCertificadoPdf(data: MedicionPdfData): void {
-  crearCertificadoPdf(data).save(`certificado-${String(data.numero).padStart(2, '0')}.pdf`);
+export async function descargarCertificadoPdf(data: MedicionPdfData): Promise<void> {
+  (await crearCertificadoPdf(data)).save(`certificado-${String(data.numero).padStart(2, '0')}.pdf`);
 }

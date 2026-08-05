@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { RowInput, autoTable } from 'jspdf-autotable';
+import { cargarCabeceraInstitucional, dibujarCabeceraInstitucional } from '../../../../shared/pdf/pdf-header.util';
 
 export interface ComputoPdfItem {
   itemRef: string;
@@ -51,7 +52,7 @@ function sanitizeFilename(value: string): string {
     .toLowerCase();
 }
 
-export function crearComputoPdf(data: ComputoPdfData): jsPDF {
+export async function crearComputoPdf(data: ComputoPdfData): Promise<jsPDF> {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -62,6 +63,7 @@ export function crearComputoPdf(data: ComputoPdfData): jsPDF {
     (total, rubro) => total + totalRubro(rubro),
     0,
   );
+  const cabecera = await cargarCabeceraInstitucional();
   const body: RowInput[] = [];
 
   data.rubros
@@ -165,8 +167,8 @@ export function crearComputoPdf(data: ComputoPdfData): jsPDF {
   });
 
   autoTable(doc, {
-    startY: 36,
-    margin: { top: 36, right: 10, bottom: 13, left: 10 },
+    startY: 48,
+    margin: { top: 48, right: 10, bottom: 13, left: 10 },
     head: [[
       'ÍTEM',
       'RUBRO',
@@ -210,19 +212,20 @@ export function crearComputoPdf(data: ComputoPdfData): jsPDF {
     rowPageBreak: 'avoid',
     didDrawPage: () => {
       const pageWidth = doc.internal.pageSize.getWidth();
+      const finCabecera = dibujarCabeceraInstitucional(doc, cabecera);
       doc.setDrawColor(45, 52, 61);
       doc.setLineWidth(0.35);
-      doc.rect(10, 15, pageWidth - 20, 9);
+      doc.rect(10, finCabecera + 2, pageWidth - 20, 7);
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.text(data.nombreObra.toUpperCase(), pageWidth / 2, 20.7, {
+      doc.setFontSize(8);
+      doc.text(data.nombreObra.toUpperCase(), pageWidth / 2, finCabecera + 6.5, {
         align: 'center',
       });
-      doc.setFontSize(9);
-      doc.text('CÓMPUTO Y PRESUPUESTO', pageWidth / 2, 29.5, {
+      doc.setFontSize(8);
+      doc.text('CÓMPUTO Y PRESUPUESTO', pageWidth / 2, finCabecera + 13, {
         align: 'center',
       });
-      doc.line(10, 32, pageWidth - 10, 32);
+      doc.line(10, finCabecera + 15, pageWidth - 10, finCabecera + 15);
     },
   });
 
@@ -243,7 +246,7 @@ export function crearComputoPdf(data: ComputoPdfData): jsPDF {
   return doc;
 }
 
-export function descargarComputoPdf(data: ComputoPdfData): void {
+export async function descargarComputoPdf(data: ComputoPdfData): Promise<void> {
   const filename = sanitizeFilename(data.nombreObra) || 'obra';
-  crearComputoPdf(data).save(`computo-presupuesto-${filename}.pdf`);
+  (await crearComputoPdf(data)).save(`computo-presupuesto-${filename}.pdf`);
 }

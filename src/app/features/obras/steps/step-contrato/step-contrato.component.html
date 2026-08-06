@@ -117,6 +117,7 @@
         <input
           type="text"
           [value]="form.get('presupuestoAdjudicado')?.value | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR'"
+          placeholder="Se calcula al cargar el cómputo"
           readonly
         />
       </div>
@@ -124,13 +125,6 @@
       <div class="form-field">
         <label>Plazo de obra en días</label>
         <input type="number" formControlName="plazoObraDias" />
-      </div>
-    </div>
-
-    <div class="form-grid">
-      <div class="form-field">
-        <label>Estructura de ponderación</label>
-        <textarea matInput rows="4" formControlName="estructuraPonderacion"></textarea>
       </div>
     </div>
 

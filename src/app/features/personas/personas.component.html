@@ -23,7 +23,14 @@
 
       <ng-container matColumnDef="dni">
         <th mat-header-cell *matHeaderCellDef>DNI</th>
-        <td mat-cell *matCellDef="let persona">{{ persona.dni }}</td>
+        <td mat-cell *matCellDef="let persona">{{ persona.dni || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="matricula">
+        <th mat-header-cell *matHeaderCellDef>Matrícula</th>
+        <td mat-cell *matCellDef="let persona">
+          {{ persona.tipoMatricula || '' }} {{ persona.numeroMatricula || '—' }}
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="titulo">
@@ -89,8 +96,8 @@
           <mat-form-field appearance="outline">
             <mat-label>DNI</mat-label>
             <input matInput formControlName="dni" />
-            @if (form.get('dni')?.hasError('required') && form.get('dni')?.touched) {
-              <mat-error>El DNI es requerido</mat-error>
+            @if (form.get('dni')?.hasError('minlength') && form.get('dni')?.touched) {
+              <mat-error>El DNI debe tener al menos 7 caracteres</mat-error>
             }
           </mat-form-field>
 
@@ -122,6 +129,21 @@
           <mat-form-field appearance="outline">
             <mat-label>Email</mat-label>
             <input matInput formControlName="email" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Tipo de matrícula</mat-label>
+            <mat-select formControlName="tipoMatricula">
+              <mat-option value="">Sin tipo</mat-option>
+              @for (item of tiposMatricula; track item.value) {
+                <mat-option [value]="item.value">{{ item.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Número de matrícula</mat-label>
+            <input matInput formControlName="numeroMatricula" />
           </mat-form-field>
 
           <mat-form-field appearance="outline">

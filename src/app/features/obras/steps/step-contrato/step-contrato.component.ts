@@ -19,7 +19,6 @@ const FIELD_LABELS: Record<string, string> = {
   empresaId: 'Empresa',
   responsableLegalId: 'Responsable legal',
   responsableTecnicoId: 'Responsable técnico',
-  presupuestoAdjudicado: 'Presupuesto adjudicado',
   plazoObraDias: 'Plazo de obra en días',
   fechaContrato: 'Fecha de contrato',
 };
@@ -225,7 +224,7 @@ export class StepContratoComponent implements OnInit , OnChanges{
     responsableLegalId: [null, Validators.required],
     responsableTecnicoId: [null, Validators.required],
 
-    presupuestoAdjudicado: [null, Validators.required],
+    presupuestoAdjudicado: [null],
     plazoObraDias: [null, Validators.required],
     estructuraPonderacion: [''],
 
@@ -270,10 +269,11 @@ export class StepContratoComponent implements OnInit , OnChanges{
       numeroContrato: raw.numeroLicitacion || undefined,
       fechaFirma: raw.fechaContrato,
       vigenciaDesde: raw.fechaApertura,
-      montoDelta: raw.presupuestoAdjudicado,
+      // El monto nace en 0 y se actualiza automáticamente al guardar el cómputo.
+      montoDelta: presupuestoAdjudicado,
       porcentajeAnticipo,
       porcentajeFondoReparo: 0,
-      montoPresupuestoOficial: raw.presupuestoAdjudicado || undefined,
+      montoPresupuestoOficial: presupuestoAdjudicado || undefined,
       fechaPresupuesto: raw.fechaContrato || undefined,
       descripcion: raw.decretoAdjudicacion || raw.decretoContrato || undefined,
       responsableLegalId: raw.responsableLegalId,

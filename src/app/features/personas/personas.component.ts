@@ -41,7 +41,7 @@ export class PersonasComponent implements OnInit {
   modalOpen = signal(false);
   editando = signal<any | null>(null);
 
-  columnas = ['nombreCompleto', 'dni', 'titulo', 'roles', 'estado', 'acciones'];
+  columnas = ['nombreCompleto', 'dni', 'titulo', 'matricula', 'roles', 'estado', 'acciones'];
 
   titulos = [
     { value: 'ARQUITECTO', label: 'Arquitecto' },
@@ -55,12 +55,19 @@ export class PersonasComponent implements OnInit {
     { value: 'REPRESENTANTE_TECNICO', label: 'Representante técnico' },
   ];
 
+  tiposMatricula = [
+    { value: 'MN', label: 'MN' },
+    { value: 'MP', label: 'MP' },
+  ];
+
   form = this.fb.group({
-    dni: ['', [Validators.required, Validators.minLength(7)]],
+    dni: ['', [Validators.minLength(7)]],
     cuil: [''],
     nombre: ['', [Validators.required, Validators.minLength(2)]],
     apellido: ['', [Validators.required, Validators.minLength(2)]],
     titulo: [''],
+    tipoMatricula: [''],
+    numeroMatricula: [''],
     email: ['', [Validators.email]],
     telefono: [''],
     domicilio: [''],
@@ -92,6 +99,8 @@ export class PersonasComponent implements OnInit {
       nombre: '',
       apellido: '',
       titulo: '',
+      tipoMatricula: '',
+      numeroMatricula: '',
       email: '',
       telefono: '',
       domicilio: '',
@@ -107,6 +116,8 @@ export class PersonasComponent implements OnInit {
         nombre: persona.nombre,
         apellido: persona.apellido,
         titulo: persona.titulo ?? '',
+        tipoMatricula: persona.tipoMatricula ?? '',
+        numeroMatricula: persona.numeroMatricula ?? '',
         email: persona.email ?? '',
         telefono: persona.telefono ?? '',
         domicilio: persona.domicilio ?? '',
@@ -141,11 +152,13 @@ export class PersonasComponent implements OnInit {
 
     if (!this.editando()) {
       const body = {
-        dni: raw.dni,
+        dni: raw.dni || undefined,
         cuil: raw.cuil || undefined,
         nombre: raw.nombre,
         apellido: raw.apellido,
         titulo: raw.titulo || undefined,
+        tipoMatricula: raw.tipoMatricula || undefined,
+        numeroMatricula: raw.numeroMatricula || undefined,
         email: raw.email || undefined,
         telefono: raw.telefono || undefined,
         domicilio: raw.domicilio || undefined,
@@ -177,6 +190,8 @@ export class PersonasComponent implements OnInit {
       nombre: raw.nombre,
       apellido: raw.apellido,
       titulo: raw.titulo || undefined,
+      tipoMatricula: raw.tipoMatricula || undefined,
+      numeroMatricula: raw.numeroMatricula || undefined,
       email: raw.email || undefined,
       telefono: raw.telefono || undefined,
       domicilio: raw.domicilio || undefined,

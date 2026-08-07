@@ -1,11 +1,18 @@
 import { CommonModule, registerLocaleData } from '@angular/common';
 import localeEsAr from '@angular/common/locales/es-AR';
-import { Component, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, SimpleChanges, inject } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { forkJoin, Observable, of, switchMap } from 'rxjs';
 import { ApiService } from 'src/app/core/services/api.service';
-import { descargarCertificadoPdf, descargarFojaPdf, MedicionPdfData } from './certificado-pdf.util';
+import {
+  crearCertificadoPdf,
+  crearFojaPdf,
+  descargarCertificadoPdf,
+  descargarFojaPdf,
+  MedicionPdfData,
+} from './certificado-pdf.util';
 
 registerLocaleData(localeEsAr);
 
@@ -89,10 +96,11 @@ interface Foja {
   templateUrl: './step-certificacion.component.html',
   styleUrl: './step-certificacion.component.scss',
 })
-export class StepCertificacionComponent implements OnChanges {
+export class StepCertificacionComponent implements OnChanges, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ApiService);
   private readonly snack = inject(MatSnackBar);
+  private readonly sanitizer = inject(DomSanitizer);
 
   @Input() obraId: number | null = null;
   @Input() obra: ObraCertificacion | null = null;
@@ -111,6 +119,11 @@ export class StepCertificacionComponent implements OnChanges {
   guardando = false;
   preparandoSiguiente = false;
   editandoCertificado: Certificado | null = null;
+  vistaPreviaUrl: SafeResourceUrl | null = null;
+  vistaPreviaTitulo = '';
+  generandoVistaPrevia = false;
+  cambiandoValidacionId: number | null = null;
+  private vistaPreviaObjectUrl: string | null = null;
 
   get proximoNumeroFoja(): number {
     return this.fojas.reduce((maximo, foja) => Math.max(maximo, foja.numeroFoja), 0) + 1;
@@ -253,11 +266,108 @@ export class StepCertificacionComponent implements OnChanges {
   }
 
   imprimirCertificado(certificado: Certificado): void {
+    if (!this.estaValidado(certificado)) {
+      this.mostrarDescargaBloqueada();
+      return;
+    }
     descargarCertificadoPdf(this.datosPdf(certificado));
   }
 
   imprimirFoja(certificado: Certificado): void {
+    if (!this.estaValidado(certificado)) {
+      this.mostrarDescargaBloqueada();
+      return;
+    }
     descargarFojaPdf(this.datosPdf(certificado));
+  }
+
+  estaValidado(certificado: Certificado): boolean {
+    return certificado.estado === 'APROBADO';
+  }
+
+  validarCertificado(certificado: Certificado): void {
+    if (!this.obraId || this.cambiandoValidacionId !== null) return;
+    this.cambiandoValidacionId = certificado.id;
+    this.api.post<Certificado>(
+      `obras/${this.obraId}/certificados/${certificado.id}/aprobar`,
+      {},
+    ).subscribe({
+      next: () => {
+        this.cambiandoValidacionId = null;
+        this.snack.open(`Certificado N° ${certificado.numero} validado`, 'Cerrar', { duration: 3500 });
+        this.cargarDatos();
+      },
+      error: (error) => {
+        this.cambiandoValidacionId = null;
+        this.snack.open(error?.error?.message || 'No se pudo validar el certificado', 'Cerrar', { duration: 4500 });
+      },
+    });
+  }
+
+  desvalidarCertificado(certificado: Certificado): void {
+    if (!this.obraId || this.cambiandoValidacionId !== null) return;
+    if (!confirm(`¿Desvalidar el certificado N° ${certificado.numero}? Se bloquearán sus descargas.`)) return;
+    this.cambiandoValidacionId = certificado.id;
+    this.api.post<Certificado>(
+      `obras/${this.obraId}/certificados/${certificado.id}/desaprobar`,
+      {},
+    ).subscribe({
+      next: () => {
+        this.cambiandoValidacionId = null;
+        this.snack.open(`Certificado N° ${certificado.numero} desvalidado`, 'Cerrar', { duration: 3500 });
+        this.cargarDatos();
+      },
+      error: (error) => {
+        this.cambiandoValidacionId = null;
+        this.snack.open(error?.error?.message || 'No se pudo desvalidar el certificado', 'Cerrar', { duration: 4500 });
+      },
+    });
+  }
+
+  async abrirVistaPrevia(
+    tipo: 'foja' | 'certificado',
+    certificado: Certificado,
+  ): Promise<void> {
+    this.cerrarVistaPrevia();
+    this.generandoVistaPrevia = true;
+    try {
+      const data = this.datosPdf(certificado);
+      const doc = tipo === 'foja'
+        ? await crearFojaPdf(data)
+        : await crearCertificadoPdf(data);
+      this.vistaPreviaObjectUrl = URL.createObjectURL(doc.output('blob'));
+      this.vistaPreviaUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        `${this.vistaPreviaObjectUrl}#toolbar=0&navpanes=0&scrollbar=1`,
+      );
+      this.vistaPreviaTitulo = tipo === 'foja'
+        ? `Vista previa - Foja N° ${String(data.numeroFoja).padStart(2, '0')}`
+        : `Vista previa - Certificado N° ${data.numero}`;
+    } catch {
+      this.snack.open('No se pudo generar la vista previa', 'Cerrar', { duration: 4000 });
+    } finally {
+      this.generandoVistaPrevia = false;
+    }
+  }
+
+  cerrarVistaPrevia(): void {
+    if (this.vistaPreviaObjectUrl) {
+      URL.revokeObjectURL(this.vistaPreviaObjectUrl);
+    }
+    this.vistaPreviaObjectUrl = null;
+    this.vistaPreviaUrl = null;
+    this.vistaPreviaTitulo = '';
+  }
+
+  ngOnDestroy(): void {
+    this.cerrarVistaPrevia();
+  }
+
+  private mostrarDescargaBloqueada(): void {
+    this.snack.open(
+      'La descarga estará disponible cuando la foja y el certificado estén validados',
+      'Cerrar',
+      { duration: 4500 },
+    );
   }
 
   editarFoja(certificado: Certificado): void {

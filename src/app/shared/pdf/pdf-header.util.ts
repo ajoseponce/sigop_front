@@ -26,10 +26,13 @@ export function dibujarCabeceraInstitucional(
   image: string,
   left = 10,
   right = 10,
+  scale = 1,
 ): number {
   const pageWidth = doc.internal.pageSize.getWidth();
-  const width = pageWidth - left - right;
+  const availableWidth = pageWidth - left - right;
+  const width = availableWidth * scale;
   const height = width / HEADER_RATIO;
-  doc.addImage(image, 'JPEG', left, 5, width, height, undefined, 'FAST');
+  const x = left + (availableWidth - width) / 2;
+  doc.addImage(image, 'JPEG', x, 5, width, height, undefined, 'FAST');
   return 5 + height;
 }

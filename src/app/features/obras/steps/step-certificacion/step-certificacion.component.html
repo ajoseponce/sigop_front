@@ -113,6 +113,12 @@
             <div>
               <strong>Certificado N° {{ certificado.numero }}</strong>
               <span>{{ certificado.periodo | date:'MMMM yyyy':'UTC':'es-AR' }}</span>
+              <span
+                class="chip-validacion"
+                [class.validado]="estaValidado(certificado)"
+              >
+                {{ estaValidado(certificado) ? 'Validado' : 'Pendiente de validación' }}
+              </span>
             </div>
             <div class="resumen-montos">
               <span>Bruto <b>{{ numero(certificado.montoBruto) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
@@ -125,12 +131,51 @@
                     Editar foja
                   </button>
                 }
-                <button type="button" class="btn-imprimir" (click)="imprimirFoja(certificado)">
-                  Imprimir foja de medición
-                </button>
-                <button type="button" class="btn-imprimir principal" (click)="imprimirCertificado(certificado)">
-                  Imprimir certificado
-                </button>
+                @if (estaValidado(certificado)) {
+                  @if (puedeEditar(certificado)) {
+                    <button
+                      type="button"
+                      class="btn-validacion quitar"
+                      [disabled]="cambiandoValidacionId !== null"
+                      (click)="desvalidarCertificado(certificado)"
+                    >
+                      Desvalidar
+                    </button>
+                  }
+                  <button type="button" class="btn-imprimir" (click)="imprimirFoja(certificado)">
+                    Descargar foja de medición
+                  </button>
+                  <button type="button" class="btn-imprimir principal" (click)="imprimirCertificado(certificado)">
+                    Descargar certificado
+                  </button>
+                } @else {
+                  @if (puedeEditar(certificado)) {
+                    <button
+                      type="button"
+                      class="btn-validacion"
+                      [disabled]="cambiandoValidacionId !== null"
+                      (click)="validarCertificado(certificado)"
+                    >
+                      Validar
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="btn-imprimir"
+                    [disabled]="generandoVistaPrevia"
+                    (click)="abrirVistaPrevia('foja', certificado)"
+                  >
+                    Vista previa de foja
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-imprimir principal"
+                    [disabled]="generandoVistaPrevia"
+                    (click)="abrirVistaPrevia('certificado', certificado)"
+                  >
+                    Vista previa del certificado
+                  </button>
+                }
               </div>
             </div>
           </article>
@@ -150,3 +195,18 @@
     </section>
   }
 </form>
+
+@if (vistaPreviaUrl) {
+  <div class="preview-overlay" (click)="cerrarVistaPrevia()">
+    <section class="preview-modal" role="dialog" aria-modal="true" [attr.aria-label]="vistaPreviaTitulo" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <h3>{{ vistaPreviaTitulo }}</h3>
+          <span>Documento pendiente de validación - sólo vista previa</span>
+        </div>
+        <button type="button" aria-label="Cerrar vista previa" (click)="cerrarVistaPrevia()">×</button>
+      </header>
+      <iframe [src]="vistaPreviaUrl" title="Vista previa del documento"></iframe>
+    </section>
+  </div>
+}

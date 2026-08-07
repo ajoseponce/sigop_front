@@ -60,6 +60,74 @@ function n(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+const unidades = [
+  'CERO', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE',
+  'DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE',
+  'DIECIOCHO', 'DIECINUEVE', 'VEINTE', 'VEINTIUNO', 'VEINTIDÓS', 'VEINTITRÉS',
+  'VEINTICUATRO', 'VEINTICINCO', 'VEINTISÉIS', 'VEINTISIETE', 'VEINTIOCHO', 'VEINTINUEVE',
+];
+
+function apocopar(value: string): string {
+  return value
+    .replace(/VEINTIUNO$/, 'VEINTIÚN')
+    .replace(/ Y UNO$/, ' Y UN')
+    .replace(/UNO$/, 'UN');
+}
+
+function menoresAMil(value: number): string {
+  if (value < 30) return unidades[value];
+  if (value < 100) {
+    const decena = Math.floor(value / 10) * 10;
+    const resto = value % 10;
+    const nombres: Record<number, string> = {
+      30: 'TREINTA', 40: 'CUARENTA', 50: 'CINCUENTA', 60: 'SESENTA',
+      70: 'SETENTA', 80: 'OCHENTA', 90: 'NOVENTA',
+    };
+    return resto ? `${nombres[decena]} Y ${unidades[resto]}` : nombres[decena];
+  }
+  if (value === 100) return 'CIEN';
+  const centena = Math.floor(value / 100);
+  const resto = value % 100;
+  const centenas: Record<number, string> = {
+    1: 'CIENTO', 2: 'DOSCIENTOS', 3: 'TRESCIENTOS', 4: 'CUATROCIENTOS',
+    5: 'QUINIENTOS', 6: 'SEISCIENTOS', 7: 'SETECIENTOS', 8: 'OCHOCIENTOS',
+    9: 'NOVECIENTOS',
+  };
+  return resto ? `${centenas[centena]} ${menoresAMil(resto)}` : centenas[centena];
+}
+
+function enteroEnLetras(value: number): string {
+  if (value < 1000) return menoresAMil(value);
+  if (value < 1_000_000) {
+    const miles = Math.floor(value / 1000);
+    const resto = value % 1000;
+    const prefijo = miles === 1 ? 'MIL' : `${apocopar(enteroEnLetras(miles))} MIL`;
+    return resto ? `${prefijo} ${enteroEnLetras(resto)}` : prefijo;
+  }
+  if (value < 1_000_000_000) {
+    const millones = Math.floor(value / 1_000_000);
+    const resto = value % 1_000_000;
+    const prefijo = millones === 1
+      ? 'UN MILLÓN'
+      : `${apocopar(enteroEnLetras(millones))} MILLONES`;
+    return resto ? `${prefijo} ${enteroEnLetras(resto)}` : prefijo;
+  }
+  const milesDeMillones = Math.floor(value / 1_000_000_000);
+  const resto = value % 1_000_000_000;
+  const prefijo = `${apocopar(enteroEnLetras(milesDeMillones))} MIL MILLONES`;
+  return resto ? `${prefijo} ${enteroEnLetras(resto)}` : prefijo;
+}
+
+export function montoEnLetras(value: number): string {
+  const centavosTotales = Math.round(Math.abs(value) * 100);
+  const pesos = Math.floor(centavosTotales / 100);
+  const centavos = centavosTotales % 100;
+  const signo = value < 0 ? 'MENOS ' : '';
+  const moneda = pesos === 1 ? 'PESO' : 'PESOS';
+  const textoCentavos = centavos === 1 ? 'CENTAVO' : 'CENTAVOS';
+  return `${signo}${enteroEnLetras(pesos)} ${moneda} CON ${enteroEnLetras(centavos)} ${textoCentavos}`;
+}
+
 function periodoTexto(value: string | null): string {
   return value
     ? new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
@@ -144,45 +212,45 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
 }
 
 function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: string): number {
-  const finCabecera = dibujarCabeceraInstitucional(doc, cabecera);
   const ancho = doc.internal.pageSize.getWidth();
-  const left = 10;
+  const left = 25;
   const right = 10;
+  const finCabecera = dibujarCabeceraInstitucional(doc, cabecera, left, right, 0.5);
   const width = ancho - left - right;
-  const col1 = left + 94;
-  const col2 = col1 + 96;
-  const y = finCabecera + 3;
+  const col1 = left + 84;
+  const col2 = col1 + 90;
+  const y = finCabecera + 2;
 
   doc.setDrawColor(30);
   doc.setLineWidth(0.35);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.6);
 
-  doc.rect(left, y, width - 28, 9);
-  doc.rect(ancho - right - 28, y, 28, 9);
+  doc.rect(left, y, width - 28, 7);
+  doc.rect(ancho - right - 28, y, 28, 7);
   doc.text(
     `CERTIFICADO BÁSICO DE OBRA N° ${data.numero} / (${periodoTexto(data.periodo)})`,
     left + 2,
-    y + 5.8,
+    y + 4.7,
   );
-  doc.text('ANEXO I', ancho - right - 14, y + 5.8, { align: 'center' });
+  doc.text('ANEXO I', ancho - right - 14, y + 4.7, { align: 'center' });
 
-  doc.rect(left, y + 11, width, 9);
-  doc.text(`Obra: ${data.nombreObra || '—'}`, left + 2, y + 16.8);
+  doc.rect(left, y + 8.5, width, 7);
+  doc.text(`Obra: ${data.nombreObra || '—'}`, left + 2, y + 13.2);
 
-  doc.rect(left, y + 22, col1 - left, 44);
-  doc.rect(col1, y + 22, col2 - col1, 44);
-  doc.rect(col2, y + 22, ancho - right - col2, 44);
-  doc.setFontSize(6.6);
+  doc.rect(left, y + 17, col1 - left, 36);
+  doc.rect(col1, y + 17, col2 - col1, 36);
+  doc.rect(col2, y + 17, ancho - right - col2, 36);
+  doc.setFontSize(6.1);
 
   const drawRows = (
     rows: Array<[string, string]>,
     labelX: number,
     valueX: number,
     maxWidth: number,
-    startY = y + 28,
+    startY = y + 21.8,
   ) => rows.forEach(([label, value], index) => {
-    const rowY = startY + index * 5.2;
+    const rowY = startY + index * 4.15;
     doc.text(label, labelX, rowY);
     doc.text(doc.splitTextToSize(value, maxWidth)[0] ?? '', valueX, rowY);
   });
@@ -208,8 +276,8 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
     ['Monto Total Actualizado', `$ ${money.format(totalContrato(data))}`],
   ], col1 + 2, col1 + 36, col2 - col1 - 39);
 
-  doc.text(`CERTIFICADO BÁSICO DE OBRA N° ${data.numero}`, col2 + 2, y + 28);
-  doc.line(col2, y + 31, ancho - right, y + 31);
+  doc.text(`CERTIFICADO BÁSICO DE OBRA N° ${data.numero}`, col2 + 2, y + 21.8);
+  doc.line(col2, y + 24.5, ancho - right, y + 24.5);
   drawRows([
     ['Período', periodoTexto(data.periodo)],
     ['Fecha de Medición', fechaTexto(data.fechaMedicion)],
@@ -217,9 +285,9 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
     ['Plazo de Ejecución', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
     ['Expediente de la Obra', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
     ['Expediente del Certificado', '—'],
-  ], col2 + 2, col2 + 34, ancho - right - col2 - 37, y + 36);
+  ], col2 + 2, col2 + 32, ancho - right - col2 - 35, y + 28.5);
 
-  return y + 69;
+  return y + 55;
 }
 
 function totalContrato(data: MedicionPdfData): number {
@@ -292,7 +360,7 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
   const inicioTabla = encabezadoCertificado(doc, data, cabecera);
   autoTable(doc, {
     startY: inicioTabla,
-    margin: { top: inicioTabla },
+    margin: { top: inicioTabla, left: 25, right: 10 },
     head: [[
       'Ítem', 'Designación', 'Un.', 'Cant.', 'Precio unit.', 'Monto ítem',
       'Cant. anterior', 'Cant. actual', 'Cant. acum.',
@@ -303,12 +371,12 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
     styles: { fontSize: 6.4, cellPadding: 1.15, overflow: 'linebreak' },
     headStyles: { fillColor: [31, 41, 55], textColor: 255, halign: 'center', fontSize: 6 },
     columnStyles: {
-      0: { cellWidth: 12 }, 1: { cellWidth: 67 }, 2: { cellWidth: 10, halign: 'center' },
-      3: { cellWidth: 15, halign: 'right' }, 4: { cellWidth: 22, halign: 'right' },
-      5: { cellWidth: 24, halign: 'right' }, 6: { cellWidth: 18, halign: 'right' },
-      7: { cellWidth: 17, halign: 'right', fillColor: [219, 234, 254] },
-      8: { cellWidth: 18, halign: 'right' }, 9: { cellWidth: 25, halign: 'right' },
-      10: { cellWidth: 25, halign: 'right' }, 11: { cellWidth: 25, halign: 'right' },
+      0: { cellWidth: 11 }, 1: { cellWidth: 55 }, 2: { cellWidth: 9, halign: 'center' },
+      3: { cellWidth: 14, halign: 'right' }, 4: { cellWidth: 20, halign: 'right' },
+      5: { cellWidth: 22, halign: 'right' }, 6: { cellWidth: 17, halign: 'right' },
+      7: { cellWidth: 16, halign: 'right', fillColor: [219, 234, 254] },
+      8: { cellWidth: 17, halign: 'right' }, 9: { cellWidth: 27, halign: 'right' },
+      10: { cellWidth: 27, halign: 'right' }, 11: { cellWidth: 27, halign: 'right' },
     },
     didDrawPage: ({ pageNumber }) => {
       if (pageNumber > 1) encabezadoCertificado(doc, data, cabecera);
@@ -316,15 +384,46 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
   });
 
   const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 60;
-  const y = Math.min(finalY + 6, 179);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.text(`TOTAL CONTRATO  $ ${money.format(totalContrato(data))}`, 145, y, { align: 'right' });
-  doc.text(`TOTAL GENERAL  $ ${money.format(n(data.montoBruto))}`, 284, y, { align: 'right' });
-  doc.text(`ANTICIPO FINANCIERO ${money.format(n(data.porcentajeAnticipo))}%  - $ ${money.format(n(data.deduccionAnticipo))}`, 284, y + 6, { align: 'right' });
-  doc.text(`FONDO DE REPARO 6%  - $ ${money.format(n(data.deduccionFondoReparo))}`, 284, y + 12, { align: 'right' });
-  doc.setFontSize(10);
-  doc.text(`SUMA A PAGAR EN EL PRESENTE CERTIFICADO  $ ${money.format(n(data.montoFinal))}`, 284, y + 20, { align: 'right' });
+  const pageHeight = doc.internal.pageSize.getHeight();
+  let resumenY = finalY + 5;
+  if (resumenY + 34 > pageHeight - 10) {
+    doc.addPage();
+    resumenY = encabezadoCertificado(doc, data, cabecera);
+  }
+
+  const montoFinal = n(data.montoFinal);
+  autoTable(doc, {
+    startY: resumenY,
+    margin: { left: 25, right: 10 },
+    theme: 'grid',
+    styles: { fontSize: 7.2, cellPadding: 1.7, lineColor: [55, 65, 81], lineWidth: 0.25 },
+    body: [
+      [
+        { content: 'TOTAL CONTRATO', styles: { fontStyle: 'bold', fillColor: [226, 232, 240] } },
+        { content: `$ ${money.format(totalContrato(data))}`, styles: { fontStyle: 'bold', halign: 'right' } },
+        { content: 'TOTAL GENERAL', styles: { fontStyle: 'bold', fillColor: [226, 232, 240] } },
+        { content: `$ ${money.format(n(data.montoBruto))}`, styles: { fontStyle: 'bold', halign: 'right' } },
+      ],
+      [
+        { content: 'ANTICIPO FINANCIERO', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right' } },
+        { content: `${money.format(n(data.porcentajeAnticipo))}%  - $ ${money.format(n(data.deduccionAnticipo))}`, styles: { halign: 'right' } },
+      ],
+      [
+        { content: 'FONDO DE REPARO', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right' } },
+        { content: `6%  - $ ${money.format(n(data.deduccionFondoReparo))}`, styles: { halign: 'right' } },
+      ],
+      [
+        { content: 'SUMA A PAGAR EN EL PRESENTE CERTIFICADO', colSpan: 3, styles: { fontStyle: 'bold', fontSize: 8.5, fillColor: [219, 234, 254] } },
+        { content: `$ ${money.format(montoFinal)}`, styles: { fontStyle: 'bold', fontSize: 8.5, halign: 'right', fillColor: [219, 234, 254] } },
+      ],
+      [
+        { content: `SON: ${montoEnLetras(montoFinal)}`, colSpan: 4, styles: { fontStyle: 'bold', fontSize: 7.2 } },
+      ],
+    ],
+    columnStyles: {
+      0: { cellWidth: 54 }, 1: { cellWidth: 50 }, 2: { cellWidth: 76 }, 3: { cellWidth: 82 },
+    },
+  });
   return doc;
 }
 

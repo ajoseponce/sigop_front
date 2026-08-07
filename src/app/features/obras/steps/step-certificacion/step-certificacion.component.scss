@@ -45,6 +45,19 @@ td.excede { color: #b91c1c; background: #fee2e2; font-weight: 700; }
 .btn-imprimir { align-self: center; border: 1px solid #111827; border-radius: 8px; padding: 8px 12px; background: #fff; color: #111827; font-weight: 700; cursor: pointer; }
 .botones-impresion { display: flex; align-items: center; gap: 8px; }
 .btn-imprimir.principal { background: #111827; color: #fff; }
+.btn-validacion { align-self: center; border: 1px solid #15803d; border-radius: 8px; padding: 8px 12px; background: #dcfce7; color: #166534; font-weight: 750; cursor: pointer; }
+.btn-validacion.quitar { border-color: #d97706; background: #fffbeb; color: #92400e; }
+.btn-validacion:disabled { opacity: .5; cursor: wait; }
+.btn-imprimir:disabled { opacity: .5; cursor: wait; }
+.chip-validacion { align-self: flex-start; margin-top: 4px; padding: 5px 9px; border-radius: 999px; background: #fef3c7; color: #92400e !important; font-size: 11px !important; font-weight: 750; }
+.chip-validacion.validado { background: #dcfce7; color: #166534 !important; }
+.preview-overlay { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(17, 24, 39, .72); }
+.preview-modal { display: flex; flex-direction: column; width: min(1180px, 96vw); height: min(860px, 92vh); overflow: hidden; border-radius: 14px; background: #fff; box-shadow: 0 24px 70px rgba(0, 0, 0, .3); }
+.preview-modal header { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 18px; border-bottom: 1px solid #e5e7eb; }
+.preview-modal h3 { margin: 0 0 3px; color: #111827; }
+.preview-modal header span { color: #92400e; font-size: 12px; font-weight: 650; }
+.preview-modal header button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: #f3f4f6; color: #111827; font-size: 25px; line-height: 1; cursor: pointer; }
+.preview-modal iframe { flex: 1; width: 100%; border: 0; background: #e5e7eb; }
 .historial-fojas { padding-top: 16px; border-top: 1px solid #e5e7eb; }
 .historial-fojas h3 { margin: 0 0 10px; }
 .historial-fojas > div { display: flex; flex-wrap: wrap; gap: 8px; }

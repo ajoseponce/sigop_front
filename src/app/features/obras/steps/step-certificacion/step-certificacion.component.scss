@@ -49,6 +49,7 @@ td.excede { color: #b91c1c; background: #fee2e2; font-weight: 700; }
 .btn-validacion.quitar { border-color: #d97706; background: #fffbeb; color: #92400e; }
 .btn-validacion:disabled { opacity: .5; cursor: wait; }
 .btn-imprimir:disabled { opacity: .5; cursor: wait; }
+.btn-readecuacion { align-self: center; border: 1px solid #0369a1; border-radius: 8px; padding: 8px 12px; background: #e0f2fe; color: #075985; font-weight: 750; cursor: pointer; }
 .chip-validacion { align-self: flex-start; margin-top: 4px; padding: 5px 9px; border-radius: 999px; background: #fef3c7; color: #92400e !important; font-size: 11px !important; font-weight: 750; }
 .chip-validacion.validado { background: #dcfce7; color: #166534 !important; }
 .preview-overlay { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(17, 24, 39, .72); }
@@ -58,6 +59,28 @@ td.excede { color: #b91c1c; background: #fee2e2; font-weight: 700; }
 .preview-modal header span { color: #92400e; font-size: 12px; font-weight: 650; }
 .preview-modal header button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: #f3f4f6; color: #111827; font-size: 25px; line-height: 1; cursor: pointer; }
 .preview-modal iframe { flex: 1; width: 100%; border: 0; background: #e5e7eb; }
+.readecuacion-overlay { position: fixed; inset: 0; z-index: 1250; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(17, 24, 39, .72); }
+.readecuacion-modal { width: min(820px, 96vw); max-height: 92vh; overflow: auto; border-radius: 14px; background: #fff; }
+.readecuacion-modal > header { display: flex; align-items: center; justify-content: space-between; padding: 17px 20px; border-bottom: 1px solid #e5e7eb; }
+.readecuacion-modal h3 { margin: 0; }
+.readecuacion-modal header > button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: #f3f4f6; font-size: 25px; cursor: pointer; }
+.readecuacion-cargando { padding: 50px; }
+.readecuacion-contenido { display: flex; flex-direction: column; gap: 16px; padding: 20px; }
+.readecuacion-base { display: flex; justify-content: space-between; gap: 20px; padding: 14px; background: #f8fafc; }
+.readecuacion-base span { display: flex; flex-direction: column; font-size: 12px; }
+.ayuda-ajustes { margin: 0; font-size: 13px; }
+.lista-saltos { display: flex; flex-direction: column; gap: 9px; }
+.salto { display: grid; grid-template-columns: 22px 1fr 190px; align-items: center; gap: 12px; padding: 13px 15px; border: 1px solid #dbe3ed; border-radius: 10px; cursor: pointer; }
+.salto.seleccionado { background: #f0f9ff; }
+.salto-periodo { display: flex; flex-direction: column; }
+.salto-periodo span { font-size: 12px; text-transform: capitalize; }
+.salto-fap { display: grid; grid-template-columns: 32px 1fr; align-items: center; gap: 4px 8px; }
+.salto-fap input,.salto-periodo select { width: 100%; box-sizing: border-box; padding: 7px 8px; border: 1px solid #94a3b8; border-radius: 7px; background: #fff; font: inherit; }
+.salto-fap small { grid-column: 1 / -1; font-size: 10px; text-align: right; }
+.resultado-readecuacion { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; overflow: hidden; border: 1px solid #cbd5e1; border-radius: 10px; background: #cbd5e1; }
+.resultado-readecuacion span { display: flex; justify-content: space-between; gap: 15px; padding: 11px 13px; background: #f8fafc; color: #475569; font-size: 12px; }
+.resultado-readecuacion .total { grid-column: 1 / -1; background: #e0f2fe; font-weight: 750; }
+.readecuacion-modal footer { display: flex; justify-content: flex-end; gap: 9px; padding: 15px 20px; border-top: 1px solid #e5e7eb; }
 .historial-fojas { padding-top: 16px; border-top: 1px solid #e5e7eb; }
 .historial-fojas h3 { margin: 0 0 10px; }
 .historial-fojas > div { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -68,4 +91,7 @@ td.excede { color: #b91c1c; background: #fee2e2; font-weight: 700; }
   .certificados article, .form-actions { align-items: stretch; flex-direction: column; }
   .resumen-montos { justify-content: flex-start; }
   .resumen-montos span { text-align: left; }
+  .salto { grid-template-columns: 22px 1fr; }
+  .salto-fap { grid-column: 2; }
+  .readecuacion-base, .resultado-readecuacion { grid-template-columns: 1fr; flex-direction: column; }
 }

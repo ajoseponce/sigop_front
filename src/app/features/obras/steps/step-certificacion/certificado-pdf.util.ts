@@ -52,6 +52,21 @@ export interface MedicionPdfData {
   detalles: PdfDetalle[];
 }
 
+export interface ReadecuacionPdfData extends MedicionPdfData {
+  readecuacion: {
+    saltos: Array<{ orden: number; mesBase: string; mesCorte: string; fap: string }>;
+    fapConsolidado: string;
+    montoBase: string;
+    deduccionAnticipo: string;
+    montoNetoActualizar: string;
+    montoNetoActualizado: string;
+    incremento: string;
+    porcentajeFondoReparo: string;
+    deduccionFondoReparo: string;
+    incrementoNetoPagar: string;
+  };
+}
+
 const quantity = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 const money = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -429,4 +444,80 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
 
 export async function descargarCertificadoPdf(data: MedicionPdfData): Promise<void> {
   (await crearCertificadoPdf(data)).save(`certificado-${String(data.numero).padStart(2, '0')}.pdf`);
+}
+
+export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<jsPDF> {
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const cabecera = await cargarCabeceraInstitucional();
+  const left = 5;
+  const right = 5;
+  const width = doc.internal.pageSize.getWidth() - left - right;
+  const inicio = dibujarCabeceraInstitucional(doc, cabecera, left, right, 0.5) + 2;
+  const r = data.readecuacion;
+
+  doc.setDrawColor(40);
+  doc.setLineWidth(0.3);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.8);
+  doc.rect(left, inicio, width, 8);
+  doc.text('PLANILLA DE DETERMINACIÓN DEL INCREMENTO DEL CERTIFICADO BÁSICO DE OBRA POR MONTOS READECUADOS POR APLICACIÓN DEL FAP', left + width / 2, inicio + 5, { align: 'center' });
+  doc.rect(left, inicio + 9, width, 7);
+  doc.text(`CÁLCULO DE MONTOS READECUADOS PARA EL CERTIFICADO BÁSICO N° ${data.numero} - SALTOS ${r.saltos.map((s) => s.orden).join(' Y ')}`, left + width / 2, inicio + 13.5, { align: 'center' });
+
+  autoTable(doc, {
+    startY: inicio + 18,
+    margin: { left, right },
+    theme: 'plain',
+    styles: { fontSize: 6.4, cellPadding: 1.1 },
+    body: [
+      ['OBRA:', data.nombreObra, 'MONTO CONTRATO ORIGINAL:', `$ ${money.format(totalContrato(data))}`, 'MES Y AÑO CERTIFICADO:', periodoTexto(data.periodo)],
+      ['ORGANISMO EJECUTOR:', 'MUNICIPALIDAD DE POSADAS', 'MONTO ANTICIPO:', `$ ${money.format(n(data.deduccionAnticipo))}`, 'NRO CERTIFICADO:', String(data.numero)],
+      ['PROVINCIA:', 'MISIONES', 'EMPRESA:', data.empresa ?? '—', 'TIPO DE CERTIFICADO:', 'ACTUALIZACIÓN'],
+      ['MUNICIPIO:', data.localidad ?? 'POSADAS', 'CUIT:', data.empresaCuit ?? '—', 'FECHA INICIO:', fechaTexto(data.fechaInicio)],
+      ['INSPECTOR DE OBRA:', data.responsableInstitucional ?? '—', 'EXPEDIENTE:', data.expediente ?? '—', 'DISPOSITIVO DE APROBACIÓN:', data.aprobacion ?? '—'],
+    ],
+    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 30 }, 1: { cellWidth: 70 }, 2: { fontStyle: 'bold', cellWidth: 38 }, 3: { cellWidth: 48 }, 4: { fontStyle: 'bold', cellWidth: 37 }, 5: { cellWidth: 64 } },
+  });
+
+  const tablaY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? inicio + 46;
+  const saltos = r.saltos.map((salto, index) => [
+    index === 0 ? String(data.numero) : '', index === 0 ? periodoTexto(data.periodo) : '',
+    index === 0 ? `$ ${money.format(n(r.montoBase))}` : '', index === 0 ? `$ ${money.format(n(r.deduccionAnticipo))}` : '',
+    index === 0 ? `$ ${money.format(n(r.montoNetoActualizar))}` : '', `SALTO ${salto.orden}`, salto.fap,
+    index === 0 ? r.fapConsolidado : '', index === 0 ? `$ ${money.format(n(r.montoNetoActualizado))}` : '',
+    index === 0 ? `$ ${money.format(n(r.incremento))}` : '',
+  ]);
+  autoTable(doc, {
+    startY: tablaY + 3,
+    margin: { left, right },
+    theme: 'grid',
+    styles: { fontSize: 5.7, cellPadding: 1.2, halign: 'center', valign: 'middle' },
+    headStyles: { fillColor: [239, 242, 225], textColor: 20, fontStyle: 'bold' },
+    head: [['CERTIFICADO BÁSICO N°', 'MES CERTIFICADO', 'MONTO CERTIFICADO A PRECIOS BASE', 'DESCUENTO ANTICIPO', 'MONTO NETO A ACTUALIZAR', 'SALTO', 'FACTOR DE ACTUALIZACIÓN', 'FAP CONSOLIDADO', 'MONTO NETO ACTUALIZADO', 'INCREMENTO POR ACTUALIZACIÓN']],
+    body: saltos,
+  });
+
+  const resumenY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? tablaY + 22;
+  autoTable(doc, {
+    startY: resumenY + 2,
+    margin: { left: 184, right },
+    theme: 'grid',
+    styles: { fontSize: 6.5, cellPadding: 1.2 },
+    body: [
+      ['TOTAL MONTO INCREMENTADO POR ACTUALIZACIONES', `$ ${money.format(n(r.incremento))}`],
+      ['DESCUENTO DE FONDO DE REPARO', `$ ${money.format(n(r.deduccionFondoReparo))}`],
+      ['TOTAL DEL INCREMENTO NETO A PAGAR', `$ ${money.format(n(r.incrementoNetoPagar))}`],
+    ],
+    columnStyles: { 0: { cellWidth: 78, fontStyle: 'bold', halign: 'right' }, 1: { cellWidth: 26, fontStyle: 'bold', halign: 'right' } },
+  });
+  const letrasY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? resumenY + 20;
+  doc.rect(left + 46, letrasY + 2, width - 46, 7);
+  doc.setFontSize(6.2);
+  doc.text(`MONTO A PAGAR: ${montoEnLetras(n(r.incrementoNetoPagar))}`, left + 48, letrasY + 6.5);
+  doc.text('EL PRESENTE CERTIFICADO TIENE CARÁCTER DE DECLARACIÓN JURADA', left + width / 2, letrasY + 13, { align: 'center' });
+  return doc;
+}
+
+export async function descargarReadecuacionPdf(data: ReadecuacionPdfData): Promise<void> {
+  (await crearReadecuacionPdf(data)).save(`readecuacion-certificado-${String(data.numero).padStart(2, '0')}.pdf`);
 }

@@ -125,6 +125,9 @@
               <span>Anticipo <b>-{{ numero(certificado.deduccionAnticipo) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
               <span>Fondo reparo <b>-{{ numero(certificado.deduccionFondoReparo) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
               <span>Neto <b>{{ numero(certificado.montoFinal) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
+              @if (certificado.readecuacion) {
+                <span class="monto-readecuacion">Incremento readecuado <b>{{ numero(certificado.readecuacion.incrementoNetoPagar) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
+              }
               <div class="botones-impresion">
                 @if (puedeEditar(certificado)) {
                   <button type="button" class="btn-imprimir" (click)="editarFoja(certificado)">
@@ -132,6 +135,24 @@
                   </button>
                 }
                 @if (estaValidado(certificado)) {
+                  <button type="button" class="btn-readecuacion" (click)="abrirReadecuacion(certificado)">
+                    {{ certificado.readecuacion ? 'Editar readecuación' : 'Readecuación de precios' }}
+                  </button>
+                  @if (certificado.readecuacion?.estado === 'BORRADOR') {
+                    <button type="button" class="btn-imprimir" [disabled]="generandoVistaPrevia" (click)="abrirVistaPrevia('readecuacion', certificado)">
+                      Vista previa readecuación
+                    </button>
+                    <button type="button" class="btn-validacion" [disabled]="cambiandoValidacionId !== null" (click)="validarReadecuacion(certificado)">
+                      Validar readecuación
+                    </button>
+                  } @else if (certificado.readecuacion?.estado === 'APROBADO') {
+                    <button type="button" class="btn-validacion quitar" [disabled]="cambiandoValidacionId !== null" (click)="desvalidarReadecuacion(certificado)">
+                      Desvalidar readecuación
+                    </button>
+                    <button type="button" class="btn-imprimir principal" (click)="imprimirReadecuacion(certificado)">
+                      Descargar readecuación
+                    </button>
+                  }
                   @if (puedeEditar(certificado)) {
                     <button
                       type="button"
@@ -195,6 +216,73 @@
     </section>
   }
 </form>
+
+@if (readecuacionCertificado) {
+  <div class="readecuacion-overlay" (click)="cerrarReadecuacion()">
+    <section class="readecuacion-modal" role="dialog" aria-modal="true" aria-label="Readecuación de precios" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <h3>Readecuación de precios</h3>
+          <span>Certificado N° {{ readecuacionCertificado.numero }}</span>
+        </div>
+        <button type="button" aria-label="Cerrar" (click)="cerrarReadecuacion()">×</button>
+      </header>
+
+      @if (cargandoReadecuacion) {
+        <div class="readecuacion-cargando">Cargando ajustes mensuales…</div>
+      } @else if (opcionesReadecuacion) {
+        <div class="readecuacion-contenido">
+          <div class="readecuacion-base">
+            <span>Estructura FAP <b>{{ opcionesReadecuacion.estructuraNombre }}</b></span>
+            <span>Monto neto a actualizar <b>{{ numero(opcionesReadecuacion.certificado.montoNetoActualizar) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
+          </div>
+          <p class="ayuda-ajustes">Marcá exactamente los meses que querés aplicar. Podés elegir Ajuste 1 y 2, solamente el 2, o cualquier combinación disponible.</p>
+          <div class="lista-saltos">
+            @for (salto of saltosReadecuacion; track salto.orden) {
+              <div class="salto" [class.seleccionado]="salto.seleccionado">
+                <input type="checkbox" [(ngModel)]="salto.seleccionado" [ngModelOptions]="{standalone: true}" />
+                <div class="salto-periodo">
+                  <strong>Ajuste {{ salto.orden }}</strong>
+                  <select
+                    [ngModel]="salto.mesCorte"
+                    (ngModelChange)="cambiarMesReadecuacion(salto, $event)"
+                    [ngModelOptions]="{standalone: true}"
+                    [attr.aria-label]="'Mes y año del ajuste ' + salto.orden"
+                  >
+                    @for (opcion of opcionesReadecuacion.saltos; track opcion.mesCorte) {
+                      <option [value]="opcion.mesCorte">{{ opcion.mesCorte | date:'MMMM yyyy':'UTC':'es-AR' }}</option>
+                    }
+                  </select>
+                  <span>Base: {{ salto.mesBase | date:'MMMM yyyy':'UTC':'es-AR' }}</span>
+                </div>
+                <div class="salto-fap">
+                  <label [for]="'fap-' + salto.orden">FAP</label>
+                  <input [id]="'fap-' + salto.orden" type="number" min="0.0001" step="0.0001" [(ngModel)]="salto.fap" [ngModelOptions]="{standalone: true}" [readonly]="salto.fapCalculado !== null" />
+                  <small>{{ salto.fapCalculado ? 'Calculado automáticamente' : 'Ingresar según planilla' }}</small>
+                </div>
+              </div>
+            }
+          </div>
+          @if (saltosReadecuacion.length === 0) {
+            <div class="estado-vacio">No hay meses anteriores al certificado para generar ajustes.</div>
+          }
+          <div class="resultado-readecuacion">
+            <span>FAP consolidado <b>{{ fapConsolidadoVista() | number:'1.4-4':'es-AR' }}</b></span>
+            <span>Incremento <b>{{ incrementoVista() | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
+            <span>Fondo de reparo <b>-{{ fondoReparoVista() | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
+            <span class="total">Incremento neto a pagar <b>{{ incrementoNetoVista() | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
+          </div>
+        </div>
+        <footer>
+          <button type="button" class="btn-siguiente" (click)="cerrarReadecuacion()">Cancelar</button>
+          <button type="button" class="btn-primary" [disabled]="guardandoReadecuacion || saltosReadecuacion.length === 0" (click)="guardarReadecuacionPrecio()">
+            {{ guardandoReadecuacion ? 'Guardando…' : 'Guardar readecuación' }}
+          </button>
+        </footer>
+      }
+    </section>
+  </div>
+}
 
 @if (vistaPreviaUrl) {
   <div class="preview-overlay" (click)="cerrarVistaPrevia()">

@@ -35,6 +35,7 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
   { label: 'Obras', icon: 'engineering', hijos: [
     { label: 'Nueva Obra', icon: 'local_shipping', ruta: '/obras/nueva', roles: ['ADMIN','SUPERVISOR'] },
     { label: 'Lista de Obras', icon: 'list', ruta: '/obras', roles: ['ADMIN','SUPERVISOR'] },
+    { label: 'FAP', icon: 'query_stats', ruta: '/obras/fap', roles: ['ADMIN','SUPERVISOR'] },
   ]},
   { label: 'Pañol', icon: 'inventory_2', roles: ['ADMIN','SUPERVISOR'], hijos: [
     { label: 'Ingresos y egresos', icon: 'sync_alt', ruta: '/panol/movimientos', roles: ['ADMIN','SUPERVISOR'] },

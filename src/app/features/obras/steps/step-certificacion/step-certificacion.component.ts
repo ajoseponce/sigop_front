@@ -2,16 +2,19 @@ import { CommonModule, registerLocaleData } from '@angular/common';
 import localeEsAr from '@angular/common/locales/es-AR';
 import { Component, Input, OnChanges, OnDestroy, SimpleChanges, inject } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { forkJoin, Observable, of, switchMap } from 'rxjs';
 import { ApiService } from 'src/app/core/services/api.service';
 import {
   crearCertificadoPdf,
   crearFojaPdf,
+  crearReadecuacionPdf,
   descargarCertificadoPdf,
   descargarFojaPdf,
+  descargarReadecuacionPdf,
   MedicionPdfData,
+  ReadecuacionPdfData,
 } from './certificado-pdf.util';
 
 registerLocaleData(localeEsAr);
@@ -71,6 +74,7 @@ interface Certificado {
   deduccionAnticipo: string | null;
   deduccionFondoReparo: string | null;
   montoFinal: string | null;
+  readecuacion: ReadecuacionGuardada | null;
   detalles: Array<{
     itemId: number;
     cantidadContratadaSnapshot: string;
@@ -78,6 +82,40 @@ interface Certificado {
     cantidadAcumulada: string;
     montoPeriodo: string;
   }>;
+}
+
+interface ReadecuacionGuardada {
+  estado: 'BORRADOR' | 'APROBADO';
+  estructura: { id: number; nombre: string };
+  saltos: Array<{ orden: number; mesBase: string; mesCorte: string; fap: string; automatico: boolean }>;
+  fapConsolidado: string;
+  montoBase: string;
+  deduccionAnticipo: string;
+  montoNetoActualizar: string;
+  montoNetoActualizado: string;
+  incremento: string;
+  porcentajeFondoReparo: string;
+  deduccionFondoReparo: string;
+  incrementoNetoPagar: string;
+}
+
+interface SaltoReadecuacion {
+  orden: number;
+  mesBase: string;
+  mesCorte: string;
+  fapCalculado: string | null;
+  faltantes: string[];
+  seleccionado: boolean;
+  fap: string;
+}
+
+interface OpcionesReadecuacion {
+  certificado: { id: number; numero: number; periodo: string; montoBase: string; deduccionAnticipo: string; montoNetoActualizar: string; porcentajeFondoReparo: string };
+  estructuraId: number;
+  estructuraNombre: string;
+  estructuras: Array<{ id: number; nombre: string }>;
+  saltos: Array<Omit<SaltoReadecuacion, 'seleccionado' | 'fap'>>;
+  guardada: ReadecuacionGuardada | null;
 }
 
 interface Foja {
@@ -92,7 +130,7 @@ interface Foja {
 @Component({
   selector: 'app-step-certificacion',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatSnackBarModule],
   templateUrl: './step-certificacion.component.html',
   styleUrl: './step-certificacion.component.scss',
 })
@@ -123,6 +161,11 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
   vistaPreviaTitulo = '';
   generandoVistaPrevia = false;
   cambiandoValidacionId: number | null = null;
+  readecuacionCertificado: Certificado | null = null;
+  opcionesReadecuacion: OpcionesReadecuacion | null = null;
+  saltosReadecuacion: SaltoReadecuacion[] = [];
+  cargandoReadecuacion = false;
+  guardandoReadecuacion = false;
   private vistaPreviaObjectUrl: string | null = null;
 
   get proximoNumeroFoja(): number {
@@ -324,8 +367,119 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
     });
   }
 
+  abrirReadecuacion(certificado: Certificado): void {
+    if (!this.obraId) return;
+    this.readecuacionCertificado = certificado;
+    this.opcionesReadecuacion = null;
+    this.saltosReadecuacion = [];
+    this.cargandoReadecuacion = true;
+    this.api.get<OpcionesReadecuacion>(`obras/${this.obraId}/certificados/${certificado.id}/readecuacion/opciones`).subscribe({
+      next: (opciones) => {
+        const guardados = new Map((opciones.guardada?.saltos ?? []).map((salto) => [salto.orden, salto]));
+        this.opcionesReadecuacion = opciones;
+        this.saltosReadecuacion = opciones.saltos.map((salto) => ({
+          ...salto,
+          seleccionado: guardados.has(salto.orden),
+          fap: guardados.get(salto.orden)?.fap ?? salto.fapCalculado ?? '',
+        }));
+        this.cargandoReadecuacion = false;
+      },
+      error: (error) => {
+        this.cargandoReadecuacion = false;
+        this.cerrarReadecuacion();
+        this.snack.open(error?.error?.message || 'No se pudieron cargar los ajustes FAP', 'Cerrar', { duration: 5000 });
+      },
+    });
+  }
+
+  cerrarReadecuacion(): void {
+    if (this.guardandoReadecuacion) return;
+    this.readecuacionCertificado = null;
+    this.opcionesReadecuacion = null;
+    this.saltosReadecuacion = [];
+  }
+
+  guardarReadecuacionPrecio(): void {
+    if (!this.obraId || !this.readecuacionCertificado || !this.opcionesReadecuacion) return;
+    const seleccionados = this.saltosReadecuacion.filter((salto) => salto.seleccionado);
+    if (seleccionados.length === 0) {
+      this.snack.open('Seleccioná al menos un ajuste mensual', 'Cerrar', { duration: 3500 });
+      return;
+    }
+    const meses = seleccionados.map((salto) => salto.mesCorte);
+    if (new Set(meses).size !== meses.length) {
+      this.snack.open('No podés seleccionar dos veces el mismo mes', 'Cerrar', { duration: 3500 });
+      return;
+    }
+    const invalido = seleccionados.find((salto) => !salto.fap || this.numero(salto.fap) <= 0);
+    if (invalido) {
+      this.snack.open(`Ingresá el FAP del ajuste ${invalido.orden}`, 'Cerrar', { duration: 3500 });
+      return;
+    }
+    this.guardandoReadecuacion = true;
+    this.api.put<ReadecuacionGuardada>(
+      `obras/${this.obraId}/certificados/${this.readecuacionCertificado.id}/readecuacion`,
+      {
+        estructuraId: this.opcionesReadecuacion.estructuraId,
+        saltos: seleccionados.map((salto) => ({
+          orden: salto.orden,
+          mesBase: salto.mesBase,
+          mesCorte: salto.mesCorte,
+          fap: salto.fap === salto.fapCalculado ? undefined : salto.fap,
+        })),
+      },
+    ).subscribe({
+      next: () => {
+        const numeroCertificado = this.readecuacionCertificado?.numero;
+        this.guardandoReadecuacion = false;
+        this.cerrarReadecuacion();
+        this.snack.open(`Readecuación del certificado N° ${numeroCertificado} guardada`, 'Cerrar', { duration: 4000 });
+        this.cargarDatos();
+      },
+      error: (error) => {
+        this.guardandoReadecuacion = false;
+        this.snack.open(error?.error?.message || 'No se pudo guardar la readecuación', 'Cerrar', { duration: 5000 });
+      },
+    });
+  }
+
+  cambiarMesReadecuacion(salto: SaltoReadecuacion, mesCorte: string): void {
+    const opcion = this.opcionesReadecuacion?.saltos.find((item) => item.mesCorte === mesCorte);
+    if (!opcion) return;
+    salto.mesBase = opcion.mesBase;
+    salto.mesCorte = opcion.mesCorte;
+    salto.fapCalculado = opcion.fapCalculado;
+    salto.faltantes = opcion.faltantes;
+    salto.fap = opcion.fapCalculado ?? '';
+  }
+
+  fapConsolidadoVista(): number {
+    const producto = this.saltosReadecuacion
+      .filter((salto) => salto.seleccionado)
+      .reduce((total, salto) => total * this.numero(salto.fap || 1), 1);
+    return Math.round((producto + Number.EPSILON) * 10000) / 10000;
+  }
+
+  incrementoVista(): number {
+    return this.redondearCentavos(
+      this.numero(this.opcionesReadecuacion?.certificado.montoNetoActualizar)
+        * (this.fapConsolidadoVista() - 1),
+    );
+  }
+
+  fondoReparoVista(): number {
+    return this.redondearCentavos(
+      this.incrementoVista()
+        * this.numero(this.opcionesReadecuacion?.certificado.porcentajeFondoReparo) / 100,
+    );
+  }
+
+  incrementoNetoVista(): number {
+    return this.redondearCentavos(this.incrementoVista() - this.fondoReparoVista());
+  }
+
   async abrirVistaPrevia(
-    tipo: 'foja' | 'certificado',
+    tipo: 'foja' | 'certificado' | 'readecuacion',
     certificado: Certificado,
   ): Promise<void> {
     this.cerrarVistaPrevia();
@@ -334,19 +488,60 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       const data = this.datosPdf(certificado);
       const doc = tipo === 'foja'
         ? await crearFojaPdf(data)
-        : await crearCertificadoPdf(data);
+        : tipo === 'certificado'
+          ? await crearCertificadoPdf(data)
+          : await crearReadecuacionPdf(this.datosReadecuacionPdf(certificado));
       this.vistaPreviaObjectUrl = URL.createObjectURL(doc.output('blob'));
       this.vistaPreviaUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
         `${this.vistaPreviaObjectUrl}#toolbar=0&navpanes=0&scrollbar=1`,
       );
       this.vistaPreviaTitulo = tipo === 'foja'
         ? `Vista previa - Foja N° ${String(data.numeroFoja).padStart(2, '0')}`
-        : `Vista previa - Certificado N° ${data.numero}`;
+        : tipo === 'certificado'
+          ? `Vista previa - Certificado N° ${data.numero}`
+          : `Vista previa - Readecuación del certificado N° ${data.numero}`;
     } catch {
       this.snack.open('No se pudo generar la vista previa', 'Cerrar', { duration: 4000 });
     } finally {
       this.generandoVistaPrevia = false;
     }
+  }
+
+  validarReadecuacion(certificado: Certificado): void {
+    if (!this.obraId || this.cambiandoValidacionId !== null) return;
+    this.cambiandoValidacionId = certificado.id;
+    this.api.post<ReadecuacionGuardada>(`obras/${this.obraId}/certificados/${certificado.id}/readecuacion/aprobar`, {}).subscribe({
+      next: () => {
+        this.cambiandoValidacionId = null;
+        this.snack.open('Readecuación validada correctamente', 'Cerrar', { duration: 3500 });
+        this.cargarDatos();
+      },
+      error: (error) => {
+        this.cambiandoValidacionId = null;
+        this.snack.open(error?.error?.message || 'No se pudo validar la readecuación', 'Cerrar', { duration: 4500 });
+      },
+    });
+  }
+
+  desvalidarReadecuacion(certificado: Certificado): void {
+    if (!this.obraId || this.cambiandoValidacionId !== null) return;
+    this.cambiandoValidacionId = certificado.id;
+    this.api.post<ReadecuacionGuardada>(`obras/${this.obraId}/certificados/${certificado.id}/readecuacion/desaprobar`, {}).subscribe({
+      next: () => {
+        this.cambiandoValidacionId = null;
+        this.snack.open('Readecuación desvalidada', 'Cerrar', { duration: 3500 });
+        this.cargarDatos();
+      },
+      error: (error) => {
+        this.cambiandoValidacionId = null;
+        this.snack.open(error?.error?.message || 'No se pudo desvalidar la readecuación', 'Cerrar', { duration: 4500 });
+      },
+    });
+  }
+
+  imprimirReadecuacion(certificado: Certificado): void {
+    if (!certificado.readecuacion || certificado.readecuacion.estado !== 'APROBADO') return;
+    descargarReadecuacionPdf(this.datosReadecuacionPdf(certificado));
   }
 
   cerrarVistaPrevia(): void {
@@ -423,6 +618,11 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       rubros: this.rubros,
       detalles: certificado.detalles,
     };
+  }
+
+  private datosReadecuacionPdf(certificado: Certificado): ReadecuacionPdfData {
+    if (!certificado.readecuacion) throw new Error('El certificado no tiene readecuación');
+    return { ...this.datosPdf(certificado), readecuacion: certificado.readecuacion };
   }
 
   crearSiguienteFoja(): void {
@@ -524,5 +724,9 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
   numero(value: unknown): number {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  private redondearCentavos(value: number): number {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
   }
 }

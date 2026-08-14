@@ -76,6 +76,10 @@ export const routes: Routes = [
           import('./features/obras/obra-wizard/obra-wizard.component').then(m => m.ObraWizardComponent),
       },
       {
+        path: 'obras/fap',
+        loadComponent: () => import('./features/obras/fap/fap.component').then(m => m.FapComponent),
+      },
+      {
         path: 'obras',
         loadComponent: () =>
           import('./features/obras/obras-list/obras-list.component').then(m => m.ObrasListComponent),

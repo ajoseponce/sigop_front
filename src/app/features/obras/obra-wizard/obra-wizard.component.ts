@@ -32,11 +32,17 @@ export class ObraWizardComponent {
     return (contrato?.rubros ?? []).reduce(
       (totalRubros: number, rubro: any) => totalRubros + (rubro.items ?? []).reduce(
         (totalItems: number, item: any) =>
-          totalItems + Number(item.cantidad ?? 0) * Number(item.precioUnitario ?? 0),
+          totalItems + this.redondearMoneda(
+            Number(item.cantidad ?? 0) * Number(item.precioUnitario ?? 0),
+          ),
         0,
       ),
       0,
     );
+  }
+
+  private redondearMoneda(valor: number): number {
+    return Math.round((valor + Number.EPSILON) * 100) / 100;
   }
 
   get computoExcedeLimite(): boolean {

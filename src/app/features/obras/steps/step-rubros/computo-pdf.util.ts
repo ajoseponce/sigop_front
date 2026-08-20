@@ -38,9 +38,13 @@ function money(value: number): string {
 
 function totalRubro(rubro: ComputoPdfRubro): number {
   return rubro.items.reduce(
-    (total, item) => total + item.cantidad * item.precioUnitario,
+    (total, item) => total + redondearMoneda(item.cantidad * item.precioUnitario),
     0,
   );
+}
+
+function redondearMoneda(valor: number): number {
+  return Math.round((valor + Number.EPSILON) * 100) / 100;
 }
 
 function sanitizeFilename(value: string): string {
@@ -120,7 +124,7 @@ export async function crearComputoPdf(data: ComputoPdfData): Promise<jsPDF> {
             styles: { halign: 'right' },
           },
           {
-            content: money(item.cantidad * item.precioUnitario),
+            content: money(redondearMoneda(item.cantidad * item.precioUnitario)),
             styles: { halign: 'right' },
           },
           '',

@@ -11,7 +11,7 @@
         <ng-container matColumnDef="hora"><th mat-header-cell *matHeaderCellDef>Hora</th><td mat-cell *matCellDef="let c">{{ c.hora }}</td></ng-container>
         <ng-container matColumnDef="interno"><th mat-header-cell *matHeaderCellDef>Interno</th><td mat-cell *matCellDef="let c"><strong>{{ c.interno }}</strong></td></ng-container>
         <ng-container matColumnDef="kms"><th mat-header-cell *matHeaderCellDef>Kms</th><td mat-cell *matCellDef="let c">{{ c.kms ?? '—' }}</td></ng-container>
-        <ng-container matColumnDef="chofer"><th mat-header-cell *matHeaderCellDef>Chofer</th><td mat-cell *matCellDef="let c"><span class="legajo">{{ c.choferLegajo || '—' }}</span> {{ c.chofer?.nombre || 'Nombre pendiente' }}</td></ng-container>
+        <ng-container matColumnDef="chofer"><th mat-header-cell *matHeaderCellDef>Chofer</th><td mat-cell *matCellDef="let c"><span class="legajo">{{ c.choferLegajo || '—' }}</span> {{ c.chofer?.nombre || c.choferNombreInformado || 'Nombre pendiente' }}</td></ng-container>
         <ng-container matColumnDef="litros"><th mat-header-cell *matHeaderCellDef>Litros</th><td mat-cell *matCellDef="let c">{{ c.litros | number:'1.0-2' }} L</td></ng-container>
         <ng-container matColumnDef="puntoCarga"><th mat-header-cell *matHeaderCellDef>Punto de carga</th><td mat-cell *matCellDef="let c">{{ c.puntoCarga.nombre }}</td></ng-container>
         <ng-container matColumnDef="acciones"><th mat-header-cell *matHeaderCellDef>Acciones</th><td mat-cell *matCellDef="let c">

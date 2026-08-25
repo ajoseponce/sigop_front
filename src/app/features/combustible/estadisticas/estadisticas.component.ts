@@ -34,6 +34,7 @@ export class EstadisticasComponent implements OnInit {
   datos = signal<Estadisticas | null>(null);
   choferes = signal<any[]>([]);
   cargando = signal(false);
+  tooltipDia = signal<{ x: number; y: number; fecha: string; litros: number; cargas: number } | null>(null);
   readonly grafico = { ancho: 900, alto: 285, izquierda: 56, derecha: 24, arriba: 22, abajo: 48 };
 
   form = this.fb.group({
@@ -86,6 +87,15 @@ export class EstadisticasComponent implements OnInit {
   }
   anchoBarra(valor: number, maximo: number) { return `${Math.max(valor / maximo * 100, valor > 0 ? 2 : 0)}%`; }
   fechaCorta(fecha: string) { const [, mes, dia] = fecha.split('-'); return `${dia}/${mes}`; }
+  fechaCompleta(fecha: string) { const [anio, mes, dia] = fecha.split('-'); return `${dia}/${mes}/${anio}`; }
+  mostrarTooltip(dia: SerieDia, index: number) {
+    const ancho = 174;
+    const xPunto = this.x(index);
+    const x = Math.min(Math.max(xPunto - ancho / 2, this.grafico.izquierda), this.grafico.ancho - this.grafico.derecha - ancho);
+    const y = Math.max(this.y(dia.litros) - 76, 6);
+    this.tooltipDia.set({ x, y, fecha: dia.fecha, litros: dia.litros, cargas: dia.cargas });
+  }
+  ocultarTooltip() { this.tooltipDia.set(null); }
   formatoLitros(valor: unknown, decimales = 2) {
     const numero = Number(valor);
     if (!Number.isFinite(numero)) return '0';

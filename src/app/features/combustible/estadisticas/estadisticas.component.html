@@ -24,7 +24,21 @@
         <div class="svg-scroll"><svg [attr.viewBox]="'0 0 '+grafico.ancho+' '+grafico.alto" role="img" aria-label="Gráfico de consumo diario">
           @for (tick of ticksY; track tick.y) { <line class="grid-line" [attr.x1]="grafico.izquierda" [attr.x2]="grafico.ancho-grafico.derecha" [attr.y1]="tick.y" [attr.y2]="tick.y"/><text class="axis-label" [attr.x]="grafico.izquierda-10" [attr.y]="tick.y+4" text-anchor="end">{{ formatoLitros(tick.valor,0) }}</text> }
           <polyline class="area-line" [attr.points]="puntosLinea"/>
-          @for (dia of dias; track dia.fecha; let i=$index) { <circle class="point" [attr.cx]="x(i)" [attr.cy]="y(dia.litros)" r="5"><title>{{ dia.fecha }}: {{ dia.litros }} litros</title></circle><text class="x-label" [attr.x]="x(i)" [attr.y]="grafico.alto-18" text-anchor="middle">{{ fechaCorta(dia.fecha) }}</text> }
+          @for (dia of dias; track dia.fecha; let i=$index) {
+            <circle class="point" [attr.cx]="x(i)" [attr.cy]="y(dia.litros)" r="6" tabindex="0"
+              (mouseenter)="mostrarTooltip(dia,i)" (mouseleave)="ocultarTooltip()"
+              (focus)="mostrarTooltip(dia,i)" (blur)="ocultarTooltip()"
+              (click)="mostrarTooltip(dia,i)"></circle>
+            <text class="x-label" [attr.x]="x(i)" [attr.y]="grafico.alto-18" text-anchor="middle">{{ fechaCorta(dia.fecha) }}</text>
+          }
+          @if (tooltipDia(); as tip) {
+            <g class="chart-tooltip" [attr.transform]="'translate('+tip.x+' '+tip.y+')'" pointer-events="none">
+              <rect width="174" height="62" rx="9" ry="9"></rect>
+              <text x="12" y="20" class="tooltip-date">{{ fechaCompleta(tip.fecha) }}</text>
+              <text x="12" y="42" class="tooltip-value">{{ formatoLitros(tip.litros) }} litros</text>
+              <text x="162" y="42" text-anchor="end" class="tooltip-loads">{{ tip.cargas }} {{ tip.cargas === 1 ? 'carga' : 'cargas' }}</text>
+            </g>
+          }
         </svg></div>
       } @else { <div class="empty"><mat-icon>query_stats</mat-icon><p>No hay consumos para los filtros seleccionados</p></div> }
     </section>

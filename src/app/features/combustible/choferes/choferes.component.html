@@ -1,0 +1,39 @@
+<div class="page-container fade-in-up">
+  <div class="page-header">
+    <div><h1>Choferes</h1><p>Gestión del personal habilitado para cargas de combustible</p></div>
+    <button mat-raised-button color="primary" (click)="abrirModal()"><mat-icon>person_add</mat-icon> Nuevo chofer</button>
+  </div>
+
+  <div class="table-card card">
+    <div class="table-scroll">
+      <table mat-table [dataSource]="choferes()">
+        <ng-container matColumnDef="nombre"><th mat-header-cell *matHeaderCellDef>Apellido y nombre</th><td mat-cell *matCellDef="let c"><strong>{{ c.nombre }}</strong></td></ng-container>
+        <ng-container matColumnDef="legajo"><th mat-header-cell *matHeaderCellDef>Legajo</th><td mat-cell *matCellDef="let c">{{ c.legajo || 'Pendiente' }}</td></ng-container>
+        <ng-container matColumnDef="dni"><th mat-header-cell *matHeaderCellDef>DNI</th><td mat-cell *matCellDef="let c">{{ c.dni || 'Pendiente' }}</td></ng-container>
+        <ng-container matColumnDef="estado"><th mat-header-cell *matHeaderCellDef>Estado</th><td mat-cell *matCellDef="let c"><span class="estado" [class.activo]="c.activo" [class.inactivo]="!c.activo">{{ c.activo ? 'Activo' : 'Baja' }}</span></td></ng-container>
+        <ng-container matColumnDef="acciones"><th mat-header-cell *matHeaderCellDef>Acciones</th><td mat-cell *matCellDef="let c">
+          <button mat-icon-button matTooltip="Editar" (click)="abrirModal(c)"><mat-icon>edit</mat-icon></button>
+          @if (c.activo) { <button mat-icon-button color="warn" matTooltip="Dar de baja" (click)="eliminar(c)"><mat-icon>person_off</mat-icon></button> }
+        </td></ng-container>
+        <tr mat-header-row *matHeaderRowDef="columnas"></tr><tr mat-row *matRowDef="let row; columns: columnas"></tr>
+      </table>
+    </div>
+    @if (!cargando() && choferes().length === 0) { <div class="empty-state"><mat-icon>badge</mat-icon><p>No hay choferes registrados</p></div> }
+  </div>
+</div>
+
+@if (modalOpen()) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header"><div><h2>{{ editando() ? 'Editar chofer' : 'Nuevo chofer' }}</h2><p>Los campos son obligatorios</p></div><button mat-icon-button (click)="cerrarModal()"><mat-icon>close</mat-icon></button></div>
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="modal-form">
+        <mat-form-field appearance="outline"><mat-label>Apellido y nombre</mat-label><input matInput formControlName="nombre" maxlength="150"><mat-error>Ingresá apellido y nombre</mat-error></mat-form-field>
+        <div class="form-grid">
+          <mat-form-field appearance="outline"><mat-label>Legajo</mat-label><input matInput inputmode="numeric" maxlength="5" formControlName="legajo" (input)="soloDigitos('legajo', 5, $event)"><mat-hint>Hasta 5 dígitos</mat-hint><mat-error>Debe tener entre 1 y 5 dígitos</mat-error></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>DNI</mat-label><input matInput inputmode="numeric" maxlength="8" formControlName="dni" (input)="soloDigitos('dni', 8, $event)"><mat-hint>7 u 8 dígitos</mat-hint><mat-error>Ingresá un DNI válido</mat-error></mat-form-field>
+        </div>
+        <div class="modal-actions"><button mat-stroked-button type="button" (click)="cerrarModal()">Cancelar</button><button mat-raised-button color="primary" type="submit">{{ editando() ? 'Guardar cambios' : 'Crear chofer' }}</button></div>
+      </form>
+    </div>
+  </div>
+}

@@ -30,18 +30,21 @@ export class CombustibleComponent implements OnInit {
   consumos = signal<any[]>([]);
   choferes = signal<Catalogo[]>([]);
   puntosCarga = signal<Catalogo[]>([]);
+  estadoChofer = signal<'idle' | 'buscando' | 'encontrado' | 'no-encontrado'>('idle');
   cargando = signal(false);
   modalOpen = signal(false);
   editando = signal<any | null>(null);
-  columnas = ['fecha', 'hora', 'interno', 'chofer', 'litros', 'puntoCarga', 'acciones'];
+  columnas = ['fecha', 'hora', 'interno', 'kms', 'chofer', 'litros', 'puntoCarga', 'acciones'];
 
   form = this.fb.group({
     fecha: [{ value: this.hoy(), disabled: true }],
     hora: ['', [Validators.required, Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d$/)]],
-    choferId: [null as number | null, Validators.required],
+    choferLegajo: ['', [Validators.required, Validators.pattern(/^\d{1,5}$/)]],
+    choferNombre: [{ value: '', disabled: true }],
     litros: [null as number | null, [Validators.required, Validators.min(0.01)]],
     puntoCargaId: [null as number | null, Validators.required],
     interno: ['', [Validators.required, Validators.pattern(/^\d{1,3}$/)]],
+    kms: [null as number | null, [Validators.min(0), Validators.pattern(/^\d+$/)]],
   });
 
   ngOnInit() { this.cargarTodo(); }
@@ -63,8 +66,10 @@ export class CombustibleComponent implements OnInit {
   abrirModal(consumo?: any) {
     this.editando.set(consumo ?? null);
     this.form.reset({ fecha: consumo ? String(consumo.fecha).slice(0, 10) : this.hoy(), hora: consumo?.hora ?? '',
-      choferId: consumo?.choferId ?? null, litros: consumo ? Number(consumo.litros) : null,
-      puntoCargaId: consumo?.puntoCargaId ?? null, interno: consumo ? String(consumo.interno) : '' });
+      choferLegajo: consumo?.choferLegajo ?? consumo?.chofer?.legajo ?? '', choferNombre: consumo?.chofer?.nombre ?? '',
+      litros: consumo ? Number(consumo.litros) : null, puntoCargaId: consumo?.puntoCargaId ?? null,
+      interno: consumo ? String(consumo.interno) : '', kms: consumo?.kms ?? null });
+    this.estadoChofer.set(consumo?.chofer ? 'encontrado' : consumo?.choferLegajo ? 'no-encontrado' : 'idle');
     this.modalOpen.set(true);
   }
   cerrarModal() { this.modalOpen.set(false); this.editando.set(null); }
@@ -76,11 +81,34 @@ export class CombustibleComponent implements OnInit {
     this.form.controls.interno.setValue(limpio);
   }
 
+  buscarChoferPorLegajo(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const legajo = input.value.replace(/\D/g, '').slice(0, 5);
+    input.value = legajo;
+    this.form.controls.choferLegajo.setValue(legajo);
+    this.form.controls.choferNombre.setValue('');
+    if (legajo.length === 0) { this.estadoChofer.set('idle'); return; }
+    this.estadoChofer.set('buscando');
+    this.api.get<any>(`combustible/choferes/legajo/${legajo}`).subscribe({
+      next: chofer => {
+        if (this.form.controls.choferLegajo.value !== legajo) return;
+        this.form.controls.choferNombre.setValue(chofer.nombre);
+        this.estadoChofer.set('encontrado');
+      },
+      error: () => {
+        if (this.form.controls.choferLegajo.value !== legajo) return;
+        this.form.controls.choferNombre.setValue('');
+        this.estadoChofer.set('no-encontrado');
+      },
+    });
+  }
+
   guardar() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     const raw = this.form.getRawValue();
-    const body = { hora: raw.hora!, choferId: Number(raw.choferId), litros: Number(raw.litros),
-      puntoCargaId: Number(raw.puntoCargaId), interno: Number(raw.interno) };
+    const body = { hora: raw.hora!, choferLegajo: raw.choferLegajo!, litros: Number(raw.litros),
+      puntoCargaId: Number(raw.puntoCargaId), interno: Number(raw.interno),
+      ...(raw.kms !== null ? { kms: Number(raw.kms) } : {}) };
     const op = this.editando()
       ? this.api.put(`combustible/consumos/${this.editando().id}`, body)
       : this.api.post('combustible/consumos', body);

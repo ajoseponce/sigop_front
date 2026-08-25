@@ -42,7 +42,10 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
     { label: 'Categorías de recursos', icon: 'category', ruta: '/panol/categorias', roles: ['ADMIN','SUPERVISOR'] },
     { label: 'Recursos y materiales', icon: 'inventory', ruta: '/panol/materiales', roles: ['ADMIN','SUPERVISOR'] },
   ]},
-  { label: 'Combustible', icon: 'local_gas_station', ruta: '/combustible', roles: ['ADMIN','SUPERVISOR'] },
+  { label: 'Combustible', icon: 'local_gas_station', roles: ['ADMIN','SUPERVISOR'], hijos: [
+    { label: 'Cargas de combustible', icon: 'local_gas_station', ruta: '/combustible/cargas', roles: ['ADMIN','SUPERVISOR'] },
+    { label: 'Choferes', icon: 'badge', ruta: '/combustible/choferes', roles: ['ADMIN','SUPERVISOR'] },
+  ]},
 ];
 
 type MenuApiItem = {

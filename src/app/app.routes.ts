@@ -72,8 +72,18 @@ export const routes: Routes = [
       },
       {
         path: 'combustible',
+        redirectTo: 'combustible/cargas',
+        pathMatch: 'full',
+      },
+      {
+        path: 'combustible/cargas',
         loadComponent: () =>
           import('./features/combustible/combustible.component').then(m => m.CombustibleComponent),
+      },
+      {
+        path: 'combustible/choferes',
+        loadComponent: () =>
+          import('./features/combustible/choferes/choferes.component').then(m => m.ChoferesComponent),
       },
       {
         path: 'obras/nueva',

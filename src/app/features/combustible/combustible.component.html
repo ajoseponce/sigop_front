@@ -10,7 +10,8 @@
         <ng-container matColumnDef="fecha"><th mat-header-cell *matHeaderCellDef>Fecha</th><td mat-cell *matCellDef="let c">{{ c.fecha | date:'dd/MM/yyyy':'UTC' }}</td></ng-container>
         <ng-container matColumnDef="hora"><th mat-header-cell *matHeaderCellDef>Hora</th><td mat-cell *matCellDef="let c">{{ c.hora }}</td></ng-container>
         <ng-container matColumnDef="interno"><th mat-header-cell *matHeaderCellDef>Interno</th><td mat-cell *matCellDef="let c"><strong>{{ c.interno }}</strong></td></ng-container>
-        <ng-container matColumnDef="chofer"><th mat-header-cell *matHeaderCellDef>Chofer</th><td mat-cell *matCellDef="let c">{{ c.chofer.nombre }}</td></ng-container>
+        <ng-container matColumnDef="kms"><th mat-header-cell *matHeaderCellDef>Kms</th><td mat-cell *matCellDef="let c">{{ c.kms ?? '—' }}</td></ng-container>
+        <ng-container matColumnDef="chofer"><th mat-header-cell *matHeaderCellDef>Chofer</th><td mat-cell *matCellDef="let c"><span class="legajo">{{ c.choferLegajo || '—' }}</span> {{ c.chofer?.nombre || 'Nombre pendiente' }}</td></ng-container>
         <ng-container matColumnDef="litros"><th mat-header-cell *matHeaderCellDef>Litros</th><td mat-cell *matCellDef="let c">{{ c.litros | number:'1.0-2' }} L</td></ng-container>
         <ng-container matColumnDef="puntoCarga"><th mat-header-cell *matHeaderCellDef>Punto de carga</th><td mat-cell *matCellDef="let c">{{ c.puntoCarga.nombre }}</td></ng-container>
         <ng-container matColumnDef="acciones"><th mat-header-cell *matHeaderCellDef>Acciones</th><td mat-cell *matCellDef="let c">
@@ -32,9 +33,12 @@
         <div class="form-grid">
           <mat-form-field appearance="outline"><mat-label>Fecha</mat-label><input matInput type="date" formControlName="fecha"><mat-hint>Se asigna automáticamente</mat-hint></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Hora</mat-label><input matInput type="time" formControlName="hora">@if (form.controls.hora.touched && form.controls.hora.invalid) { <mat-error>Ingresá una hora válida</mat-error> }</mat-form-field>
-          <mat-form-field appearance="outline" class="wide"><mat-label>Chofer</mat-label><mat-select formControlName="choferId">@for (chofer of choferes(); track chofer.id) { <mat-option [value]="chofer.id">{{ chofer.nombre }}</mat-option> }</mat-select><mat-error>Seleccioná un chofer</mat-error></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Legajo del conductor</mat-label><input matInput inputmode="numeric" maxlength="5" formControlName="choferLegajo" (input)="buscarChoferPorLegajo($event)"><mat-hint>Hasta 5 dígitos</mat-hint><mat-error>Ingresá un legajo de hasta 5 dígitos</mat-error></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Apellido y nombre</mat-label><input matInput formControlName="choferNombre" readonly></mat-form-field>
+          @if (estadoChofer() === 'no-encontrado') { <div class="chofer-warning wide"><mat-icon>warning_amber</mat-icon><span>No se encontró el legajo. La carga se guardará y el apellido y nombre serán actualizados después.</span></div> }
           <mat-form-field appearance="outline"><mat-label>Litros</mat-label><input matInput type="number" min="0.01" step="0.01" inputmode="decimal" formControlName="litros"><mat-error>Ingresá una cantidad positiva</mat-error></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Interno</mat-label><input matInput type="text" inputmode="numeric" maxlength="3" formControlName="interno" (input)="limitarInterno($event)"><mat-hint>Hasta 3 dígitos</mat-hint><mat-error>Debe tener entre 1 y 3 dígitos</mat-error></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Kms (opcional)</mat-label><input matInput type="number" min="0" step="1" inputmode="numeric" formControlName="kms"><mat-error>Ingresá kilómetros válidos</mat-error></mat-form-field>
           <mat-form-field appearance="outline" class="wide"><mat-label>Punto de carga</mat-label><mat-select formControlName="puntoCargaId">@for (punto of puntosCarga(); track punto.id) { <mat-option [value]="punto.id">{{ punto.nombre }}</mat-option> }</mat-select><mat-error>Seleccioná un punto de carga</mat-error></mat-form-field>
         </div>
         <div class="modal-actions"><button mat-stroked-button type="button" (click)="cerrarModal()">Cancelar</button><button mat-raised-button color="primary" type="submit">{{ editando() ? 'Guardar cambios' : 'Registrar carga' }}</button></div>

@@ -1,0 +1,41 @@
+<div class="page-container fade-in-up">
+  <div class="page-header"><div><h1>Estadísticas de combustible</h1><p>Análisis de consumos por período, chofer e interno</p></div></div>
+
+  <form class="filters card" [formGroup]="form" (ngSubmit)="aplicarFiltros()">
+    <mat-form-field appearance="outline"><mat-label>Fecha desde</mat-label><input matInput type="date" formControlName="fechaDesde"></mat-form-field>
+    <mat-form-field appearance="outline"><mat-label>Fecha hasta</mat-label><input matInput type="date" formControlName="fechaHasta"></mat-form-field>
+    <mat-form-field appearance="outline"><mat-label>Chofer</mat-label><mat-select formControlName="choferId"><mat-option [value]="null">Todos</mat-option>@for (c of choferes(); track c.id) { <mat-option [value]="c.id">{{ c.nombre }}{{ c.activo ? '' : ' (Baja)' }}</mat-option> }</mat-select></mat-form-field>
+    <mat-form-field appearance="outline"><mat-label>Interno</mat-label><input matInput inputmode="numeric" maxlength="3" formControlName="interno" placeholder="Todos"></mat-form-field>
+    <mat-form-field appearance="outline"><mat-label>Litros desde</mat-label><input matInput type="number" min="0" step="0.01" formControlName="litrosDesde" placeholder="Sin mínimo"></mat-form-field>
+    <div class="filter-actions"><button mat-stroked-button type="button" (click)="limpiar()">Limpiar</button><button mat-raised-button color="primary" type="submit" [disabled]="cargando()"><mat-icon>filter_alt</mat-icon> Aplicar</button></div>
+  </form>
+
+  @if (datos(); as estadisticas) {
+    <section class="summary-grid">
+      <article class="summary card"><div class="summary-icon litros"><mat-icon>local_gas_station</mat-icon></div><div><span>Litros consumidos</span><strong>{{ formatoLitros(estadisticas.resumen.totalLitros) }} <small>L</small></strong></div></article>
+      <article class="summary card"><div class="summary-icon cargas"><mat-icon>receipt_long</mat-icon></div><div><span>Total de cargas</span><strong>{{ estadisticas.resumen.totalCargas }}</strong></div></article>
+      <article class="summary card"><div class="summary-icon promedio"><mat-icon>speed</mat-icon></div><div><span>Promedio por carga</span><strong>{{ formatoLitros(estadisticas.resumen.promedioLitros) }} <small>L</small></strong></div></article>
+      <article class="summary card"><div class="summary-icon internos"><mat-icon>local_shipping</mat-icon></div><div><span>Internos con consumo</span><strong>{{ estadisticas.resumen.totalInternos }}</strong></div></article>
+    </section>
+
+    <section class="chart-card card daily-chart">
+      <div class="chart-heading"><div><h2>Consumo por día</h2><p>Litros totales cargados diariamente</p></div><span class="legend"><i></i> Litros</span></div>
+      @if (dias.length) {
+        <div class="svg-scroll"><svg [attr.viewBox]="'0 0 '+grafico.ancho+' '+grafico.alto" role="img" aria-label="Gráfico de consumo diario">
+          @for (tick of ticksY; track tick.y) { <line class="grid-line" [attr.x1]="grafico.izquierda" [attr.x2]="grafico.ancho-grafico.derecha" [attr.y1]="tick.y" [attr.y2]="tick.y"/><text class="axis-label" [attr.x]="grafico.izquierda-10" [attr.y]="tick.y+4" text-anchor="end">{{ formatoLitros(tick.valor,0) }}</text> }
+          <polyline class="area-line" [attr.points]="puntosLinea"/>
+          @for (dia of dias; track dia.fecha; let i=$index) { <circle class="point" [attr.cx]="x(i)" [attr.cy]="y(dia.litros)" r="5"><title>{{ dia.fecha }}: {{ dia.litros }} litros</title></circle><text class="x-label" [attr.x]="x(i)" [attr.y]="grafico.alto-18" text-anchor="middle">{{ fechaCorta(dia.fecha) }}</text> }
+        </svg></div>
+      } @else { <div class="empty"><mat-icon>query_stats</mat-icon><p>No hay consumos para los filtros seleccionados</p></div> }
+    </section>
+
+    <div class="bars-grid">
+      <section class="chart-card card"><div class="chart-heading"><div><h2>Por chofer</h2><p>Los 10 mayores consumos</p></div></div>
+        <div class="bar-list">@for (item of choferesTop; track $index) { <div class="bar-row"><div class="bar-label"><span>{{ item.nombre }}</span><small>{{ item.legajo ? 'Legajo '+item.legajo : 'Sin legajo' }} · {{ item.cargas }} cargas</small></div><div class="bar-track"><div class="bar-fill pink" [style.width]="anchoBarra(item.litros,maxChofer)"></div></div><strong>{{ formatoLitros(item.litros) }} <small>L</small></strong></div> } @empty { <div class="empty small"><p>Sin datos</p></div> }</div>
+      </section>
+      <section class="chart-card card"><div class="chart-heading"><div><h2>Por móvil</h2><p>Los 10 internos con mayor consumo</p></div></div>
+        <div class="bar-list">@for (item of internosTop; track $index) { <div class="bar-row"><div class="bar-label"><span>Interno {{ item.interno }}</span><small>{{ item.cargas }} {{ item.cargas === 1 ? 'carga' : 'cargas' }}</small></div><div class="bar-track"><div class="bar-fill teal" [style.width]="anchoBarra(item.litros,maxInterno)"></div></div><strong>{{ formatoLitros(item.litros) }} <small>L</small></strong></div> } @empty { <div class="empty small"><p>Sin datos</p></div> }</div>
+      </section>
+    </div>
+  }
+</div>

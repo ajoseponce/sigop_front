@@ -45,6 +45,7 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
   { label: 'Combustible', icon: 'local_gas_station', roles: ['ADMIN','SUPERVISOR'], hijos: [
     { label: 'Cargas de combustible', icon: 'local_gas_station', ruta: '/combustible/cargas', roles: ['ADMIN','SUPERVISOR'] },
     { label: 'Choferes', icon: 'badge', ruta: '/combustible/choferes', roles: ['ADMIN','SUPERVISOR'] },
+    { label: 'Estadísticas', icon: 'analytics', ruta: '/combustible/estadisticas', roles: ['ADMIN','SUPERVISOR'] },
   ]},
 ];
 
@@ -76,7 +77,7 @@ export class ShellComponent implements OnInit {
 
   sidebarAbierto = signal(true);
   navItems = signal<NavItem[]>(DEFAULT_NAV_ITEMS);
-  appVersion = '1.0.5';
+  appVersion = '1.0.6';
 
   submenuAbierto = signal<string | null>(null);
 

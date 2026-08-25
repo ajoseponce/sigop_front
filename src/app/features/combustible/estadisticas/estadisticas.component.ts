@@ -69,8 +69,8 @@ export class EstadisticasComponent implements OnInit {
   }
 
   get dias() { return this.datos()?.porDia ?? []; }
-  get choferesTop() { return (this.datos()?.porChofer ?? []).slice(0, 10); }
-  get internosTop() { return (this.datos()?.porInterno ?? []).slice(0, 10); }
+  get choferesTop() { return this.datos()?.porChofer ?? []; }
+  get internosTop() { return this.datos()?.porInterno ?? []; }
   get maxDia() { return Math.max(...this.dias.map(item => item.litros), 1); }
   get maxChofer() { return Math.max(...this.choferesTop.map(item => item.litros), 1); }
   get maxInterno() { return Math.max(...this.internosTop.map(item => item.litros), 1); }

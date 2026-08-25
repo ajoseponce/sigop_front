@@ -44,10 +44,10 @@
     </section>
 
     <div class="bars-grid">
-      <section class="chart-card card"><div class="chart-heading"><div><h2>Por chofer</h2><p>Los 10 mayores consumos</p></div></div>
+      <section class="chart-card card"><div class="chart-heading"><div><h2>Por chofer</h2><p>Todos los choferes con consumo</p></div></div>
         <div class="bar-list">@for (item of choferesTop; track $index) { <div class="bar-row"><div class="bar-label"><span>{{ item.nombre }}</span><small>{{ item.legajo ? 'Legajo '+item.legajo : 'Sin legajo' }} · {{ item.cargas }} cargas</small></div><div class="bar-track"><div class="bar-fill pink" [style.width]="anchoBarra(item.litros,maxChofer)"></div></div><strong>{{ formatoLitros(item.litros) }} <small>L</small></strong></div> } @empty { <div class="empty small"><p>Sin datos</p></div> }</div>
       </section>
-      <section class="chart-card card"><div class="chart-heading"><div><h2>Por móvil</h2><p>Los 10 internos con mayor consumo</p></div></div>
+      <section class="chart-card card"><div class="chart-heading"><div><h2>Por móvil</h2><p>Todos los internos con consumo</p></div></div>
         <div class="bar-list">@for (item of internosTop; track $index) { <div class="bar-row"><div class="bar-label"><span>Interno {{ item.interno }}</span><small>{{ item.cargas }} {{ item.cargas === 1 ? 'carga' : 'cargas' }}</small></div><div class="bar-track"><div class="bar-fill teal" [style.width]="anchoBarra(item.litros,maxInterno)"></div></div><strong>{{ formatoLitros(item.litros) }} <small>L</small></strong></div> } @empty { <div class="empty small"><p>Sin datos</p></div> }</div>
       </section>
     </div>

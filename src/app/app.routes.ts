@@ -71,6 +71,11 @@ export const routes: Routes = [
           import('./features/panol/panol-materiales.component').then(m => m.PanolMaterialesComponent),
       },
       {
+        path: 'combustible',
+        loadComponent: () =>
+          import('./features/combustible/combustible.component').then(m => m.CombustibleComponent),
+      },
+      {
         path: 'obras/nueva',
         loadComponent: () =>
           import('./features/obras/obra-wizard/obra-wizard.component').then(m => m.ObraWizardComponent),

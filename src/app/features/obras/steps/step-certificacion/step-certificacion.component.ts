@@ -727,6 +727,9 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
   }
 
   private redondearCentavos(value: number): number {
-    return Math.round((value + Number.EPSILON) * 100) / 100;
+    const signo = value < 0 ? -1 : 1;
+    const absoluto = Math.abs(value);
+    const tolerancia = Number.EPSILON * absoluto * 100;
+    return signo * Math.floor(absoluto * 100 + 0.5 + tolerancia) / 100;
   }
 }

@@ -1,0 +1,44 @@
+<div class="page-container fade-in-up">
+  <div class="page-header">
+    <div><h1>Consumo de combustible</h1><p>Registro de cargas de los internos de Obras Públicas</p></div>
+    <button mat-raised-button color="primary" (click)="abrirModal()"><mat-icon>add</mat-icon> Nueva carga</button>
+  </div>
+
+  <div class="table-card card">
+    <div class="table-scroll">
+      <table mat-table [dataSource]="consumos()">
+        <ng-container matColumnDef="fecha"><th mat-header-cell *matHeaderCellDef>Fecha</th><td mat-cell *matCellDef="let c">{{ c.fecha | date:'dd/MM/yyyy':'UTC' }}</td></ng-container>
+        <ng-container matColumnDef="hora"><th mat-header-cell *matHeaderCellDef>Hora</th><td mat-cell *matCellDef="let c">{{ c.hora }}</td></ng-container>
+        <ng-container matColumnDef="interno"><th mat-header-cell *matHeaderCellDef>Interno</th><td mat-cell *matCellDef="let c"><strong>{{ c.interno }}</strong></td></ng-container>
+        <ng-container matColumnDef="chofer"><th mat-header-cell *matHeaderCellDef>Chofer</th><td mat-cell *matCellDef="let c">{{ c.chofer.nombre }}</td></ng-container>
+        <ng-container matColumnDef="litros"><th mat-header-cell *matHeaderCellDef>Litros</th><td mat-cell *matCellDef="let c">{{ c.litros | number:'1.0-2' }} L</td></ng-container>
+        <ng-container matColumnDef="puntoCarga"><th mat-header-cell *matHeaderCellDef>Punto de carga</th><td mat-cell *matCellDef="let c">{{ c.puntoCarga.nombre }}</td></ng-container>
+        <ng-container matColumnDef="acciones"><th mat-header-cell *matHeaderCellDef>Acciones</th><td mat-cell *matCellDef="let c">
+          <button mat-icon-button matTooltip="Editar" (click)="abrirModal(c)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button color="warn" matTooltip="Eliminar" (click)="eliminar(c)"><mat-icon>delete</mat-icon></button>
+        </td></ng-container>
+        <tr mat-header-row *matHeaderRowDef="columnas"></tr><tr mat-row *matRowDef="let row; columns: columnas"></tr>
+      </table>
+    </div>
+    @if (!cargando() && consumos().length === 0) { <div class="empty-state"><mat-icon>local_gas_station</mat-icon><p>Todavía no hay cargas registradas</p></div> }
+  </div>
+</div>
+
+@if (modalOpen()) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header"><div><h2>{{ editando() ? 'Editar carga' : 'Nueva carga' }}</h2><p>Completá los datos del despacho</p></div><button mat-icon-button (click)="cerrarModal()"><mat-icon>close</mat-icon></button></div>
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="modal-form">
+        <div class="form-grid">
+          <mat-form-field appearance="outline"><mat-label>Fecha</mat-label><input matInput type="date" formControlName="fecha"><mat-hint>Se asigna automáticamente</mat-hint></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Hora</mat-label><input matInput type="time" formControlName="hora">@if (form.controls.hora.touched && form.controls.hora.invalid) { <mat-error>Ingresá una hora válida</mat-error> }</mat-form-field>
+          <mat-form-field appearance="outline" class="wide"><mat-label>Chofer</mat-label><mat-select formControlName="choferId">@for (chofer of choferes(); track chofer.id) { <mat-option [value]="chofer.id">{{ chofer.nombre }}</mat-option> }</mat-select><mat-error>Seleccioná un chofer</mat-error></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Litros</mat-label><input matInput type="number" min="0.01" step="0.01" inputmode="decimal" formControlName="litros"><mat-error>Ingresá una cantidad positiva</mat-error></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Interno</mat-label><input matInput type="text" inputmode="numeric" maxlength="3" formControlName="interno" (input)="limitarInterno($event)"><mat-hint>Hasta 3 dígitos</mat-hint><mat-error>Debe tener entre 1 y 3 dígitos</mat-error></mat-form-field>
+          <mat-form-field appearance="outline" class="wide"><mat-label>Punto de carga</mat-label><mat-select formControlName="puntoCargaId">@for (punto of puntosCarga(); track punto.id) { <mat-option [value]="punto.id">{{ punto.nombre }}</mat-option> }</mat-select><mat-error>Seleccioná un punto de carga</mat-error></mat-form-field>
+        </div>
+        <div class="modal-actions"><button mat-stroked-button type="button" (click)="cerrarModal()">Cancelar</button><button mat-raised-button color="primary" type="submit">{{ editando() ? 'Guardar cambios' : 'Registrar carga' }}</button></div>
+      </form>
+    </div>
+  </div>
+}

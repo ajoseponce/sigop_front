@@ -42,6 +42,7 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
     { label: 'Categorías de recursos', icon: 'category', ruta: '/panol/categorias', roles: ['ADMIN','SUPERVISOR'] },
     { label: 'Recursos y materiales', icon: 'inventory', ruta: '/panol/materiales', roles: ['ADMIN','SUPERVISOR'] },
   ]},
+  { label: 'Combustible', icon: 'local_gas_station', ruta: '/combustible', roles: ['ADMIN','SUPERVISOR'] },
 ];
 
 type MenuApiItem = {
@@ -72,7 +73,7 @@ export class ShellComponent implements OnInit {
 
   sidebarAbierto = signal(true);
   navItems = signal<NavItem[]>(DEFAULT_NAV_ITEMS);
-  appVersion = '1.0.3';
+  appVersion = '1.0.4';
 
   submenuAbierto = signal<string | null>(null);
 

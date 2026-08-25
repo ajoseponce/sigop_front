@@ -73,11 +73,14 @@ export class ShellComponent implements OnInit {
 
   sidebarAbierto = signal(true);
   navItems = signal<NavItem[]>(DEFAULT_NAV_ITEMS);
-  appVersion = '1.0.4';
+  appVersion = '1.0.5';
 
   submenuAbierto = signal<string | null>(null);
 
   ngOnInit() {
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      this.sidebarAbierto.set(false);
+    }
     this.api.get<MenuApiItem[]>('pantallas/menu').subscribe({
       next: items => {
         const nav = this.mapearMenu(items);
@@ -90,6 +93,13 @@ export class ShellComponent implements OnInit {
   toggleSidebar() {
     this.sidebarAbierto.update(v => !v);
     if (!this.sidebarAbierto()) this.submenuAbierto.set(null);
+  }
+
+  cerrarSidebarMobile() {
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      this.sidebarAbierto.set(false);
+      this.submenuAbierto.set(null);
+    }
   }
 get primerRol(): string {
   const roles = this.auth.usuario()?.roles;

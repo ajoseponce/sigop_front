@@ -335,6 +335,8 @@ $transition:   var(--transition);
   background: var(--bg-page);
 }
 
+.mobile-backdrop { display: none; }
+
 // ── Responsive mobile ─────────────────────────────────────────
 @media (max-width: 768px) {
   .sidebar {
@@ -349,5 +351,15 @@ $transition:   var(--transition);
       width: $sidebar-w;
       min-width: $sidebar-w;
     }
+  }
+
+
+  .mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 190;
+    border: 0;
+    background: rgba(15, 23, 42, .42);
   }
 }

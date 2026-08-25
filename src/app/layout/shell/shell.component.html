@@ -17,6 +17,7 @@
             <!-- Item simple -->
             <a class="nav-item"
                [routerLink]="item.ruta"
+               (click)="cerrarSidebarMobile()"
                routerLinkActive="active"
                [matTooltip]="!sidebarAbierto() ? item.label : ''"
                matTooltipPosition="right">
@@ -45,6 +46,7 @@
                   @if (puedeVer(hijo)) {
                     <a class="nav-subitem"
                        [routerLink]="hijo.ruta"
+                       (click)="cerrarSidebarMobile()"
                        routerLinkActive="active">
                       <mat-icon class="nav-icon">{{ hijo.icon }}</mat-icon>
                       <span>{{ hijo.label }}</span>
@@ -70,6 +72,10 @@
     </div>
 
   </aside>
+
+  @if (sidebarAbierto()) {
+    <button class="mobile-backdrop" type="button" aria-label="Cerrar menú" (click)="cerrarSidebarMobile()"></button>
+  }
 
   <!-- ── CONTENIDO ────────────────────────────────────────── -->
   <div class="shell-content">

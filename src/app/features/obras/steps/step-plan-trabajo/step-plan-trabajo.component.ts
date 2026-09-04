@@ -15,6 +15,7 @@ interface ItemPlan {
 }
 
 interface RubroPlan {
+  id?: number;
   rubroRef: string;
   nombre: string;
   orden: number;
@@ -35,17 +36,16 @@ interface ObraPlan {
 
 interface FilaPlan {
   clave: string;
-  itemRef: string;
+  rubroRef: string;
   nombre: string;
-  unidad: string;
   incidencia: number;
   porcentajes: number[];
 }
 
 interface PlanGuardado {
-  version: 1;
+  version: 2;
   meses: number;
-  items: Record<string, number[]>;
+  rubros: Record<string, number[]>;
 }
 
 @Component({
@@ -105,20 +105,20 @@ export class StepPlanTrabajoComponent implements OnChanges {
       return;
     }
     if (this.filas.length === 0) {
-      this.snack.open('Primero cargá los ítems del cómputo', 'Cerrar', { duration: 3500 });
+      this.snack.open('Primero cargá los rubros del cómputo', 'Cerrar', { duration: 3500 });
       return;
     }
 
     const invalida = this.filas.find((fila) => this.totalFila(fila) > 100.01);
     if (invalida) {
-      this.snack.open(`El ítem ${invalida.itemRef} no puede superar el 100%`, 'Cerrar', { duration: 5000 });
+      this.snack.open(`El rubro ${invalida.rubroRef} no puede superar el 100%`, 'Cerrar', { duration: 5000 });
       return;
     }
 
     const plan: PlanGuardado = {
-      version: 1,
+      version: 2,
       meses: this.meses.length,
-      items: Object.fromEntries(this.filas.map((fila) => [
+      rubros: Object.fromEntries(this.filas.map((fila) => [
         fila.clave,
         fila.porcentajes.map((valor) => this.redondear(this.numero(valor))),
       ])),
@@ -133,7 +133,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
         const pendientes = this.filas.filter((fila) => this.totalFila(fila) < 99.99).length;
         this.snack.open(
           pendientes > 0
-            ? `Avance guardado. Quedan ${pendientes} ítem${pendientes === 1 ? '' : 's'} por completar`
+            ? `Avance guardado. Quedan ${pendientes} rubro${pendientes === 1 ? '' : 's'} por completar`
             : 'Plan de trabajo completo guardado correctamente',
           'Cerrar',
           { duration: 4000 },
@@ -158,21 +158,19 @@ export class StepPlanTrabajoComponent implements OnChanges {
     const cantidadMeses = this.plazoDias > 0 ? Math.ceil(this.plazoDias / 30) : 0;
     this.meses = Array.from({ length: cantidadMeses }, (_, index) => index + 1);
     const guardado = this.leerPlan(this.contrato?.planTrabajo);
-    const items = (this.contrato?.rubros ?? [])
+    const rubros = (this.contrato?.rubros ?? [])
       .slice()
-      .sort((a, b) => a.orden - b.orden)
-      .flatMap((rubro) => rubro.items);
-    const montoTotal = items.reduce((total, item) => total + this.montoItem(item), 0);
+      .sort((a, b) => a.orden - b.orden);
+    const montoTotal = rubros.reduce((total, rubro) => total + this.montoRubro(rubro), 0);
 
-    this.filas = items.map((item) => {
-      const clave = item.id ? String(item.id) : item.itemRef;
-      const anteriores = guardado?.items?.[clave] ?? [];
+    this.filas = rubros.map((rubro) => {
+      const clave = rubro.id ? String(rubro.id) : rubro.rubroRef;
+      const anteriores = guardado?.rubros?.[clave] ?? [];
       return {
         clave,
-        itemRef: item.itemRef,
-        nombre: item.nombre,
-        unidad: item.unidad,
-        incidencia: montoTotal > 0 ? this.redondear((this.montoItem(item) / montoTotal) * 100) : 0,
+        rubroRef: rubro.rubroRef,
+        nombre: rubro.nombre,
+        incidencia: montoTotal > 0 ? this.redondear((this.montoRubro(rubro) / montoTotal) * 100) : 0,
         porcentajes: this.meses.map((_, index) => this.numero(anteriores[index])),
       };
     });
@@ -182,7 +180,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
     if (!valor) return null;
     try {
       const plan = JSON.parse(valor) as PlanGuardado;
-      return plan?.version === 1 && plan.items ? plan : null;
+      return plan?.version === 2 && plan.rubros ? plan : null;
     } catch {
       return null;
     }
@@ -190,6 +188,10 @@ export class StepPlanTrabajoComponent implements OnChanges {
 
   private montoItem(item: ItemPlan): number {
     return this.valorNumerico(item.cantidad) * this.valorNumerico(item.precioUnitario);
+  }
+
+  private montoRubro(rubro: RubroPlan): number {
+    return rubro.items.reduce((total, item) => total + this.montoItem(item), 0);
   }
 
   private numero(valor: unknown): number {

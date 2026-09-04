@@ -15,6 +15,8 @@
 
   @if (!contrato) {
     <div class="empty-state"><mat-icon>assignment_late</mat-icon><div><strong>Primero completá la adjudicación</strong><p>El plan se asocia al contrato original.</p></div></div>
+  } @else if (!obraActiva) {
+    <div class="empty-state"><mat-icon>lock</mat-icon><div><strong>La obra todavía no está activa</strong><p>Activá la obra para habilitar la carga del Plan de Trabajo.</p></div></div>
   } @else if (!plazoDias) {
     <div class="empty-state"><mat-icon>calendar_month</mat-icon><div><strong>Falta el plazo de obra</strong><p>Cargá la cantidad de días en la pestaña Adjudicación.</p></div></div>
   } @else if (filas.length === 0) {

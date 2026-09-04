@@ -31,6 +31,7 @@ interface ContratoPlan {
 }
 
 interface ObraPlan {
+  estado?: 'BORRADOR' | 'ACTIVA' | 'FINALIZADA';
   contratos?: ContratoPlan[];
 }
 
@@ -76,6 +77,10 @@ export class StepPlanTrabajoComponent implements OnChanges {
     return Number(this.contrato?.plazoObraDias ?? 0);
   }
 
+  get obraActiva(): boolean {
+    return this.obra?.estado === 'ACTIVA';
+  }
+
   get totalComputo(): number {
     return this.filas.reduce((total, fila) => total + fila.incidencia, 0);
   }
@@ -98,6 +103,10 @@ export class StepPlanTrabajoComponent implements OnChanges {
   guardar(): void {
     if (!this.obraId || !this.contrato) {
       this.snack.open('Primero tenés que guardar la adjudicación', 'Cerrar', { duration: 3500 });
+      return;
+    }
+    if (!this.obraActiva) {
+      this.snack.open('La obra debe estar activa para cargar el plan de trabajo', 'Cerrar', { duration: 4000 });
       return;
     }
     if (!this.plazoDias || this.meses.length === 0) {
@@ -125,7 +134,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
     };
 
     this.guardando = true;
-    this.api.put<ContratoPlan>(`obras/${this.obraId}/contrato/${this.contrato.id}`, {
+    this.api.put<ContratoPlan>(`obras/${this.obraId}/plan-trabajo`, {
       planTrabajo: JSON.stringify(plan),
     }).subscribe({
       next: () => {

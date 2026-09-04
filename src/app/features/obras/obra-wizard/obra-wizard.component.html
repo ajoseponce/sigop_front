@@ -71,11 +71,7 @@
     </app-step-rubros>
     }
     @if (currentStep === 4) {
-      <section class="plan-placeholder">
-        <h2>Plan de trabajo</h2>
-        <p>Esta sección está preparada para incorporar la carga del plan de trabajo.</p>
-        <button type="button" (click)="goToStep(5)">Continuar a certificación</button>
-      </section>
+      <app-step-plan-trabajo [obraId]="obraId" [obra]="obra" (planSaved)="planGuardado()"></app-step-plan-trabajo>
     }
     @if (currentStep === 5) {
     <app-step-certificacion [obraId]="obraId" [obra]="obra"></app-step-certificacion>

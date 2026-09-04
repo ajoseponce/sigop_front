@@ -3,6 +3,7 @@ import { StepDatosBasicosComponent } from '../steps/step-datos-basicos/step-dato
 import { StepContratoComponent } from '../steps/step-contrato/step-contrato.component';
 import { StepCertificacionComponent } from '../steps/step-certificacion/step-certificacion.component';
 import { StepRubrosComponent } from '../steps/step-rubros/step-rubros.component';
+import { StepPlanTrabajoComponent } from '../steps/step-plan-trabajo/step-plan-trabajo.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from 'src/app/core/services/api.service';
 import { ActivatedRoute } from '@angular/router';
@@ -11,7 +12,7 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'app-obra-wizard',
   standalone: true,
-  imports: [StepDatosBasicosComponent, StepContratoComponent, StepRubrosComponent, StepCertificacionComponent],
+  imports: [StepDatosBasicosComponent, StepContratoComponent, StepRubrosComponent, StepPlanTrabajoComponent, StepCertificacionComponent],
   templateUrl: './obra-wizard.component.html',
   styleUrl: './obra-wizard.component.scss',
 })
@@ -128,6 +129,11 @@ export class ObraWizardComponent {
     if (this.obraId) {
       this.cargarObra(this.obraId);
     }
+  }
+
+  planGuardado(): void {
+    this.currentStep = 5;
+    if (this.obraId) this.cargarObra(this.obraId);
   }
 
   saveObra(payload: any): void {

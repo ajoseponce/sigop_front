@@ -1,0 +1,63 @@
+<section class="plan-step">
+  <header class="step-header">
+    <div>
+      <span class="eyebrow">Programación física</span>
+      <h2>Plan de trabajo</h2>
+      <p>Distribuí el porcentaje de ejecución de cada ítem durante el plazo de la obra.</p>
+    </div>
+    @if (plazoDias > 0) {
+      <div class="period-summary">
+        <strong>{{ plazoDias }} días</strong>
+        <span>{{ meses.length }} período{{ meses.length === 1 ? '' : 's' }} de 30 días</span>
+      </div>
+    }
+  </header>
+
+  @if (!contrato) {
+    <div class="empty-state"><mat-icon>assignment_late</mat-icon><div><strong>Primero completá la adjudicación</strong><p>El plan se asocia al contrato original.</p></div></div>
+  } @else if (!plazoDias) {
+    <div class="empty-state"><mat-icon>calendar_month</mat-icon><div><strong>Falta el plazo de obra</strong><p>Cargá la cantidad de días en la pestaña Adjudicación.</p></div></div>
+  } @else if (filas.length === 0) {
+    <div class="empty-state"><mat-icon>format_list_bulleted</mat-icon><div><strong>Falta el cómputo</strong><p>Cargá rubros e ítems antes de armar el plan.</p></div></div>
+  } @else {
+    <div class="plan-help">
+      <mat-icon>info</mat-icon>
+      <span>Podés guardar una carga parcial y continuarla más adelante. Cada fila puede acumular hasta 100%.</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Ítem</th><th>Descripción</th><th>Unidad</th><th>Incidencia</th>
+            @for (mes of meses; track mes) { <th>Mes {{ mes }}</th> }
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (fila of filas; track trackFila($index, fila)) {
+            <tr [class.invalid-row]="totalFila(fila) > 100" [class.pending-row]="totalFila(fila) < 100">
+              <td class="item-ref">{{ fila.itemRef }}</td>
+              <td class="description">{{ fila.nombre }}</td>
+              <td>{{ fila.unidad }}</td>
+              <td>{{ fila.incidencia | number:'1.2-2' }}%</td>
+              @for (mes of meses; track mes; let indice = $index) {
+                <td><div class="percent-input"><input type="number" min="0" max="100" step="0.01" [(ngModel)]="fila.porcentajes[indice]" [attr.aria-label]="'Porcentaje del ítem ' + fila.itemRef + ' para el mes ' + mes"><span>%</span></div></td>
+              }
+              <td class="row-total">
+                {{ totalFila(fila) | number:'1.2-2' }}%
+                @if (totalFila(fila) < 100) { <small>Pendiente</small> }
+              </td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr><th colspan="4">Total obra</th>@for (mes of meses; track mes; let indice = $index) { <th>{{ totalMes(indice) | number:'1.2-2' }}%</th> }<th>{{ totalPlan() | number:'1.2-2' }}%</th></tr>
+        </tfoot>
+      </table>
+    </div>
+    <footer>
+      <span>Las {{ meses.length }} columnas se calcularon a partir de {{ plazoDias }} días.</span>
+      <button type="button" class="button primary" (click)="guardar()" [disabled]="guardando"><mat-icon>save</mat-icon>{{ guardando ? 'Guardando...' : 'Guardar y continuar' }}</button>
+    </footer>
+  }
+</section>

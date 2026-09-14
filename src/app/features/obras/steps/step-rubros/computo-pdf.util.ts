@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { RowInput, autoTable } from 'jspdf-autotable';
 import { cargarCabeceraInstitucional, dibujarCabeceraInstitucional } from '../../../../shared/pdf/pdf-header.util';
+import { redondearMoneda } from '../../../../shared/utils/money.util';
 
 export interface ComputoPdfItem {
   itemRef: string;
@@ -41,10 +42,6 @@ function totalRubro(rubro: ComputoPdfRubro): number {
     (total, item) => total + redondearMoneda(item.cantidad * item.precioUnitario),
     0,
   );
-}
-
-function redondearMoneda(valor: number): number {
-  return Math.round((valor + Number.EPSILON) * 100) / 100;
 }
 
 function sanitizeFilename(value: string): string {

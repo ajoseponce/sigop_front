@@ -7,6 +7,7 @@ import { StepPlanTrabajoComponent } from '../steps/step-plan-trabajo/step-plan-t
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from 'src/app/core/services/api.service';
 import { ActivatedRoute } from '@angular/router';
+import { redondearMoneda } from '../../../shared/utils/money.util';
 
 
 @Component({
@@ -33,17 +34,13 @@ export class ObraWizardComponent {
     return (contrato?.rubros ?? []).reduce(
       (totalRubros: number, rubro: any) => totalRubros + (rubro.items ?? []).reduce(
         (totalItems: number, item: any) =>
-          totalItems + this.redondearMoneda(
+          totalItems + redondearMoneda(
             Number(item.cantidad ?? 0) * Number(item.precioUnitario ?? 0),
           ),
         0,
       ),
       0,
     );
-  }
-
-  private redondearMoneda(valor: number): number {
-    return Math.round((valor + Number.EPSILON) * 100) / 100;
   }
 
   get computoExcedeLimite(): boolean {

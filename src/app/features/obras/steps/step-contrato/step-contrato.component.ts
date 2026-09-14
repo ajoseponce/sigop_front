@@ -12,6 +12,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ApiService } from 'src/app/core/services/api.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { redondearMoneda } from '../../../../shared/utils/money.util';
 
 const FIELD_LABELS: Record<string, string> = {
   fechaApertura: 'Fecha de apertura',
@@ -337,11 +338,13 @@ export class StepContratoComponent implements OnInit , OnChanges{
 
     const total = items.reduce(
       (total: number, item: any) =>
-        total + Number(item.cantidad ?? 0) * Number(item.precioUnitario ?? 0),
+        total + redondearMoneda(
+          Number(item.cantidad ?? 0) * Number(item.precioUnitario ?? 0),
+        ),
       0,
     );
 
-    return Math.round((total + Number.EPSILON) * 100) / 100;
+    return redondearMoneda(total);
   }
 
   private toDateInput(value: string | Date | null | undefined): string {

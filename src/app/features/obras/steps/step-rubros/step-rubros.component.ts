@@ -7,6 +7,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from 'src/app/core/services/api.service';
 import { descargarComputoPdf } from './computo-pdf.util';
 import { forkJoin } from 'rxjs';
+import { redondearMoneda } from '../../../../shared/utils/money.util';
 
 registerLocaleData(localeEsAr);
 
@@ -137,7 +138,7 @@ export class StepRubrosComponent implements OnChanges {
 
   subtotalItem(rubroIndex: number, itemIndex: number): number {
     const item = this.itemsDe(rubroIndex).at(itemIndex);
-    return this.redondearMoneda(
+    return redondearMoneda(
       this.numero(item.get('cantidad')?.value) * this.numero(item.get('precioUnitario')?.value),
     );
   }
@@ -158,10 +159,6 @@ export class StepRubrosComponent implements OnChanges {
 
   incidenciaRubro(rubroIndex: number): number {
     return this.totalGeneral > 0 ? (this.totalRubro(rubroIndex) / this.totalGeneral) * 100 : 0;
-  }
-
-  private redondearMoneda(valor: number): number {
-    return Math.round((valor + Number.EPSILON) * 100) / 100;
   }
 
   guardar(): void {

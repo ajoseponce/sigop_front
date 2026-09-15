@@ -30,7 +30,7 @@
   <div class="form-section">
     <h3>Empresa</h3>
 
-    <div class="form-grid">
+    <div class="empresa-picker">
   <mat-form-field appearance="outline" class="full-width">
     
 
@@ -53,6 +53,16 @@
       }
     </mat-autocomplete>
   </mat-form-field>
+  <button
+    mat-icon-button
+    type="button"
+    class="add-button"
+    aria-label="Agregar empresa"
+    title="Agregar empresa"
+    (click)="abrirEmpresaModal()"
+  >
+    <mat-icon>add</mat-icon>
+  </button>
 </div>
   </div>
 
@@ -158,3 +168,33 @@
     </button>
   </div>
 </form>
+
+@if (empresaModalOpen()) {
+  <div class="modal-backdrop" (click)="cerrarEmpresaModal()">
+    <section class="empresa-modal" role="dialog" aria-modal="true" aria-labelledby="empresa-modal-title" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="empresa-modal-title">Nueva empresa</h2>
+        <button mat-icon-button type="button" aria-label="Cerrar" (click)="cerrarEmpresaModal()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <form [formGroup]="empresaRapidaForm" (ngSubmit)="guardarEmpresaRapida()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="razonSocial" autocomplete="organization" />
+          @if (empresaRapidaForm.get('razonSocial')?.touched && empresaRapidaForm.get('razonSocial')?.invalid) {
+            <mat-error>Ingresá al menos 2 caracteres</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="modal-actions">
+          <button mat-stroked-button type="button" (click)="cerrarEmpresaModal()" [disabled]="guardandoEmpresa()">Cancelar</button>
+          <button mat-flat-button type="submit" [disabled]="guardandoEmpresa()">
+            {{ guardandoEmpresa() ? 'Guardando...' : 'Agregar' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}

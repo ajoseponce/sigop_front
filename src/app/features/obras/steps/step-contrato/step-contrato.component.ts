@@ -12,6 +12,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ApiService } from 'src/app/core/services/api.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { redondearMoneda } from '../../../../shared/utils/money.util';
 
 const FIELD_LABELS: Record<string, string> = {
@@ -27,7 +29,7 @@ const FIELD_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-step-contrato',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatAutocompleteModule, MatInputModule, MatFormFieldModule, MatSnackBarModule],
+  imports: [CommonModule, ReactiveFormsModule, MatAutocompleteModule, MatInputModule, MatFormFieldModule, MatSnackBarModule, MatButtonModule, MatIconModule],
   templateUrl: './step-contrato.component.html',
   styleUrl: './step-contrato.component.scss',
 })
@@ -47,6 +49,11 @@ export class StepContratoComponent implements OnInit , OnChanges{
   private snack = inject(MatSnackBar);
   empresaSearch = new FormControl('');
   empresasFiltradas: any[] = [];
+  empresaModalOpen = signal(false);
+  guardandoEmpresa = signal(false);
+  empresaRapidaForm = this.fb.group({
+    razonSocial: ['', [Validators.required, Validators.minLength(2)]],
+  });
   @Input() obraId!: number | null;
   @Output() adjudicacionCreated = new EventEmitter<any>();
 
@@ -214,6 +221,51 @@ export class StepContratoComponent implements OnInit , OnChanges{
     this.empresaSearch.setValue(
       empresa.razonSocial ?? empresa.nombreFantasia ?? ''
     );
+  }
+
+  abrirEmpresaModal(): void {
+    this.empresaRapidaForm.reset({ razonSocial: '' });
+    this.empresaModalOpen.set(true);
+  }
+
+  cerrarEmpresaModal(): void {
+    if (!this.guardandoEmpresa()) {
+      this.empresaModalOpen.set(false);
+    }
+  }
+
+  guardarEmpresaRapida(): void {
+    if (this.empresaRapidaForm.invalid || this.guardandoEmpresa()) {
+      this.empresaRapidaForm.markAllAsTouched();
+      return;
+    }
+
+    const razonSocial = this.empresaRapidaForm.getRawValue().razonSocial!.trim();
+    this.guardandoEmpresa.set(true);
+    this.api.post<any>('empresas/rapida', { razonSocial }).subscribe({
+      next: (resp) => {
+        const empresa = resp?.data ?? resp;
+        const empresas = [...this.empresas(), empresa].sort((a, b) =>
+          (a.razonSocial ?? '').localeCompare(b.razonSocial ?? '', 'es'),
+        );
+        this.empresas.set(empresas);
+        this.empresasFiltradas = empresas;
+        this.seleccionarEmpresa(empresa);
+        this.guardandoEmpresa.set(false);
+        this.empresaModalOpen.set(false);
+        this.snack.open('Empresa creada y seleccionada', '', {
+          duration: 3000,
+          panelClass: 'snack-success',
+        });
+      },
+      error: (err) => {
+        this.guardandoEmpresa.set(false);
+        this.snack.open(err?.error?.message ?? 'Error al crear la empresa', 'Cerrar', {
+          duration: 4000,
+          panelClass: 'snack-error',
+        });
+      },
+    });
   }
 
   form = this.fb.group({

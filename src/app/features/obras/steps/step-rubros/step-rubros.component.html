@@ -46,12 +46,19 @@
       <mat-icon>table_view</mat-icon>
       <div>
         <strong>Formato admitido</strong>
-        <span>ÍTEM · DESIGNACIÓN · UN · CANT · PRECIO UNITARIO</span>
+        <span>ÍTEM · DESIGNACIÓN · UN · CANT · PRECIO UNITARIO · PARCIAL (opcional, columna F)</span>
         @if (archivoSeleccionado) {
           <small>Último archivo: {{ archivoSeleccionado }}</small>
         }
       </div>
     </div>
+    @if (tieneComparacionImportada) {
+      <div class="comparison-help" [class.has-difference]="diferenciaTotalImportada !== 0">
+        <mat-icon>difference</mat-icon>
+        <span>Comparación con el archivo: diferencia total</span>
+        <strong>{{ diferenciaTotalImportada | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</strong>
+      </div>
+    }
     <form [formGroup]="form" (ngSubmit)="guardar()">
       <div formArrayName="rubros" class="rubros-list">
         @for (rubro of rubros.controls; track rubro; let rubroIndex = $index) {
@@ -103,9 +110,17 @@
                         <input type="number" formControlName="precioUnitario" min="0" step="0.01"
                           aria-label="Precio unitario" />
                       </div>
-                      <strong class="subtotal">
-                        {{ subtotalItem(rubroIndex, itemIndex) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}
-                      </strong>
+                      <div class="subtotal-comparison">
+                        <strong class="subtotal">
+                          {{ subtotalItem(rubroIndex, itemIndex) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}
+                        </strong>
+                        @if (parcialArchivo(rubroIndex, itemIndex) !== null) {
+                          <small>Archivo: {{ parcialArchivo(rubroIndex, itemIndex) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</small>
+                          <small class="difference" [class.matches]="diferenciaArchivo(rubroIndex, itemIndex) === 0">
+                            Dif.: {{ diferenciaArchivo(rubroIndex, itemIndex) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}
+                          </small>
+                        }
+                      </div>
                       <button type="button" class="icon-button" (click)="eliminarItem(rubroIndex, itemIndex)"
                         aria-label="Eliminar ítem" title="Eliminar ítem">
                         <mat-icon>close</mat-icon>

@@ -17,6 +17,8 @@ interface ItemObra {
   unidad: string;
   cantidad: string | number;
   precioUnitario: string | number;
+  parcialArchivo?: string | number;
+  diferencia?: string | number;
 }
 
 interface RubroObra {
@@ -75,6 +77,22 @@ export class StepRubrosComponent implements OnChanges {
   importando = false;
   archivoSeleccionado = '';
   computoBloqueado = false;
+
+  get tieneComparacionImportada(): boolean {
+    return this.rubros.controls.some((_, rubroIndex) =>
+      this.itemsDe(rubroIndex).controls.some((item) => item.get('parcialArchivo')?.value !== null),
+    );
+  }
+
+  get diferenciaTotalImportada(): number {
+    return redondearMoneda(this.rubros.controls.reduce(
+      (totalRubro, _, rubroIndex) => totalRubro + this.itemsDe(rubroIndex).controls.reduce(
+        (totalItem, item) => totalItem + this.numero(item.get('diferencia')?.value),
+        0,
+      ),
+      0,
+    ));
+  }
 
   get rubros(): FormArray<FormGroup> {
     return this.form.controls.rubros;
@@ -141,6 +159,15 @@ export class StepRubrosComponent implements OnChanges {
     return redondearMoneda(
       this.numero(item.get('cantidad')?.value) * this.numero(item.get('precioUnitario')?.value),
     );
+  }
+
+  parcialArchivo(rubroIndex: number, itemIndex: number): number | null {
+    const value = this.itemsDe(rubroIndex).at(itemIndex).get('parcialArchivo')?.value;
+    return value === null || value === undefined ? null : this.numero(value);
+  }
+
+  diferenciaArchivo(rubroIndex: number, itemIndex: number): number {
+    return this.numero(this.itemsDe(rubroIndex).at(itemIndex).get('diferencia')?.value);
   }
 
   totalRubro(rubroIndex: number): number {
@@ -311,6 +338,8 @@ export class StepRubrosComponent implements OnChanges {
       unidad: [item.unidad, [Validators.required, Validators.maxLength(50)]],
       cantidad: [this.numero(item.cantidad), [Validators.required, Validators.min(0.0001)]],
       precioUnitario: [this.numero(item.precioUnitario), [Validators.required, Validators.min(0)]],
+      parcialArchivo: [item.parcialArchivo ?? null],
+      diferencia: [item.diferencia ?? null],
     });
   }
 

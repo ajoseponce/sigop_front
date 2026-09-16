@@ -43,6 +43,26 @@
 .import-help > div { display: grid; gap: 2px; }
 .import-help span, .import-help small { color: #667085; font-size: 12px; }
 
+.comparison-help {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -10px 0 20px;
+  padding: 10px 14px;
+  border: 1px solid #a7d7bd;
+  border-radius: 8px;
+  background: #edf9f2;
+  color: #166534;
+}
+
+.comparison-help.has-difference {
+  border-color: #f2c879;
+  background: #fff8e7;
+  color: #92400e;
+}
+
+.comparison-help strong { margin-left: auto; }
+
 .eyebrow {
   color: #b86b2a;
   font-size: 12px;
@@ -256,6 +276,24 @@ input.ng-invalid.ng-touched {
   text-align: right;
   font-size: 14px;
 }
+
+.subtotal-comparison {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+}
+
+.subtotal-comparison small {
+  color: #667085;
+  font-size: 10px;
+}
+
+.subtotal-comparison .difference {
+  color: #b54708;
+  font-weight: 700;
+}
+
+.subtotal-comparison .difference.matches { color: #16803c; }
 
 .add-item {
   display: inline-flex;

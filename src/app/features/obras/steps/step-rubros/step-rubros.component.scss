@@ -63,6 +63,28 @@
 
 .comparison-help strong { margin-left: auto; }
 
+.report-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #b91c1c;
+  border-radius: 6px;
+  background: #fff;
+  color: #b91c1c;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.report-button mat-icon {
+  width: 17px;
+  height: 17px;
+  font-size: 17px;
+}
+
 .eyebrow {
   color: #b86b2a;
   font-size: 12px;

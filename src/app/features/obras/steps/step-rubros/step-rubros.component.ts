@@ -8,6 +8,10 @@ import { ApiService } from 'src/app/core/services/api.service';
 import { descargarComputoPdf } from './computo-pdf.util';
 import { forkJoin } from 'rxjs';
 import { redondearMoneda } from '../../../../shared/utils/money.util';
+import {
+  descargarReporteErroresImportacion,
+  ErrorImportacionComputo,
+} from './reporte-errores-importacion-pdf.util';
 
 registerLocaleData(localeEsAr);
 
@@ -87,11 +91,15 @@ export class StepRubrosComponent implements OnChanges {
   get diferenciaTotalImportada(): number {
     return redondearMoneda(this.rubros.controls.reduce(
       (totalRubro, _, rubroIndex) => totalRubro + this.itemsDe(rubroIndex).controls.reduce(
-        (totalItem, item) => totalItem + this.numero(item.get('diferencia')?.value),
+        (totalItem, _item, itemIndex) => totalItem + this.diferenciaArchivo(rubroIndex, itemIndex),
         0,
       ),
       0,
     ));
+  }
+
+  get tieneDiferenciasImportadas(): boolean {
+    return this.erroresImportacion().length > 0;
   }
 
   get rubros(): FormArray<FormGroup> {
@@ -167,7 +175,10 @@ export class StepRubrosComponent implements OnChanges {
   }
 
   diferenciaArchivo(rubroIndex: number, itemIndex: number): number {
-    return this.numero(this.itemsDe(rubroIndex).at(itemIndex).get('diferencia')?.value);
+    const parcial = this.parcialArchivo(rubroIndex, itemIndex);
+    return parcial === null
+      ? 0
+      : redondearMoneda(parcial - this.subtotalItem(rubroIndex, itemIndex));
   }
 
   totalRubro(rubroIndex: number): number {
@@ -191,6 +202,14 @@ export class StepRubrosComponent implements OnChanges {
   guardar(): void {
     if (this.computoBloqueado) {
       this.mostrarBloqueo();
+      return;
+    }
+    if (this.tieneDiferenciasImportadas) {
+      this.snack.open(
+        'No se puede guardar mientras existan diferencias con el parcial del archivo',
+        'Cerrar',
+        { duration: 5000, panelClass: 'snack-error' },
+      );
       return;
     }
     if (!this.obraId || !this.tieneContrato) {
@@ -235,6 +254,19 @@ export class StepRubrosComponent implements OnChanges {
     descargarComputoPdf({
       nombreObra: this.obra?.nombre?.trim() || 'Obra',
       rubros: payload.rubros,
+    });
+  }
+
+  descargarReporteErrores(): void {
+    const errores = this.erroresImportacion();
+    if (errores.length === 0) {
+      this.snack.open('No hay diferencias para informar', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    void descargarReporteErroresImportacion({
+      nombreObra: this.obra?.nombre?.trim() || 'Obra',
+      archivo: this.archivoSeleccionado,
+      errores,
     });
   }
 
@@ -329,6 +361,29 @@ export class StepRubrosComponent implements OnChanges {
       orden: [rubro.orden, [Validators.required, Validators.min(1)]],
       items: this.fb.array(rubro.items.map((item) => this.crearItem(item))),
     });
+  }
+
+  private erroresImportacion(): ErrorImportacionComputo[] {
+    return this.rubros.controls.flatMap((rubro, rubroIndex) =>
+      this.itemsDe(rubroIndex).controls.flatMap((item, itemIndex) => {
+        const parcialArchivo = this.parcialArchivo(rubroIndex, itemIndex);
+        const diferencia = this.diferenciaArchivo(rubroIndex, itemIndex);
+        if (parcialArchivo === null || Math.abs(diferencia) < 0.01) {
+          return [];
+        }
+        return [{
+          rubroRef: String(rubro.get('rubroRef')?.value ?? ''),
+          itemRef: String(item.get('itemRef')?.value ?? ''),
+          descripcion: String(item.get('nombre')?.value ?? ''),
+          unidad: String(item.get('unidad')?.value ?? ''),
+          cantidad: this.numero(item.get('cantidad')?.value),
+          precioUnitario: this.numero(item.get('precioUnitario')?.value),
+          parcialSistema: this.subtotalItem(rubroIndex, itemIndex),
+          parcialArchivo,
+          diferencia,
+        }];
+      }),
+    );
   }
 
   private crearItem(item: ItemObra): FormGroup {

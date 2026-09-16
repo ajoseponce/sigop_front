@@ -53,10 +53,16 @@
       </div>
     </div>
     @if (tieneComparacionImportada) {
-      <div class="comparison-help" [class.has-difference]="diferenciaTotalImportada !== 0">
+      <div class="comparison-help" [class.has-difference]="tieneDiferenciasImportadas">
         <mat-icon>difference</mat-icon>
         <span>Comparación con el archivo: diferencia total</span>
         <strong>{{ diferenciaTotalImportada | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</strong>
+        @if (tieneDiferenciasImportadas) {
+          <button type="button" class="report-button" (click)="descargarReporteErrores()">
+            <mat-icon>picture_as_pdf</mat-icon>
+            Imprimir reporte de errores
+          </button>
+        }
       </div>
     }
     <form [formGroup]="form" (ngSubmit)="guardar()">
@@ -155,7 +161,7 @@
           <strong>{{ totalGeneral | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</strong>
           <small>{{ rubros.length }} rubro{{ rubros.length === 1 ? '' : 's' }}</small>
         </div>
-        <button type="submit" class="button primary" [disabled]="guardando || rubros.length === 0 || computoBloqueado">
+        <button type="submit" class="button primary" [disabled]="guardando || rubros.length === 0 || computoBloqueado || tieneDiferenciasImportadas">
           <mat-icon>save</mat-icon>
           {{ guardando ? 'Guardando...' : 'Guardar y continuar' }}
         </button>

@@ -8,7 +8,7 @@
 
 .table-card { overflow-x: auto; }
 
-table { min-width: 980px; }
+table { min-width: 1250px; }
 
 .mat-mdc-row:hover { background: #fdf5f9; }
 
@@ -17,6 +17,41 @@ table { min-width: 980px; }
 
   mat-icon { font-size: 48px; width: 48px; height: 48px; opacity: .3; }
   p { margin-top: 12px; }
+}
+
+.semaforos {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 330px;
+}
+
+.semaforo-item {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.semaforo {
+  width: 13px;
+  height: 13px;
+  border: 1px solid rgb(0 0 0 / 16%);
+  border-radius: 50%;
+  background: #dc2626;
+  box-shadow: 0 0 0 2px rgb(220 38 38 / 12%);
+
+  &.amarillo {
+    background: #f59e0b;
+    box-shadow: 0 0 0 2px rgb(245 158 11 / 14%);
+  }
+
+  &.verde {
+    background: #16a34a;
+    box-shadow: 0 0 0 2px rgb(22 163 74 / 12%);
+  }
 }
 
 .badge-activo {

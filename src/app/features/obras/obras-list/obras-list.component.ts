@@ -34,7 +34,16 @@ export class ObrasListComponent implements OnInit {
     'sistemaContratacion',
     'numeroObra',
     'anioEmision',
+    'avance',
     'acciones',
+  ];
+
+  readonly seccionesAvance = [
+    { clave: 'datos', etiqueta: 'Datos' },
+    { clave: 'adjudicacion', etiqueta: 'Adjudicación' },
+    { clave: 'computo', etiqueta: 'Cómputo' },
+    { clave: 'planTrabajo', etiqueta: 'Plan' },
+    { clave: 'certificados', etiqueta: 'Certificados' },
   ];
 
   formatoContratacion(value: string | null | undefined): string {

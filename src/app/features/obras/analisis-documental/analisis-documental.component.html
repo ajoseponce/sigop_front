@@ -1,5 +1,5 @@
 <div class="page-container fade-in-up">
-  <div class="page-header"><div><h1>Análisis inteligente de documentos</h1><p>Compará un pliego con una oferta y generá el informe técnico.</p></div></div>
+  <div class="page-header"><div><h1>Análisis inteligente de documentos</h1><p>Compará dos PDF con texto mediante IA local, sin costo por uso.</p></div></div>
   <section class="card carga-card">
     <h2>Nueva comparación</h2>
     <form [formGroup]="form">
@@ -11,6 +11,7 @@
         <label class="archivo"><span>Pliego entregado</span><input type="file" accept="application/pdf,.pdf" (change)="elegirArchivo($event, 'pliego')"><small>{{ pliego?.name ?? 'Seleccionar PDF' }}</small></label>
         <label class="archivo"><span>Oferta presentada</span><input type="file" accept="application/pdf,.pdf" (change)="elegirArchivo($event, 'oferta')"><small>{{ oferta?.name ?? 'Seleccionar PDF' }}</small></label>
       </div>
+      <p class="ayuda-pdf"><mat-icon>info</mat-icon> Los archivos deben tener texto seleccionable. Esta modalidad gratuita no procesa documentos escaneados.</p>
       <mat-form-field appearance="outline" class="instrucciones"><mat-label>Controles adicionales</mat-label><textarea matInput rows="3" formControlName="instrucciones" placeholder="Indicá aquí cualquier punto particular que quieras revisar"></textarea></mat-form-field>
       <button mat-raised-button color="primary" type="button" [disabled]="enviando" (click)="analizar()">@if (enviando) { <mat-spinner diameter="20" /> } @else { <mat-icon>psychology</mat-icon> } Guardar y analizar</button>
     </form>

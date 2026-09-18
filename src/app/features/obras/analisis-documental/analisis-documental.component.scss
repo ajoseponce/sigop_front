@@ -18,3 +18,13 @@ button mat-spinner { display: inline-block; margin-right: 8px; }
 .vacio, .error-box { text-align: center; color: var(--text-secondary); &.grande { min-height: 280px; display: grid; place-content: center; justify-items: center; gap: 12px; } mat-icon { font-size: 42px; width: 42px; height: 42px; } }
 .error-box { color: #991b1b; padding: 50px 20px; }
 @media (max-width: 900px) { .contenido, .grid-form, .archivos { grid-template-columns: 1fr; } .historial { position: static; } }
+.ayuda-pdf {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 18px;
+  color: #5f6b7a;
+  font-size: 13px;
+
+  mat-icon { width: 18px; height: 18px; font-size: 18px; }
+}

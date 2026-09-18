@@ -36,6 +36,7 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
     { label: 'Nueva Obra', icon: 'local_shipping', ruta: '/obras/nueva', roles: ['ADMIN','SUPERVISOR'] },
     { label: 'Lista de Obras', icon: 'list', ruta: '/obras', roles: ['ADMIN','SUPERVISOR'] },
     { label: 'FAP', icon: 'query_stats', ruta: '/obras/fap', roles: ['ADMIN','SUPERVISOR'] },
+    { label: 'Análisis documental', icon: 'difference', ruta: '/obras/analisis-documental', roles: ['ADMIN','SUPERVISOR'] },
   ]},
   { label: 'Pañol', icon: 'inventory_2', roles: ['ADMIN','SUPERVISOR'], hijos: [
     { label: 'Ingresos y egresos', icon: 'sync_alt', ruta: '/panol/movimientos', roles: ['ADMIN','SUPERVISOR'] },
@@ -77,7 +78,7 @@ export class ShellComponent implements OnInit {
 
   sidebarAbierto = signal(true);
   navItems = signal<NavItem[]>(DEFAULT_NAV_ITEMS);
-  appVersion = '1.0.7';
+  appVersion = '1.0.8';
 
   submenuAbierto = signal<string | null>(null);
 

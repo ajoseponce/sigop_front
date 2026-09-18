@@ -1,0 +1,38 @@
+<div class="page-container fade-in-up">
+  <div class="page-header"><div><h1>Análisis inteligente de documentos</h1><p>Compará un pliego con una oferta y generá el informe técnico.</p></div></div>
+  <section class="card carga-card">
+    <h2>Nueva comparación</h2>
+    <form [formGroup]="form">
+      <div class="grid-form">
+        <mat-form-field appearance="outline"><mat-label>Obra</mat-label><mat-select formControlName="obraId" (selectionChange)="seleccionarObra($event.value)">@for (obra of obras; track obra.id) { <mat-option [value]="obra.id">{{ obra.nombre }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Empresa oferente</mat-label><mat-select formControlName="empresaId">@for (empresa of empresas; track empresa.id) { <mat-option [value]="empresa.id">{{ empresa.razonSocial }}</mat-option> }</mat-select></mat-form-field>
+      </div>
+      <div class="archivos">
+        <label class="archivo"><span>Pliego entregado</span><input type="file" accept="application/pdf,.pdf" (change)="elegirArchivo($event, 'pliego')"><small>{{ pliego?.name ?? 'Seleccionar PDF' }}</small></label>
+        <label class="archivo"><span>Oferta presentada</span><input type="file" accept="application/pdf,.pdf" (change)="elegirArchivo($event, 'oferta')"><small>{{ oferta?.name ?? 'Seleccionar PDF' }}</small></label>
+      </div>
+      <mat-form-field appearance="outline" class="instrucciones"><mat-label>Controles adicionales</mat-label><textarea matInput rows="3" formControlName="instrucciones" placeholder="Indicá aquí cualquier punto particular que quieras revisar"></textarea></mat-form-field>
+      <button mat-raised-button color="primary" type="button" [disabled]="enviando" (click)="analizar()">@if (enviando) { <mat-spinner diameter="20" /> } @else { <mat-icon>psychology</mat-icon> } Guardar y analizar</button>
+    </form>
+  </section>
+
+  <div class="contenido">
+    <section class="card historial"><h2>Historial</h2>@if (!analisis.length) { <p class="vacio">Todavía no hay comparaciones.</p> } @for (item of analisis; track item.id) { <button type="button" class="historial-item" [class.activo]="seleccionado?.id === item.id" (click)="ver(item)"><span>{{ tituloObra(item.obraId) }}</span><small>{{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}</small><strong [class]="'estado ' + item.estado.toLowerCase()">{{ etiquetaEstado(item.estado) }}</strong></button> }</section>
+    <section class="card resultado">
+      @if (!seleccionado) { <div class="vacio grande"><mat-icon>difference</mat-icon><p>Seleccioná un análisis del historial.</p></div> }
+      @else if (seleccionado.estado === 'PENDIENTE' || seleccionado.estado === 'PROCESANDO') { <div class="vacio grande"><mat-spinner diameter="42"/><h3>Analizando documentos</h3><p>Los PDF quedaron guardados. Podés salir de esta pantalla y volver más tarde.</p></div> }
+      @else if (seleccionado.estado === 'ERROR') { <div class="error-box"><mat-icon>error_outline</mat-icon><h3>No se pudo completar</h3><p>{{ seleccionado.error }}</p><button mat-stroked-button (click)="reintentar(seleccionado)">Reintentar</button></div> }
+      @else {
+       @if (seleccionado.resultado; as informe) {
+        <div class="resultado-header"><div><h2>Informe técnico</h2><p>{{ informe.obra }} · {{ informe.empresa }}</p></div><button mat-raised-button color="primary" (click)="descargar()"><mat-icon>picture_as_pdf</mat-icon> Descargar PDF</button></div>
+        <div class="resumen"><div><span>Monto ofertado</span><strong>{{ informe.montoOfertado | currency:'ARS':'symbol':'1.2-2':'es-AR' }}</strong></div><div><span>Presupuesto oficial</span><strong>{{ informe.presupuestoOficial | currency:'ARS':'symbol':'1.2-2':'es-AR' }}</strong></div></div>
+        <ng-container *ngTemplateOutlet="hallazgos; context: { titulo: 'Cómputo y presupuesto', items: informe.computoPresupuesto }" />
+        <ng-container *ngTemplateOutlet="hallazgos; context: { titulo: 'Plan de trabajo y curva de inversión', items: informe.planTrabajo }" />
+        <ng-container *ngTemplateOutlet="hallazgos; context: { titulo: 'Análisis de precios', items: informe.analisisPrecios }" />
+        <div class="conclusion"><h3>Conclusión</h3><p>{{ informe.conclusion }}</p></div>
+       }
+      }
+    </section>
+  </div>
+</div>
+<ng-template #hallazgos let-titulo="titulo" let-items="items"><div class="seccion"><h3>{{ titulo }}</h3>@for (item of items; track trackHallazgo($index, item)) { <article class="hallazgo" [class]="item.estado.toLowerCase()"><strong>{{ item.estado.replace('_', ' ') }}</strong><p>{{ item.texto }}</p>@if (item.referencias?.length) { <small>{{ item.referencias.join(' · ') }}</small> }</article> }</div></ng-template>

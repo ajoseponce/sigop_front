@@ -100,6 +100,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/obras/fap/fap.component').then(m => m.FapComponent),
       },
       {
+        path: 'obras/analisis-documental',
+        loadComponent: () => import('./features/obras/analisis-documental/analisis-documental.component').then(m => m.AnalisisDocumentalComponent),
+      },
+      {
         path: 'obras',
         loadComponent: () =>
           import('./features/obras/obras-list/obras-list.component').then(m => m.ObrasListComponent),

@@ -30,7 +30,7 @@ export class LoginComponent {
   cargando    = signal(false);
   verPassword = signal(false);
   year        = new Date().getFullYear();
-  appVersion  = '1.0.7';
+  appVersion  = '1.0.8';
 
   form = this.fb.group({
     email:    ['', [Validators.required, Validators.email]],

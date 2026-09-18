@@ -18,6 +18,8 @@ interface ReporteErroresImportacionData {
   nombreObra: string;
   archivo: string;
   errores: ErrorImportacionComputo[];
+  totalSistema: number;
+  totalArchivo: number;
 }
 
 const moneda = new Intl.NumberFormat('es-AR', {
@@ -47,6 +49,7 @@ export async function descargarReporteErroresImportacion(
 ): Promise<void> {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const cabecera = await cargarCabeceraInstitucional();
+  const diferenciaTotal = data.totalArchivo - data.totalSistema;
   const body: RowInput[] = data.errores.map((error) => [
     error.rubroRef,
     error.itemRef,
@@ -66,34 +69,50 @@ export async function descargarReporteErroresImportacion(
   });
 
   autoTable(doc, {
-    startY: 48,
-    margin: { top: 48, right: 10, bottom: 14, left: 10 },
+    startY: 36,
+    margin: { top: 36, right: 15, bottom: 14, left: 15 },
     head: [[
       'RUBRO', 'ÍTEM', 'DESCRIPCIÓN', 'UN.', 'CANTIDAD', 'PRECIO UNIT.',
       'PARCIAL SIGOP', 'PARCIAL ARCHIVO', 'DIFERENCIA',
     ]],
     body,
+    foot: [[
+      {
+        content: 'TOTALES',
+        colSpan: 6,
+        styles: { halign: 'right', fontStyle: 'bold' },
+      },
+      { content: importe(data.totalSistema), styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: importe(data.totalArchivo), styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: importe(diferenciaTotal), styles: { halign: 'right', fontStyle: 'bold' } },
+    ]],
     theme: 'grid',
     styles: {
       font: 'helvetica',
       fontSize: 7,
       cellPadding: 1.5,
-      lineColor: [185, 28, 28],
+      lineColor: [105, 105, 105],
       lineWidth: 0.25,
-      fillColor: [254, 226, 226],
-      textColor: [127, 29, 29],
+      fillColor: [245, 245, 245],
+      textColor: [25, 25, 25],
       valign: 'middle',
     },
     headStyles: {
-      fillColor: [185, 28, 28],
+      fillColor: [65, 65, 65],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       halign: 'center',
     },
+    footStyles: {
+      fillColor: [215, 215, 215],
+      textColor: [20, 20, 20],
+      lineColor: [65, 65, 65],
+      lineWidth: 0.35,
+    },
     columnStyles: {
       0: { cellWidth: 15, halign: 'center' },
       1: { cellWidth: 18, halign: 'center' },
-      2: { cellWidth: 74 },
+      2: { cellWidth: 88 },
       3: { cellWidth: 12, halign: 'center' },
       4: { cellWidth: 20 },
       5: { cellWidth: 29 },
@@ -102,11 +121,16 @@ export async function descargarReporteErroresImportacion(
       8: { cellWidth: 27 },
     },
     didDrawPage: () => {
-      const finCabecera = dibujarCabeceraInstitucional(doc, cabecera);
+      const finCabecera = dibujarCabeceraInstitucional(doc, cabecera, 15, 15, 0.5);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
-      doc.setTextColor(127, 29, 29);
-      doc.text('REPORTE DE DIFERENCIAS DE IMPORTACIÓN', 10, finCabecera + 8);
+      doc.setTextColor(25, 25, 25);
+      doc.text(
+        'REPORTE DE DIFERENCIAS DE IMPORTACIÓN',
+        doc.internal.pageSize.getWidth() / 2,
+        finCabecera + 8,
+        { align: 'center' },
+      );
     },
   });
 

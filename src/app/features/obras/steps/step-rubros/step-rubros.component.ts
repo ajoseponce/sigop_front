@@ -267,6 +267,8 @@ export class StepRubrosComponent implements OnChanges {
       nombreObra: this.obra?.nombre?.trim() || 'Obra',
       archivo: this.archivoSeleccionado,
       errores,
+      totalSistema: this.totalSistemaComparado(),
+      totalArchivo: this.totalArchivoComparado(),
     });
   }
 
@@ -384,6 +386,32 @@ export class StepRubrosComponent implements OnChanges {
         }];
       }),
     );
+  }
+
+  private totalSistemaComparado(): number {
+    return redondearMoneda(this.rubros.controls.reduce(
+      (totalRubro, _, rubroIndex) => totalRubro + this.itemsDe(rubroIndex).controls.reduce(
+        (totalItem, _item, itemIndex) => totalItem + (
+          this.parcialArchivo(rubroIndex, itemIndex) === null
+            ? 0
+            : this.subtotalItem(rubroIndex, itemIndex)
+        ),
+        0,
+      ),
+      0,
+    ));
+  }
+
+  private totalArchivoComparado(): number {
+    return redondearMoneda(this.rubros.controls.reduce(
+      (totalRubro, _, rubroIndex) => totalRubro + this.itemsDe(rubroIndex).controls.reduce(
+        (totalItem, _item, itemIndex) => totalItem + (
+          this.parcialArchivo(rubroIndex, itemIndex) ?? 0
+        ),
+        0,
+      ),
+      0,
+    ));
   }
 
   private crearItem(item: ItemObra): FormGroup {

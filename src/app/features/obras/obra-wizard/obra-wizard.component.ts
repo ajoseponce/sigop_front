@@ -1,3 +1,4 @@
+import { SeguimientoObraComponent } from '../seguimiento-obra/seguimiento-obra.component';
 import { Component, inject } from '@angular/core';
 import { StepDatosBasicosComponent } from '../steps/step-datos-basicos/step-datos-basicos.component';
 import { StepContratoComponent } from '../steps/step-contrato/step-contrato.component';
@@ -13,7 +14,7 @@ import { redondearMoneda } from '../../../shared/utils/money.util';
 @Component({
   selector: 'app-obra-wizard',
   standalone: true,
-  imports: [StepDatosBasicosComponent, StepContratoComponent, StepRubrosComponent, StepPlanTrabajoComponent, StepCertificacionComponent],
+  imports: [SeguimientoObraComponent, StepDatosBasicosComponent, StepContratoComponent, StepRubrosComponent, StepPlanTrabajoComponent, StepCertificacionComponent],
   templateUrl: './obra-wizard.component.html',
   styleUrl: './obra-wizard.component.scss',
 })

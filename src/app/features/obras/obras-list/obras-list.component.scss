@@ -70,3 +70,6 @@ table { min-width: 1250px; }
     color: #991b1b;
   }
 }
+
+.filtros-obras { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin-bottom: 20px; label { display: grid; gap: 6px; } input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; } }
+.antecedentes { max-height: 500px; overflow: auto; padding: 16px; background: white; margin-bottom: 20px; details { padding: 8px; border-bottom: 1px solid #ddd; } summary { cursor: pointer; } .celda-origen { white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0; } }

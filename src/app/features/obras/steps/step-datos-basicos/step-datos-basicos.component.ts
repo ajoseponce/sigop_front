@@ -1,3 +1,4 @@
+import { ApiService } from '../../../../core/services/api.service';
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, inject, SimpleChanges } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -30,26 +31,13 @@ export class StepDatosBasicosComponent implements OnChanges {
   @Input() obra: any = null;
   @Input() obraId: number | null = null;
   @Output() obraSaved = new EventEmitter<any>();
-  tiposObra = [
-    { id: 1, nombre: 'Obras de hormigón elaborado / cordón cuneta' },
-    { id: 2, nombre: 'Obras de cordón cuneta y empedrado' },
-    { id: 3, nombre: 'Obras de concreto asfáltico' },
-    { id: 4, nombre: 'Obras de paquete estructural' },
-    { id: 5, nombre: 'Obra mixta (pavimento y luminarias)' },
-    { id: 6, nombre: 'Espacios para juventudes' },
-    { id: 7, nombre: 'Centro de atención al vecino / SUM / Delegaciones municipales' },
-    { id: 8, nombre: 'Plazas' },
-    { id: 9, nombre: 'Parques' },
-    { id: 10, nombre: 'Arquitectura tipo A (Restauración y reciclaje)' },
-    { id: 11, nombre: 'Arquitectura tipo B (Obra nueva mediana escala)' },
-    { id: 12, nombre: 'Arquitectura tipo C (Obra nueva gran escala)' },
-    { id: 13, nombre: 'Arquitectura tipo D (Obra nueva mayor complejidad)' },
-    { id: 14, nombre: 'Galpones productivos' },
-  ];
+  private api = inject(ApiService);
+  tiposObra: { id: number; nombre: string }[] = [];
 
   form = this.fb.group({
     expediente: ['', Validators.required],
     anio: [null, Validators.required],
+    anioObra: this.fb.control<number | null>(null, [Validators.min(1900), Validators.max(2100)]),
     fechaEmision: ['', Validators.required],
     nombre: ['', Validators.required],
     sistemaContratacion: ['UNIDAD_DE_MEDIDA', Validators.required],
@@ -67,6 +55,10 @@ export class StepDatosBasicosComponent implements OnChanges {
     tipoObraId: [null],
   });
   ngOnInit(): void {
+    this.api.get<{ id: number; nombre: string }[]>('obras/tipos').subscribe({
+      next: tipos => { this.tiposObra = tipos; this.filtrarTiposObra(); },
+      error: () => this.snack.open('No se pudieron cargar los tipos de obra', 'Cerrar', { duration: 4000 }),
+    });
     this.tipoObraSearch.valueChanges.subscribe(() => {
       this.filtrarTiposObra();
     });
@@ -104,6 +96,7 @@ export class StepDatosBasicosComponent implements OnChanges {
       numeroObra: this.numeroObra,
       expediente: raw.expediente,
       anioEmision: Number(raw.anio),
+      anioObra: raw.anioObra,
       fechaEmision: raw.fechaEmision,
       sistemaContratacion: raw.sistemaContratacion,
 
@@ -152,8 +145,9 @@ export class StepDatosBasicosComponent implements OnChanges {
         nombre: this.obra.nombre,
         expediente: this.obra.expediente,
         anio: this.obra.anioEmision,
+        anioObra: this.obra.anioObra ?? null,
         fechaEmision: this.toDateInput(this.obra.fechaEmision),
-        sistemaContratacion: this.obra.sistemaContratacion ?? 'UNIDAD_DE_MEDIDA',
+        sistemaContratacion: this.obra.sistemaContratacion ?? null,
         departamento: this.obra.departamento ?? '04',
         municipio: this.obra.municipio ?? '54',
         seccion: this.obra.seccion ?? '',

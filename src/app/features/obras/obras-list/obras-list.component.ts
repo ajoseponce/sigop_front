@@ -1,3 +1,4 @@
+import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
@@ -12,6 +13,7 @@ import { ApiService } from '../../../core/services/api.service';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatTableModule,
     MatButtonModule,
     MatIconModule,
@@ -26,6 +28,28 @@ export class ObrasListComponent implements OnInit {
 
   obras: any[] = [];
   cargando = false;
+  importaciones: { id: number; archivo: string; filas: { id: number; hoja: string; fila: number; obraId: number | null; datos: { celdas: { columna: number; valor: string | number | null }[] } }[] }[] = [];
+  mostrarImportaciones = false;
+  errorImportaciones = '';
+  cargarImportaciones(): void {
+    this.mostrarImportaciones = !this.mostrarImportaciones;
+    if (!this.mostrarImportaciones || this.importaciones.length) return;
+    this.api.get<typeof this.importaciones>('obras/importaciones').subscribe({
+      next: datos => { this.importaciones = datos; this.errorImportaciones = ''; },
+      error: () => this.errorImportaciones = 'No se pudieron cargar los antecedentes.',
+    });
+  }
+  busqueda = '';
+  filtroAnio = '';
+  filtroEstado = '';
+  get anios(): number[] { return [...new Set<number>(this.obras.map(o => o.anioObra).filter(Boolean))].sort((a, b) => b - a); }
+  get estados(): string[] { return [...new Set<string>(this.obras.map(o => o.estadoSeguimiento?.nombre).filter(Boolean))].sort(); }
+  get obrasFiltradas() {
+    const texto = this.busqueda.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    return this.obras.filter(o => (!this.filtroAnio || String(o.anioObra) === this.filtroAnio)
+      && (!this.filtroEstado || o.estadoSeguimiento?.nombre === this.filtroEstado)
+      && (!texto || [o.nombre, o.expediente, o.empresa?.razonSocial, o.empresaOrigen, o.referenciaContratacion].join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(texto)));
+  }
 
   columnas: string[] = [
     'nombre',
@@ -33,7 +57,9 @@ export class ObrasListComponent implements OnInit {
     'empresa',
     'sistemaContratacion',
     'numeroObra',
-    'anioEmision',
+    'anioObra',
+    'estadoSeguimiento',
+    'financiamiento',
     'avance',
     'acciones',
   ];

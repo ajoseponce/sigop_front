@@ -11,8 +11,33 @@
     </button>
   </div>
 
+  <div class="filtros-obras">
+    <label>Buscar obra o empresa <input [(ngModel)]="busqueda" placeholder="Nombre, expediente, empresa…" /></label>
+    <label>Año de obra <select [(ngModel)]="filtroAnio"><option value="">Todos</option>@for (anio of anios; track anio) { <option [value]="anio">{{ anio }}</option> }</select></label>
+    <label>Estado en Construcciones <select [(ngModel)]="filtroEstado"><option value="">Todos</option>@for (estado of estados; track estado) { <option [value]="estado">{{ estado }}</option> }</select></label>
+    <span>{{ obrasFiltradas.length }} obras</span>
+  </div>
+  <button mat-button (click)="cargarImportaciones()">{{ mostrarImportaciones ? 'Ocultar antecedentes importados' : 'Consultar antecedentes importados' }}</button>
+  @if (mostrarImportaciones) {
+    <section class="antecedentes">
+      <p>Contenido original de ambas hojas. Las filas sin una coincidencia inequívoca se conservan sin asociar a una obra.</p>
+      @if (errorImportaciones) { <p role="alert">{{ errorImportaciones }}</p> }
+      @for (lote of importaciones; track lote.id) {
+        <h3>{{ lote.archivo }}</h3>
+        @for (fila of lote.filas; track fila.id) {
+          <details>
+            <summary>{{ fila.hoja }} · fila {{ fila.fila }}{{ fila.obraId ? ' · Obra #' + fila.obraId : ' · Sin asociación' }}</summary>
+            @if (fila.obraId) { <button mat-button (click)="editarObra(fila.obraId)">Abrir obra</button> }
+            @for (celda of fila.datos.celdas; track celda.columna) {
+              <div class="celda-origen"><strong>Columna {{ celda.columna }}:</strong> {{ celda.valor }}</div>
+            }
+          </details>
+        }
+      }
+    </section>
+  }
   <div class="card table-card">
-    <table mat-table [dataSource]="obras">
+    <table mat-table [dataSource]="obrasFiltradas">
 
       <ng-container matColumnDef="nombre">
         <th mat-header-cell *matHeaderCellDef>Nombre</th>
@@ -22,18 +47,18 @@
       <ng-container matColumnDef="expediente">
         <th mat-header-cell *matHeaderCellDef>Expediente</th>
         <td mat-cell *matCellDef="let o">
-          {{ o.expediente ? o.expediente + '-' + o.anioEmision : '—' }}
+          {{ o.expediente ? o.expediente + (o.anioEmision ? '-' + o.anioEmision : '') : '—' }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="empresa">
         <th mat-header-cell *matHeaderCellDef>Empresa</th>
-        <td mat-cell *matCellDef="let o">{{ o.empresa?.razonSocial ?? '—' }}</td>
+        <td mat-cell *matCellDef="let o">{{ o.empresa?.razonSocial ?? o.empresaOrigen ?? '—' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="sistemaContratacion">
-        <th mat-header-cell *matHeaderCellDef>Forma de contratación</th>
-        <td mat-cell *matCellDef="let o">{{ formatoContratacion(o.sistemaContratacion) }}</td>
+        <th mat-header-cell *matHeaderCellDef>Contratación</th>
+        <td mat-cell *matCellDef="let o">{{ o.referenciaContratacion || formatoContratacion(o.sistemaContratacion) }}</td>
       </ng-container>
 
       <ng-container matColumnDef="numeroObra">
@@ -41,11 +66,19 @@
         <td mat-cell *matCellDef="let o">{{ o.numeroObra ?? '—' }}</td>
       </ng-container>
 
-      <ng-container matColumnDef="anioEmision">
-        <th mat-header-cell *matHeaderCellDef>Año</th>
-        <td mat-cell *matCellDef="let o">{{ o.anioEmision ?? '—' }}</td>
+      <ng-container matColumnDef="anioObra">
+        <th mat-header-cell *matHeaderCellDef>Año de obra</th>
+        <td mat-cell *matCellDef="let o">{{ o.anioObra ?? '—' }}</td>
       </ng-container>
 
+      <ng-container matColumnDef="estadoSeguimiento">
+        <th mat-header-cell *matHeaderCellDef>Estado en Construcciones</th>
+        <td mat-cell *matCellDef="let o">{{ o.estadoSeguimiento?.nombre ?? 'Sin informar' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="financiamiento">
+        <th mat-header-cell *matHeaderCellDef>Financiamiento</th>
+        <td mat-cell *matCellDef="let o">{{ o.financiamiento?.nombre ?? '—' }}</td>
+      </ng-container>
       <ng-container matColumnDef="avance">
         <th mat-header-cell *matHeaderCellDef>Estado de carga</th>
         <td mat-cell *matCellDef="let o">

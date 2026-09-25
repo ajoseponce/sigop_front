@@ -1,0 +1,55 @@
+<details [open]="!!obra.filasImportadas?.length">
+  <summary>Seguimiento administrativo de la obra</summary>
+  <p>El año de obra es independiente del año del expediente. La deuda informada es un antecedente y no modifica los certificados del sistema.</p>
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <div class="grid">
+      <label>Año de la obra<input type="number" formControlName="anioObra" min="1900" max="2100" /></label>
+      @for (catalogo of catalogos; track catalogo.campo) {
+        <label>{{ catalogo.etiqueta }}
+          <select [formControlName]="catalogo.campo">
+            <option [ngValue]="null">Sin informar</option>
+            @for (p of opciones(catalogo.grupo, catalogo.campo); track p.id) {
+              <option [ngValue]="p.id">{{ p.nombre }}{{ p.activo ? '' : ' (inactivo)' }}</option>
+            }
+          </select>
+        </label>
+      }
+      <label>Referencia de contratación<input formControlName="referenciaContratacion" maxlength="255" /></label>
+      <label>En manos de<input formControlName="enManosDe" maxlength="255" /></label>
+      <label>Presupuesto / gestión<input formControlName="presupuestoSeguimiento" maxlength="255" /></label>
+      <label>Deuda informada ($)<input formControlName="deudaInformada" inputmode="decimal" placeholder="Ej.: 1234.56" /></label>
+      <label class="wide">Enlace a documentación<input type="url" formControlName="documentacionUrl" maxlength="2000" /></label>
+      @for (texto of textos; track texto.campo) {
+        <label>{{ texto.etiqueta }}<textarea [formControlName]="texto.campo" maxlength="10000"></textarea></label>
+      }
+    </div>
+    @if (enlaceDocumentacion) { <a [href]="enlaceDocumentacion" target="_blank" rel="noopener noreferrer">Abrir documentación</a> }
+    <button type="submit" [disabled]="guardando || form.invalid">{{ guardando ? 'Guardando…' : 'Guardar seguimiento' }}</button>
+  </form>
+  <details class="catalogo">
+    <summary>Administrar catálogos</summary>
+    <div class="grid">
+      <label>Catálogo<select [(ngModel)]="nuevoGrupo">
+        @for (c of catalogos; track c.grupo) { <option [value]="c.grupo">{{ c.etiqueta }}</option> }
+      </select></label>
+      <label>Nuevo valor<input [(ngModel)]="nuevoNombre" maxlength="150" /></label>
+    </div>
+    <button type="button" (click)="agregarParametro()" [disabled]="nuevoNombre.trim().length < 2">Agregar valor</button>
+    @for (p of parametrosGrupo(); track p.id) {
+      <div>{{ p.nombre }} <button type="button" (click)="cambiarActivo(p)">{{ p.activo ? 'Desactivar' : 'Activar' }}</button></div>
+    }
+  </details>
+  @if (obra.filasImportadas?.length) {
+    <details class="catalogo">
+      <summary>Antecedentes originales del Excel ({{ obra.filasImportadas?.length }} filas)</summary>
+      <p>Se conserva el contenido original para consultar las diferencias y los antecedentes financieros.</p>
+      @for (fila of obra.filasImportadas; track $index) {
+        <div class="antecedente"><strong>{{ fila.hoja }} · fila {{ fila.fila }}</strong>
+          @for (celda of fila.datos.celdas; track celda.columna) {
+            <div><small>Columna {{ celda.columna }}:</small> {{ valorCelda(celda.valor) }}</div>
+          }
+        </div>
+      }
+    </details>
+  }
+</details>

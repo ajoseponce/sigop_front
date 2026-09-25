@@ -1,4 +1,7 @@
 <div class="wizard-container">
+  @if (obra) {
+    <app-seguimiento-obra [obra]="obra" (guardado)="obra = $event"></app-seguimiento-obra>
+  }
   <div class="steps">
     <div class="step-item" [class.active]="currentStep === 1" [class.completed]="obraId" (click)="goToStep(1)">
       <div class="step-circle">1</div>

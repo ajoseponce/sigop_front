@@ -214,12 +214,29 @@ export class StepContratoComponent implements OnInit , OnChanges{
   }
 
   seleccionarEmpresa(empresa: any): void {
+    const representanteLegal = empresa.representanteLegal;
+    const representanteTecnico = empresa.representanteTecnico;
+
     this.form.patchValue({
       empresaId: empresa.id,
+      responsableLegalId: representanteLegal?.id ?? null,
+      responsableTecnicoId: representanteTecnico?.id ?? null,
     });
 
     this.empresaSearch.setValue(
       empresa.razonSocial ?? empresa.nombreFantasia ?? ''
+    );
+    this.responsableLegalSearch.setValue(
+      representanteLegal
+        ? `${representanteLegal.apellido ?? ''} ${representanteLegal.nombre ?? ''}`.trim()
+        : '',
+      { emitEvent: false },
+    );
+    this.responsableTecnicoSearch.setValue(
+      representanteTecnico
+        ? `${representanteTecnico.apellido ?? ''} ${representanteTecnico.nombre ?? ''}`.trim()
+        : '',
+      { emitEvent: false },
     );
   }
 

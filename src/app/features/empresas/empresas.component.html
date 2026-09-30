@@ -152,13 +152,25 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Representante legal ID</mat-label>
-            <input matInput type="number" formControlName="representanteLegalId" />
+            <mat-label>Representante legal</mat-label>
+            <mat-select formControlName="representanteLegalId">
+              @for (persona of representantesLegales; track persona.id) {
+                <mat-option [value]="persona.id">
+                  {{ persona.apellido }}, {{ persona.nombre }} · DNI {{ persona.dni || '—' }}
+                </mat-option>
+              }
+            </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Representante técnico ID</mat-label>
-            <input matInput type="number" formControlName="representanteTecnicoId" />
+            <mat-label>Representante técnico</mat-label>
+            <mat-select formControlName="representanteTecnicoId">
+              @for (persona of representantesTecnicos; track persona.id) {
+                <mat-option [value]="persona.id">
+                  {{ persona.apellido }}, {{ persona.nombre }} · DNI {{ persona.dni || '—' }}
+                </mat-option>
+              }
+            </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">

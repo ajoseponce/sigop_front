@@ -37,6 +37,7 @@ export class EmpresasComponent implements OnInit {
   private fb = inject(FormBuilder);
 
   empresas = signal<any[]>([]);
+  personas = signal<any[]>([]);
   cargando = signal(false);
   modalOpen = signal(false);
   editando = signal<any | null>(null);
@@ -67,6 +68,7 @@ export class EmpresasComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+    this.cargarPersonas();
   }
 
   cargar() {
@@ -86,6 +88,30 @@ export class EmpresasComponent implements OnInit {
         });
       },
     });
+  }
+
+  cargarPersonas() {
+    this.api.get<any>('personas').subscribe({
+      next: (resp) => this.personas.set(resp?.data ?? resp ?? []),
+      error: () => {
+        this.snack.open('Error al cargar personas', 'Cerrar', {
+          duration: 3000,
+          panelClass: 'snack-error',
+        });
+      },
+    });
+  }
+
+  get representantesLegales() {
+    return this.personas().filter((persona) =>
+      persona.roles?.includes('REPRESENTANTE_LEGAL'),
+    );
+  }
+
+  get representantesTecnicos() {
+    return this.personas().filter((persona) =>
+      persona.roles?.includes('REPRESENTANTE_TECNICO'),
+    );
   }
 
   abrirModal(empresa?: any) {
@@ -119,8 +145,8 @@ export class EmpresasComponent implements OnInit {
         pais: empresa.pais ?? '',
         telefono: empresa.telefono ?? '',
         email: empresa.email ?? '',
-        representanteLegalId: empresa.representanteLegalId ?? null,
-        representanteTecnicoId: empresa.representanteTecnicoId ?? null,
+        representanteLegalId: empresa.representanteLegal?.id ?? empresa.representanteLegalId ?? null,
+        representanteTecnicoId: empresa.representanteTecnico?.id ?? empresa.representanteTecnicoId ?? null,
         activo: empresa.activo ?? true,
       });
 

@@ -125,12 +125,10 @@ export class PersonasComponent implements OnInit {
           ? String(persona.fechaNacimiento).substring(0, 10)
           : '',
         activo: persona.activo,
-        roles: persona.roles?.map((r: any) => r.rol) ?? [],
+        roles: persona.roles?.map((rol: string | { rol: string }) =>
+          typeof rol === 'string' ? rol : rol.rol,
+        ) ?? [],
       });
-
-      this.form.get('dni')?.disable();
-    } else {
-      this.form.get('dni')?.enable();
     }
 
     this.modalOpen.set(true);
@@ -186,6 +184,7 @@ export class PersonasComponent implements OnInit {
     const id = this.editando().id;
 
     const bodyUpdate = {
+      dni: raw.dni || undefined,
       cuil: raw.cuil || undefined,
       nombre: raw.nombre,
       apellido: raw.apellido,
@@ -203,25 +202,19 @@ export class PersonasComponent implements OnInit {
       next: () => {
         const roles = raw.roles ?? [];
 
-        if (roles.length > 0) {
-          this.api.put(`personas/${id}/roles`, { roles }).subscribe({
-            next: () => {
-              this.snack.open('Persona actualizada', '', { duration: 3000, panelClass: 'snack-success' });
-              this.cerrarModal();
-              this.cargar();
-            },
-            error: (err) => {
-              this.snack.open(err?.error?.message ?? 'Error al actualizar roles', 'Cerrar', {
-                duration: 4000,
-                panelClass: 'snack-error',
-              });
-            },
-          });
-        } else {
-          this.snack.open('Persona actualizada', '', { duration: 3000, panelClass: 'snack-success' });
-          this.cerrarModal();
-          this.cargar();
-        }
+        this.api.put(`personas/${id}/roles`, { roles }).subscribe({
+          next: () => {
+            this.snack.open('Persona actualizada', '', { duration: 3000, panelClass: 'snack-success' });
+            this.cerrarModal();
+            this.cargar();
+          },
+          error: (err) => {
+            this.snack.open(err?.error?.message ?? 'Error al actualizar roles', 'Cerrar', {
+              duration: 4000,
+              panelClass: 'snack-error',
+            });
+          },
+        });
       },
       error: (err) => {
         this.snack.open(err?.error?.message ?? 'Error al actualizar', 'Cerrar', {
@@ -251,7 +244,9 @@ export class PersonasComponent implements OnInit {
   }
 
   getRolesLabel(persona: any) {
-    return persona.roles?.map((r: any) => this.labelRol(r.rol)).join(', ') ?? '-';
+    return persona.roles?.map((rol: string | { rol: string }) =>
+      this.labelRol(typeof rol === 'string' ? rol : rol.rol),
+    ).join(', ') || '-';
   }
 
   labelRol(rol: string) {

@@ -67,6 +67,25 @@ export interface ReadecuacionPdfData extends MedicionPdfData {
   };
 }
 
+export interface AnexoIIIPdfData extends MedicionPdfData {
+  certificados: Array<{
+    numero: number;
+    tipo: 'ANTICIPO_FINANCIERO' | 'OBRA';
+    estado: 'BORRADOR' | 'APROBADO' | 'ANULADO';
+    montoBruto: string | null;
+    montoPostAnticipo?: string | null;
+    deduccionAnticipo: string | null;
+    deduccionFondoReparo: string | null;
+    montoFinal: string | null;
+    readecuacion?: {
+      estado: 'BORRADOR' | 'APROBADO';
+      incremento: string;
+      deduccionFondoReparo: string;
+      incrementoNetoPagar: string;
+    } | null;
+  }>;
+}
+
 const quantity = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 const money = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -447,6 +466,195 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
 
 export async function descargarCertificadoPdf(data: MedicionPdfData): Promise<void> {
   (await crearCertificadoPdf(data)).save(`certificado-${String(data.numero).padStart(2, '0')}.pdf`);
+}
+
+interface MovimientoAnexo {
+  porcentaje: number;
+  importe: number;
+}
+
+function movimientoAnexo(importe: number, contrato: number): MovimientoAnexo {
+  return { importe, porcentaje: contrato > 0 ? importe * 100 / contrato : 0 };
+}
+
+function textoMovimiento(movimiento: MovimientoAnexo, moneda = false): string {
+  return moneda ? `$ ${money.format(movimiento.importe)}` : `${money.format(movimiento.porcentaje)}%`;
+}
+
+export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const cabecera = await cargarCabeceraInstitucional();
+  const left = 12;
+  const right = 12;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const width = pageWidth - left - right;
+  const inicio = dibujarCabeceraInstitucional(doc, cabecera, left, right, 0.5) + 2;
+  const contrato = totalContrato(data);
+  const certificadosObra = data.certificados
+    .filter((certificado) => certificado.tipo === 'OBRA' && certificado.estado === 'APROBADO' && certificado.numero <= data.numero)
+    .sort((a, b) => a.numero - b.numero);
+  const certificadoActual = certificadosObra.find((certificado) => certificado.numero === data.numero);
+  const anteriores = certificadosObra.filter((certificado) => certificado.numero < data.numero);
+  const suma = (certificados: typeof certificadosObra, selector: (certificado: typeof certificadosObra[number]) => number) =>
+    certificados.reduce((total, certificado) => total + selector(certificado), 0);
+  const readecuacion = (certificado: typeof certificadosObra[number]) => certificado.readecuacion?.estado === 'APROBADO'
+    ? certificado.readecuacion : null;
+  const netoCertificado = (certificado: typeof certificadosObra[number]) => certificado.montoPostAnticipo !== undefined
+    ? n(certificado.montoPostAnticipo)
+    : n(certificado.montoBruto) - n(certificado.deduccionAnticipo);
+  const actual = certificadoActual ?? {
+    montoBruto: data.montoBruto,
+    montoPostAnticipo: null,
+    deduccionAnticipo: data.deduccionAnticipo,
+    deduccionFondoReparo: data.deduccionFondoReparo,
+    montoFinal: data.montoFinal,
+    readecuacion: null,
+  } as typeof certificadosObra[number];
+  const anticipo = data.certificados
+    .filter((certificado) => certificado.tipo === 'ANTICIPO_FINANCIERO' && certificado.estado === 'APROBADO')
+    .reduce((total, certificado) => total + n(certificado.montoBruto), 0);
+  const anteriorBruto = suma(anteriores, (certificado) => n(certificado.montoBruto));
+  const presenteBruto = n(actual.montoBruto);
+  const anteriorReadecuacion = suma(anteriores, (certificado) => n(readecuacion(certificado)?.incremento));
+  const presenteReadecuacion = n(readecuacion(actual)?.incremento);
+  const anteriorDescuentoAnticipo = suma(anteriores, (certificado) => n(certificado.deduccionAnticipo));
+  const presenteDescuentoAnticipo = n(actual.deduccionAnticipo);
+  const anteriorNeto = suma(anteriores, netoCertificado);
+  const presenteNeto = netoCertificado(actual);
+  const anteriorReparo = suma(anteriores, (certificado) => n(certificado.deduccionFondoReparo));
+  const presenteReparo = n(actual.deduccionFondoReparo);
+  const anteriorReparoReadecuacion = suma(anteriores, (certificado) => n(readecuacion(certificado)?.deduccionFondoReparo));
+  const presenteReparoReadecuacion = n(readecuacion(actual)?.deduccionFondoReparo);
+  const anteriorPago = suma(anteriores, (certificado) => n(certificado.montoFinal) + n(readecuacion(certificado)?.incrementoNetoPagar));
+  const presentePago = n(actual.montoFinal) + n(readecuacion(actual)?.incrementoNetoPagar);
+
+  doc.setDrawColor(30);
+  doc.setLineWidth(0.3);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.rect(left, inicio, width - 32, 7);
+  doc.rect(left + width - 32, inicio, 32, 7);
+  doc.text('DDJJ de avance físico y financiero de obra', left + 1.5, inicio + 4.7);
+  doc.text('Anexo III-B', left + width - 16, inicio + 4.7, { align: 'center' });
+
+  const datosY = inicio + 8.5;
+  const division = left + width * 0.57;
+  const datosHeight = 46;
+  doc.rect(left, datosY, division - left, datosHeight);
+  doc.rect(division, datosY, left + width - division, datosHeight);
+  doc.setFontSize(6.2);
+  const fila = (label: string, value: string, x: number, y: number, valueX: number, maxWidth: number) => {
+    doc.setFont('helvetica', 'bold');
+    doc.text(label, x, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(doc.splitTextToSize(value, maxWidth)[0] ?? '—', valueX, y);
+  };
+  const izquierda = [
+    ['Organismo otorgante:', 'Municipalidad de Posadas'],
+    ['Convenio / proyecto:', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
+    ['Dispositivo de aprobación:', data.aprobacion ?? '—'],
+    ['Obra:', data.nombreObra ? sentenceCase(data.nombreObra) : '—'],
+    ['Programa:', 'Municipal'],
+    ['Municipalidad:', data.localidad ? sentenceCase(data.localidad) : 'Posadas'],
+    ['Provincia:', 'Misiones'],
+    ['Monto total contrato:', `$ ${money.format(contrato)}`],
+    ['Monto Nación / Provincia:', '—'],
+    ['Monto Municipio:', `$ ${money.format(contrato)}`],
+    ['Empresa:', data.empresa ? sentenceCase(data.empresa) : '—'],
+    ['CUIT:', data.empresaCuit ?? '—'],
+    ['Domicilio:', data.ubicacion ? sentenceCase(data.ubicacion) : '—'],
+  ];
+  izquierda.forEach(([label, value], index) => fila(label, value, left + 1.5, datosY + 3.5 + index * 3.25, left + 35, division - left - 37));
+  const derecha = [
+    ['Certificado N°:', String(data.numero)],
+    ['Fecha de carga:', fechaTexto(data.fechaMedicion)],
+    ['Mes y año certificado:', periodoTexto(data.periodo)],
+    ['Fecha inicio:', fechaTexto(data.fechaInicio)],
+    ['Plazo obra:', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
+  ];
+  derecha.forEach(([label, value], index) => fila(label, value, division + 1.5, datosY + 3.5 + index * 3.9, division + 32, left + width - division - 34));
+
+  const fisicoAnterior = movimientoAnexo(anteriorBruto, contrato);
+  const fisicoPresente = movimientoAnexo(presenteBruto, contrato);
+  const fisicoTotal = movimientoAnexo(anteriorBruto + presenteBruto, contrato);
+  const tituloFisicoY = datosY + datosHeight + 5;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.4);
+  doc.text('Avance físico', left, tituloFisicoY);
+  autoTable(doc, {
+    startY: tituloFisicoY + 1.5,
+    margin: { left, right },
+    theme: 'grid',
+    styles: { fontSize: 6.7, cellPadding: 1.4, valign: 'middle' },
+    headStyles: { fillColor: [226, 232, 240], textColor: [17, 24, 39], halign: 'center', fontStyle: 'bold' },
+    head: [['Concepto', 'Acumulado anterior', 'Presente certificado', 'Acumulado total']],
+    body: [[
+      { content: 'Avance físico obra', styles: { fontStyle: 'bold' } },
+      textoMovimiento(fisicoAnterior), textoMovimiento(fisicoPresente), textoMovimiento(fisicoTotal),
+    ]],
+    columnStyles: { 0: { cellWidth: 86 }, 1: { cellWidth: 45, halign: 'center' }, 2: { cellWidth: 45, halign: 'center' }, 3: { cellWidth: 45, halign: 'center' } },
+  });
+
+  const financieroY = ((doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? tituloFisicoY + 14) + 6;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.4);
+  doc.text('Avance financiero', left, financieroY);
+  const movimiento = (importe: number) => movimientoAnexo(importe, contrato);
+  const filasFinancieras: Array<[string, number, number, number, boolean?]> = [
+    ['Total bruto certificado', anteriorBruto, presenteBruto, anteriorBruto + presenteBruto],
+    ['Total bruto readecuaciones', anteriorReadecuacion, presenteReadecuacion, anteriorReadecuacion + presenteReadecuacion],
+    ['Anticipo financiero', anticipo, 0, anticipo],
+    ['(-) Deducción anticipo financiero', anteriorDescuentoAnticipo, presenteDescuentoAnticipo, anteriorDescuentoAnticipo + presenteDescuentoAnticipo],
+    ['Total neto certificado', anteriorNeto, presenteNeto, anteriorNeto + presenteNeto],
+    ['(-) Deducción garantía de obra', anteriorReparo, presenteReparo, anteriorReparo + presenteReparo],
+    ['(-) Deducción garantía de obra de readecuaciones', anteriorReparoReadecuacion, presenteReparoReadecuacion, anteriorReparoReadecuacion + presenteReparoReadecuacion],
+    ['Pago / desembolso financiero', anteriorPago, presentePago, anteriorPago + presentePago, true],
+  ];
+  autoTable(doc, {
+    startY: financieroY + 1.5,
+    margin: { left, right },
+    theme: 'grid',
+    styles: { fontSize: 5.9, cellPadding: 1.05, valign: 'middle' },
+    headStyles: { fillColor: [226, 232, 240], textColor: [17, 24, 39], halign: 'center', fontStyle: 'bold' },
+    head: [[
+      { content: 'Concepto', rowSpan: 2 },
+      { content: 'Acumulado anterior', colSpan: 2 },
+      { content: 'Presente certificado', colSpan: 2 },
+      { content: 'Acumulado total', colSpan: 2 },
+    ], ['', '%', '$', '%', '$', '%', '$']],
+    body: filasFinancieras.map(([concepto, anterior, presente, total, destacado]) => {
+      const style = destacado ? { fontStyle: 'bold' as const, fillColor: [226, 232, 240] as [number, number, number] } : undefined;
+      return [
+        { content: concepto, styles: style },
+        { content: textoMovimiento(movimiento(anterior)), styles: { ...style, halign: 'right' as const } },
+        { content: textoMovimiento(movimiento(anterior), true), styles: { ...style, halign: 'right' as const } },
+        { content: presente === 0 && concepto === 'Anticipo financiero' ? '—' : textoMovimiento(movimiento(presente)), styles: { ...style, halign: 'right' as const } },
+        { content: presente === 0 && concepto === 'Anticipo financiero' ? '—' : textoMovimiento(movimiento(presente), true), styles: { ...style, halign: 'right' as const } },
+        { content: textoMovimiento(movimiento(total)), styles: { ...style, halign: 'right' as const } },
+        { content: textoMovimiento(movimiento(total), true), styles: { ...style, halign: 'right' as const } },
+      ];
+    }),
+    columnStyles: { 0: { cellWidth: 67 }, 1: { cellWidth: 19 }, 2: { cellWidth: 31 }, 3: { cellWidth: 19 }, 4: { cellWidth: 31 }, 5: { cellWidth: 19 }, 6: { cellWidth: 31 } },
+  });
+
+  const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? financieroY + 45;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.2);
+  const declaracion = 'Declaro que los datos consignados en este formulario son correctos y completos y que he confeccionado la presente DDJJ utilizando el software entregado y aprobado por el Tribunal de Cuentas de la Provincia de Misiones, sin omitir ni falsear dato alguno que deba contener, siendo fiel expresión de la verdad.';
+  doc.text(doc.splitTextToSize(declaracion, width), left, finalY + 7);
+  const firmasY = Math.max(finalY + 24, 190);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.7);
+  [['Firma y sello', 'Intendente'], ['Firma y sello', 'Tesorero'], ['Firma y sello', 'Contador']].forEach(([firma, cargo], index) => {
+    const x = left + width * ((index + 0.5) / 3);
+    doc.text(firma, x, firmasY, { align: 'center' });
+    doc.text(cargo, x, firmasY + 4, { align: 'center' });
+  });
+  return doc;
+}
+
+export async function descargarAnexoIIIPdf(data: AnexoIIIPdfData): Promise<void> {
+  (await crearAnexoIIIPdf(data)).save(`anexo-iii-b-certificado-${String(data.numero).padStart(2, '0')}.pdf`);
 }
 
 export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<jsPDF> {

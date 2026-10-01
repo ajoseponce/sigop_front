@@ -7,9 +7,11 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { forkJoin, Observable, of, switchMap } from 'rxjs';
 import { ApiService } from 'src/app/core/services/api.service';
 import {
+  AnexoIIIPdfData,
   crearCertificadoPdf,
   crearFojaPdf,
   crearReadecuacionPdf,
+  descargarAnexoIIIPdf,
   descargarCertificadoPdf,
   descargarFojaPdf,
   descargarReadecuacionPdf,
@@ -71,6 +73,7 @@ interface Certificado {
   estado: 'BORRADOR' | 'APROBADO' | 'ANULADO';
   porcentajeAnticipoSnapshot: string;
   montoBruto: string | null;
+  montoPostAnticipo?: string | null;
   deduccionAnticipo: string | null;
   deduccionFondoReparo: string | null;
   montoFinal: string | null;
@@ -322,6 +325,14 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       return;
     }
     descargarFojaPdf(this.datosPdf(certificado));
+  }
+
+  imprimirAnexoIIIB(certificado: Certificado): void {
+    if (!this.estaValidado(certificado)) {
+      this.mostrarDescargaBloqueada();
+      return;
+    }
+    descargarAnexoIIIPdf(this.datosAnexoIIIPdf(certificado));
   }
 
   estaValidado(certificado: Certificado): boolean {
@@ -623,6 +634,10 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
   private datosReadecuacionPdf(certificado: Certificado): ReadecuacionPdfData {
     if (!certificado.readecuacion) throw new Error('El certificado no tiene readecuación');
     return { ...this.datosPdf(certificado), readecuacion: certificado.readecuacion };
+  }
+
+  private datosAnexoIIIPdf(certificado: Certificado): AnexoIIIPdfData {
+    return { ...this.datosPdf(certificado), certificados: this.certificados };
   }
 
   crearSiguienteFoja(): void {

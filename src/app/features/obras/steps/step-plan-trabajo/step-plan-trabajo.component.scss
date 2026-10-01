@@ -54,6 +54,9 @@ footer { margin-top: 18px; color: #6b7280; font-size: 13px; }
 .curva.real { stroke: #16a34a; stroke-dasharray: 7 5; }
 .punto.previsto { fill: #2563eb; }
 .punto.real { fill: #16a34a; }
+.etiqueta text { font-size: 10px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+.etiqueta.previsto text { fill: #1d4ed8; }
+.etiqueta.real text { fill: #15803d; }
 .informe-tabla { border-radius: 8px; }
 .informe-tabla table { min-width: 820px; }
 .acciones-informe { display: flex; justify-content: flex-end; margin-top: 16px; }

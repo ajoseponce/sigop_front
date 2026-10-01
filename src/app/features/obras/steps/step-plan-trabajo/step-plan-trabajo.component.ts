@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from 'src/app/core/services/api.service';
+import { descargarInformeAvancePdf } from './informe-avance-pdf.util';
 
 interface ItemPlan {
   id?: number;
@@ -27,11 +28,13 @@ interface ContratoPlan {
   tipo?: string;
   plazoObraDias?: number | null;
   planTrabajo?: string | null;
+  numeroContrato?: string | null;
   rubros?: RubroPlan[];
 }
 
 interface ObraPlan {
   estado?: 'BORRADOR' | 'ACTIVA' | 'FINALIZADA';
+  nombre?: string;
   fechaInicio?: string | null;
   contratos?: ContratoPlan[];
 }
@@ -170,8 +173,31 @@ export class StepPlanTrabajoComponent implements OnChanges {
     })].join(' ');
   }
 
+  posicionX(mes: number): number {
+    return 35 + 700 * mes / this.meses.length;
+  }
+
+  posicionY(avance: number): number {
+    return 250 - 2.3 * avance;
+  }
+
+  posicionEtiqueta(avance: number, desplazamiento: number): number {
+    return Math.max(14, this.posicionY(avance) + desplazamiento);
+  }
+
   imprimirInforme(): void {
-    window.print();
+    descargarInformeAvancePdf({
+      nombreObra: this.obra?.nombre ?? '—',
+      numeroContrato: this.contrato?.numeroContrato ?? undefined,
+      filas: this.informeAvance.map((fila) => ({
+        mes: fila.mes,
+        proyectadoParcial: fila.previstoParcial,
+        proyectadoAcumulado: fila.previstoAcumulado,
+        proyectadoMontoAcumulado: fila.previstoMontoAcumulado,
+        realAcumulado: fila.realAcumulado,
+        realMontoAcumulado: fila.realMontoAcumulado,
+      })),
+    });
   }
 
   guardar(): void {

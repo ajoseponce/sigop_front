@@ -12,16 +12,22 @@
     </div>
   </div>
 
-  <section class="datos-periodo" aria-label="Datos automáticos de la medición">
+  <section class="datos-periodo" aria-label="Datos de la medición">
     <div>
       <span>Período</span>
-      <strong>{{ form.controls.periodo.value | date:'MMMM yyyy':'UTC':'es-AR' }}</strong>
+      <input
+        class="periodo-input"
+        type="month"
+        formControlName="periodo"
+        [disabled]="!!editandoCertificado"
+        aria-label="Período de la foja"
+      />
     </div>
     <div>
       <span>Fecha de carga</span>
       <strong>{{ form.controls.fechaMedicion.value | date:'dd/MM/yyyy':'UTC':'es-AR' }}</strong>
     </div>
-    <small>Estos datos se asignan automáticamente. Solo se carga la cantidad actual.</small>
+    <small>Elegí el período de la foja. La fecha de carga se asigna automáticamente.</small>
   </section>
 
   @if (cargando) {

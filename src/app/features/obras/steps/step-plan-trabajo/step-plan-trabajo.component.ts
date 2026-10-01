@@ -97,7 +97,13 @@ export class StepPlanTrabajoComponent implements OnChanges {
   }
 
   totalPlan(): number {
-    return this.redondear(this.meses.reduce((total, _, indice) => total + this.totalMes(indice), 0));
+    return this.redondear(this.filas.reduce(
+      (total, fila) => total + fila.incidencia * fila.porcentajes.reduce(
+        (subtotal, porcentaje) => subtotal + this.numero(porcentaje),
+        0,
+      ) / 100,
+      0,
+    ));
   }
 
   guardar(): void {

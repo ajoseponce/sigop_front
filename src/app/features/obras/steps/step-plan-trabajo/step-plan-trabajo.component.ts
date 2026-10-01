@@ -58,6 +58,7 @@ interface FilaInformeAvance {
   realAcumulado: number;
   realMontoParcial: number;
   realMontoAcumulado: number;
+  realDisponible: boolean;
 }
 
 interface FilaPlan {
@@ -146,6 +147,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
       const previstoMontoParcial = this.redondear(this.totalContrato * previstoParcial / 100);
       previstoMontoAcumulado = this.redondear(previstoMontoAcumulado + previstoMontoParcial);
       const certificadosMes = this.certificadosDelMes(indice);
+      const realDisponible = certificadosMes.length > 0;
       const realMontoParcial = this.redondear(certificadosMes.reduce(
         (total, certificado) => total + this.valorNumerico(certificado.montoBruto), 0,
       ));
@@ -156,7 +158,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
           + this.valorNumerico(detalle.cantidadAcumulada) * this.valorNumerico(detalle.precioUnitarioSnapshot), 0,
         ) * 100 / this.totalContrato)
         : 0;
-      return { mes, previstoParcial, previstoAcumulado, previstoMontoParcial, previstoMontoAcumulado, realAcumulado, realMontoParcial, realMontoAcumulado };
+      return { mes, previstoParcial, previstoAcumulado, previstoMontoParcial, previstoMontoAcumulado, realAcumulado, realMontoParcial, realMontoAcumulado, realDisponible };
     });
   }
 
@@ -167,9 +169,10 @@ export class StepPlanTrabajoComponent implements OnChanges {
     const inicioX = 35;
     const inicioY = 20;
     const saltoX = filas.length ? ancho / filas.length : ancho;
-    return [`${inicioX},${inicioY + alto}`, ...filas.map((fila, indice) => {
+    const filasCurva = tipo === 'real' ? filas.filter((fila) => fila.realDisponible) : filas;
+    return [`${inicioX},${inicioY + alto}`, ...filasCurva.map((fila) => {
       const avance = tipo === 'previsto' ? fila.previstoAcumulado : fila.realAcumulado;
-      return `${inicioX + saltoX * (indice + 1)},${inicioY + alto - alto * avance / 100}`;
+      return `${inicioX + saltoX * fila.mes},${inicioY + alto - alto * avance / 100}`;
     })].join(' ');
   }
 
@@ -196,6 +199,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
         proyectadoMontoAcumulado: fila.previstoMontoAcumulado,
         realAcumulado: fila.realAcumulado,
         realMontoAcumulado: fila.realMontoAcumulado,
+        realDisponible: fila.realDisponible,
       })),
     });
   }

@@ -9,6 +9,7 @@ export interface InformeAvancePdfFila {
   proyectadoMontoAcumulado: number;
   realAcumulado: number;
   realMontoAcumulado: number;
+  realDisponible: boolean;
 }
 
 export interface InformeAvancePdfData {
@@ -74,12 +75,13 @@ export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Pro
     doc.setLineWidth(0.75);
     let anterior = { x: chartLeft, y: chartTop + chartHeight };
     data.filas.forEach((fila, indice) => {
+      if (tipo === 'real' && !fila.realDisponible) return;
       const avance = tipo === 'proyectado' ? fila.proyectadoAcumulado : fila.realAcumulado;
       const actual = punto(indice, avance, data.filas.length, chartLeft, chartTop, chartWidth, chartHeight);
       doc.line(anterior.x, anterior.y, actual.x, actual.y);
       doc.circle(actual.x, actual.y, 1.3, 'F');
       const monto = tipo === 'proyectado' ? fila.proyectadoMontoAcumulado : fila.realMontoAcumulado;
-      if (tipo === 'proyectado' || monto > 0) {
+      if (tipo === 'proyectado' || fila.realDisponible) {
         doc.setTextColor(...color);
         doc.setFontSize(5.6);
         doc.text(`${formatoMonto(monto)}\n${percent.format(avance)}%`, actual.x, Math.max(chartTop + 3, actual.y + (tipo === 'proyectado' ? -5 : 8)), { align: 'center' });
@@ -114,9 +116,9 @@ export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Pro
       `Mes ${fila.mes}`,
       `${percent.format(fila.proyectadoParcial)}%`,
       `${percent.format(fila.proyectadoAcumulado)}%`,
-      `${percent.format(fila.realAcumulado)}%`,
+      fila.realDisponible ? `${percent.format(fila.realAcumulado)}%` : '—',
       formatoMonto(fila.proyectadoMontoAcumulado),
-      formatoMonto(fila.realMontoAcumulado),
+      fila.realDisponible ? formatoMonto(fila.realMontoAcumulado) : '—',
     ]),
   });
   doc.save('informe-avance-obra.pdf');

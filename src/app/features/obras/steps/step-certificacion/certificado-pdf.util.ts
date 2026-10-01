@@ -75,6 +75,11 @@ function n(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function sentenceCase(value: string): string {
+  const normalized = value.trim().toLocaleLowerCase('es-AR');
+  return normalized ? `${normalized[0].toLocaleUpperCase('es-AR')}${normalized.slice(1)}` : normalized;
+}
+
 const unidades = [
   'CERO', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE',
   'DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE',
@@ -140,14 +145,14 @@ export function montoEnLetras(value: number): string {
   const signo = value < 0 ? 'MENOS ' : '';
   const moneda = pesos === 1 ? 'PESO' : 'PESOS';
   const textoCentavos = centavos === 1 ? 'CENTAVO' : 'CENTAVOS';
-  return `${signo}${enteroEnLetras(pesos)} ${moneda} CON ${enteroEnLetras(centavos)} ${textoCentavos}`;
+  return sentenceCase(`${signo}${enteroEnLetras(pesos)} ${moneda} CON ${enteroEnLetras(centavos)} ${textoCentavos}`);
 }
 
 function periodoTexto(value: string | null): string {
   return value
     ? new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
-      .format(new Date(value)).toUpperCase()
-    : 'SIN PERÍODO';
+      .format(new Date(value))
+    : 'Sin período';
 }
 
 function fechaTexto(value?: string): string {
@@ -162,37 +167,34 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   const pageWidth = doc.internal.pageSize.getWidth();
   const width = pageWidth - left - right;
   const splitX = left + 112;
-  const finCabecera = dibujarCabeceraInstitucional(doc, cabecera, left, right);
+  const finCabecera = dibujarCabeceraInstitucional(doc, cabecera, left, right, 0.6);
   const y = finCabecera + 3;
 
   doc.setDrawColor(30);
   doc.setLineWidth(0.35);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.2);
 
   doc.rect(left, y, width, 10);
-  doc.text(
-    `FOJA DE MEDICIÓN - Período: ${periodoTexto(data.periodo)} - Fecha de Medición: ${fechaTexto(data.fechaMedicion)}`,
-    left + 2,
-    y + 6.3,
-  );
+  doc.text(`Foja de medición N° ${data.numeroFoja}`, left + width / 2, y + 6.3, { align: 'center' });
 
   doc.rect(left, y + 12, width, 9);
-  doc.text(`Obra: ${data.nombreObra || '—'}`, left + 2, y + 17.7);
+  doc.text(`Obra: ${data.nombreObra ? sentenceCase(data.nombreObra) : '—'}`, left + 2, y + 17.7);
 
-  doc.rect(left, y + 23, splitX - left, 43);
-  doc.rect(splitX, y + 23, pageWidth - right - splitX, 43);
-  doc.setFontSize(7.2);
+  doc.rect(left, y + 23, splitX - left, 55);
+  doc.rect(splitX, y + 23, pageWidth - right - splitX, 55);
 
   const labelX = left + 2;
   const valueX = left + 39;
   const rowsLeft = [
-    ['Organismo Otorgante', 'MUNICIPALIDAD DE POSADAS'],
-    ['Convenio/Proyecto N°', `${data.expediente ?? '—'}${data.anioEmision ? `-${data.anioEmision}` : ''}`],
-    ['Programa', 'MUNICIPAL'],
-    ['Modo de Ejecución', data.numeroContrato ? `Concurso de Precios ${data.numeroContrato}` : 'Concurso de Precios'],
-    ['Ubicación', data.ubicacion || '—'],
-    ['Responsable Institucional', data.responsableInstitucional || '—'],
+    ['Organismo otorgante', 'Municipalidad de Posadas'],
+    ['Convenio/proyecto N°', `${data.expediente ?? '—'}${data.anioEmision ? `-${data.anioEmision}` : ''}`],
+    ['Programa', 'Municipal'],
+    ['Modo de ejecución', data.numeroContrato ? `Concurso de precios ${data.numeroContrato}` : 'Concurso de precios'],
+    ['Ubicación', data.ubicacion ? sentenceCase(data.ubicacion) : '—'],
+    ['Responsable institucional', data.responsableInstitucional ? sentenceCase(data.responsableInstitucional) : '—'],
+    ['Período', periodoTexto(data.periodo)],
+    ['Fecha de Carga', fechaTexto(data.fechaMedicion)],
   ];
   rowsLeft.forEach(([label, value], index) => {
     const rowY = y + 29 + index * 6;
@@ -204,9 +206,9 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   const rightValueX = splitX + 29;
   const rowsRight = [
     ['Certificado', `Certificado N° ${data.numero}`],
-    ['Monto Contrato', `$ ${money.format(totalContrato(data))}`],
-    ['Monto Total', `$ ${money.format(n(data.montoBruto))}`],
-    ['Anticipo Financiero', `$ ${money.format(n(data.deduccionAnticipo))}`],
+    ['Monto contrato', `$ ${money.format(totalContrato(data))}`],
+    ['Monto total', `$ ${money.format(n(data.montoBruto))}`],
+    ['Anticipo financiero', `$ ${money.format(n(data.deduccionAnticipo))}`],
   ];
   rowsRight.forEach(([label, value], index) => {
     const rowY = y + 29 + index * 6;
@@ -216,14 +218,14 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   doc.text('Empresa:', rightLabelX, y + 54);
   doc.text(
     doc.splitTextToSize(
-      `${data.empresa ?? '—'}${data.empresaCuit ? ` - CUIT: ${data.empresaCuit}` : ''}`,
+      `${data.empresa ? sentenceCase(data.empresa) : '—'}${data.empresaCuit ? ` - CUIT: ${data.empresaCuit}` : ''}`,
       pageWidth - right - rightLabelX - 3,
     ),
     rightLabelX,
     y + 60,
   );
 
-  return y + 69;
+  return y + 81;
 }
 
 function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: string): number {
@@ -244,14 +246,14 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
   doc.rect(left, y, width - 28, 7);
   doc.rect(ancho - right - 28, y, 28, 7);
   doc.text(
-    `CERTIFICADO BÁSICO DE OBRA N° ${data.numero} / (${periodoTexto(data.periodo)})`,
+    `Certificado básico de obra N° ${data.numero} / (${periodoTexto(data.periodo)})`,
     left + 2,
     y + 4.7,
   );
-  doc.text('ANEXO I', ancho - right - 14, y + 4.7, { align: 'center' });
+  doc.text('Anexo I', ancho - right - 14, y + 4.7, { align: 'center' });
 
   doc.rect(left, y + 8.5, width, 7);
-  doc.text(`Obra: ${data.nombreObra || '—'}`, left + 2, y + 13.2);
+  doc.text(`Obra: ${data.nombreObra ? sentenceCase(data.nombreObra) : '—'}`, left + 2, y + 13.2);
 
   doc.rect(left, y + 17, col1 - left, 36);
   doc.rect(col1, y + 17, col2 - col1, 36);
@@ -271,36 +273,33 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
   });
 
   drawRows([
-    ['Organismo Otorgante', 'MUNICIPALIDAD DE POSADAS'],
-    ['Convenio/Proyecto N°', `${data.expediente ?? '—'}${data.anioEmision ? `-${data.anioEmision}` : ''}`],
+    ['Organismo otorgante', 'Municipalidad de Posadas'],
+    ['Convenio/proyecto N°', `${data.expediente ?? '—'}${data.anioEmision ? `-${data.anioEmision}` : ''}`],
     ['Aprobación', data.aprobacion || '—'],
-    ['Programa', 'MUNICIPAL'],
-    ['Localidad', data.localidad || 'Posadas - Misiones'],
-    ['Responsable Institucional', data.responsableInstitucional || '—'],
-    ['Responsable Técnico', '—'],
+    ['Programa', 'Municipal'],
+    ['Localidad', data.localidad ? sentenceCase(data.localidad) : 'Posadas - Misiones'],
+    ['Responsable institucional', data.responsableInstitucional ? sentenceCase(data.responsableInstitucional) : '—'],
+    ['Responsable técnico', '—'],
   ], left + 2, left + 33, col1 - left - 36);
 
   drawRows([
-    ['Monto Total', `$ ${money.format(totalContrato(data))}`],
-    ['Monto Provincia / Nación', '—'],
-    ['Monto Municipio', `$ ${money.format(totalContrato(data))}`],
-    ['Modo de Ejecución', data.numeroContrato ? `Concurso de Precios ${data.numeroContrato}` : 'Concurso de Precios'],
-    ['Empresa', data.empresa || '—'],
+    ['Monto total', `$ ${money.format(totalContrato(data))}`],
+    ['Monto provincia / Nación', '—'],
+    ['Monto municipio', `$ ${money.format(totalContrato(data))}`],
+    ['Modo de ejecución', data.numeroContrato ? `Concurso de precios ${data.numeroContrato}` : 'Concurso de precios'],
+    ['Empresa', data.empresa ? sentenceCase(data.empresa) : '—'],
     ['CUIT', data.empresaCuit || '—'],
-    ['Monto Contrato Original', `$ ${money.format(totalContrato(data))}`],
-    ['Monto Total Actualizado', `$ ${money.format(totalContrato(data))}`],
+    ['Monto contrato original', `$ ${money.format(totalContrato(data))}`],
+    ['Monto total actualizado', `$ ${money.format(totalContrato(data))}`],
   ], col1 + 2, col1 + 36, col2 - col1 - 39);
 
-  doc.text(`CERTIFICADO BÁSICO DE OBRA N° ${data.numero}`, col2 + 2, y + 21.8);
-  doc.line(col2, y + 24.5, ancho - right, y + 24.5);
   drawRows([
     ['Período', periodoTexto(data.periodo)],
-    ['Fecha de Medición', fechaTexto(data.fechaMedicion)],
-    ['Fecha de Inicio', fechaTexto(data.fechaInicio)],
-    ['Plazo de Ejecución', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
-    ['Expediente de la Obra', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
-    ['Expediente del Certificado', '—'],
-  ], col2 + 2, col2 + 32, ancho - right - col2 - 35, y + 28.5);
+    ['Fecha de carga', fechaTexto(data.fechaMedicion)],
+    ['Fecha de inicio', fechaTexto(data.fechaInicio)],
+    ['Plazo de ejecución', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
+    ['Expediente de la obra', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
+  ], col2 + 2, col2 + 32, ancho - right - col2 - 35, y + 21.8);
 
   return y + 55;
 }
@@ -316,7 +315,7 @@ function bodyConRubros(data: MedicionPdfData, certificado: boolean): RowInput[] 
 
   data.rubros.slice().sort((a, b) => a.orden - b.orden).forEach((rubro) => {
     const columnas = certificado ? 12 : 7;
-    rows.push([{ content: `${rubro.rubroRef}  ${rubro.nombre.toUpperCase()}`, colSpan: columnas, styles: {
+    rows.push([{ content: `${rubro.rubroRef}  ${sentenceCase(rubro.nombre)}`, colSpan: columnas, styles: {
       fontStyle: 'bold', fillColor: [226, 232, 240], textColor: [17, 24, 39],
     } }]);
     rubro.items.forEach((item) => {
@@ -326,7 +325,7 @@ function bodyConRubros(data: MedicionPdfData, certificado: boolean): RowInput[] 
       const anterior = Math.max(0, acumulado - actual);
       const precio = n(item.precioUnitario);
       const base = [
-        item.itemRef, item.nombre, item.unidad,
+        item.itemRef, sentenceCase(item.nombre), item.unidad,
         quantity.format(n(detalle?.cantidadContratadaSnapshot ?? item.cantidad)),
       ];
       rows.push(certificado
@@ -350,8 +349,8 @@ export async function crearFojaPdf(data: MedicionPdfData): Promise<jsPDF> {
     head: [['Ítem', 'Designación', 'Un.', 'Cant.', 'Anterior', 'Actual', 'Acumulado']],
     body: bodyConRubros(data, false),
     theme: 'grid',
-    styles: { fontSize: 8, cellPadding: 1.8 },
-    headStyles: { fillColor: [55, 65, 81], textColor: 255, halign: 'center' },
+    styles: { fontSize: 7.2, cellPadding: 1.8 },
+    headStyles: { fillColor: [55, 65, 81], textColor: 255, halign: 'center', fontSize: 7.2 },
     columnStyles: {
       0: { cellWidth: 14 }, 1: { cellWidth: 78 }, 2: { cellWidth: 12, halign: 'center' },
       3: { cellWidth: 20, halign: 'right' }, 4: { cellWidth: 20, halign: 'right' },
@@ -414,29 +413,33 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
     styles: { fontSize: 7.2, cellPadding: 1.7, lineColor: [55, 65, 81], lineWidth: 0.25 },
     body: [
       [
-        { content: 'TOTAL CONTRATO', styles: { fontStyle: 'bold', fillColor: [226, 232, 240] } },
+        { content: 'Total contrato', colSpan: 5, styles: { fontStyle: 'bold', fillColor: [226, 232, 240], halign: 'right' } },
         { content: `$ ${money.format(totalContrato(data))}`, styles: { fontStyle: 'bold', halign: 'right' } },
-        { content: 'TOTAL GENERAL', styles: { fontStyle: 'bold', fillColor: [226, 232, 240] } },
+        { content: 'Total monto bruto', colSpan: 5, styles: { fontStyle: 'bold', fillColor: [226, 232, 240], halign: 'right' } },
         { content: `$ ${money.format(n(data.montoBruto))}`, styles: { fontStyle: 'bold', halign: 'right' } },
       ],
       [
-        { content: 'ANTICIPO FINANCIERO', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right' } },
+        { content: '', colSpan: 6 },
+        { content: 'Deducción anticipo financiero', colSpan: 5, styles: { fontStyle: 'bold', halign: 'right' } },
         { content: `${money.format(n(data.porcentajeAnticipo))}%  - $ ${money.format(n(data.deduccionAnticipo))}`, styles: { halign: 'right' } },
       ],
       [
-        { content: 'FONDO DE REPARO', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right' } },
+        { content: '', colSpan: 6 },
+        { content: 'Deducción fondo de reparo', colSpan: 5, styles: { fontStyle: 'bold', halign: 'right' } },
         { content: `6%  - $ ${money.format(n(data.deduccionFondoReparo))}`, styles: { halign: 'right' } },
       ],
       [
-        { content: 'SUMA A PAGAR EN EL PRESENTE CERTIFICADO', colSpan: 3, styles: { fontStyle: 'bold', fontSize: 8.5, fillColor: [219, 234, 254] } },
+        { content: 'Suma a pagar en el presente certificado', colSpan: 11, styles: { fontStyle: 'bold', fontSize: 8.5, fillColor: [219, 234, 254] } },
         { content: `$ ${money.format(montoFinal)}`, styles: { fontStyle: 'bold', fontSize: 8.5, halign: 'right', fillColor: [219, 234, 254] } },
       ],
       [
-        { content: `SON: ${montoEnLetras(montoFinal)}`, colSpan: 4, styles: { fontStyle: 'bold', fontSize: 7.2 } },
+        { content: `Son: ${montoEnLetras(montoFinal)}`, colSpan: 12, styles: { fontStyle: 'bold', fontSize: 7.2, halign: 'right' } },
       ],
     ],
     columnStyles: {
-      0: { cellWidth: 54 }, 1: { cellWidth: 50 }, 2: { cellWidth: 76 }, 3: { cellWidth: 82 },
+      0: { cellWidth: 11 }, 1: { cellWidth: 55 }, 2: { cellWidth: 9 }, 3: { cellWidth: 14 },
+      4: { cellWidth: 20 }, 5: { cellWidth: 22 }, 6: { cellWidth: 17 }, 7: { cellWidth: 16 },
+      8: { cellWidth: 17 }, 9: { cellWidth: 27 }, 10: { cellWidth: 27 }, 11: { cellWidth: 27 },
     },
   });
   return doc;
@@ -460,9 +463,9 @@ export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<j
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(6.8);
   doc.rect(left, inicio, width, 8);
-  doc.text('PLANILLA DE DETERMINACIÓN DEL INCREMENTO DEL CERTIFICADO BÁSICO DE OBRA POR MONTOS READECUADOS POR APLICACIÓN DEL FAP', left + width / 2, inicio + 5, { align: 'center' });
+  doc.text('Planilla de determinación del incremento del certificado básico de obra por montos readecuados por aplicación del FAP', left + width / 2, inicio + 5, { align: 'center' });
   doc.rect(left, inicio + 9, width, 7);
-  doc.text(`CÁLCULO DE MONTOS READECUADOS PARA EL CERTIFICADO BÁSICO N° ${data.numero} - SALTOS ${r.saltos.map((s) => s.orden).join(' Y ')}`, left + width / 2, inicio + 13.5, { align: 'center' });
+  doc.text(`Cálculo de montos readecuados para el certificado básico N° ${data.numero} - saltos ${r.saltos.map((s) => s.orden).join(' y ')}`, left + width / 2, inicio + 13.5, { align: 'center' });
 
   autoTable(doc, {
     startY: inicio + 18,
@@ -470,11 +473,11 @@ export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<j
     theme: 'plain',
     styles: { fontSize: 6.4, cellPadding: 1.1 },
     body: [
-      ['OBRA:', data.nombreObra, 'MONTO CONTRATO ORIGINAL:', `$ ${money.format(totalContrato(data))}`, 'MES Y AÑO CERTIFICADO:', periodoTexto(data.periodo)],
-      ['ORGANISMO EJECUTOR:', 'MUNICIPALIDAD DE POSADAS', 'MONTO ANTICIPO:', `$ ${money.format(n(data.deduccionAnticipo))}`, 'NRO CERTIFICADO:', String(data.numero)],
-      ['PROVINCIA:', 'MISIONES', 'EMPRESA:', data.empresa ?? '—', 'TIPO DE CERTIFICADO:', 'ACTUALIZACIÓN'],
-      ['MUNICIPIO:', data.localidad ?? 'POSADAS', 'CUIT:', data.empresaCuit ?? '—', 'FECHA INICIO:', fechaTexto(data.fechaInicio)],
-      ['INSPECTOR DE OBRA:', data.responsableInstitucional ?? '—', 'EXPEDIENTE:', data.expediente ?? '—', 'DISPOSITIVO DE APROBACIÓN:', data.aprobacion ?? '—'],
+      ['Obra:', data.nombreObra ? sentenceCase(data.nombreObra) : '—', 'Monto contrato original:', `$ ${money.format(totalContrato(data))}`, 'Mes y año certificado:', periodoTexto(data.periodo)],
+      ['Organismo ejecutor:', 'Municipalidad de Posadas', 'Monto anticipo:', `$ ${money.format(n(data.deduccionAnticipo))}`, 'Nro. certificado:', String(data.numero)],
+      ['Provincia:', 'Misiones', 'Empresa:', data.empresa ? sentenceCase(data.empresa) : '—', 'Tipo de certificado:', 'Actualización'],
+      ['Municipio:', data.localidad ? sentenceCase(data.localidad) : 'Posadas', 'CUIT:', data.empresaCuit ?? '—', 'Fecha inicio:', fechaTexto(data.fechaInicio)],
+      ['Inspector de obra:', data.responsableInstitucional ? sentenceCase(data.responsableInstitucional) : '—', 'Expediente:', data.expediente ?? '—', 'Dispositivo de aprobación:', data.aprobacion ?? '—'],
     ],
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 30 }, 1: { cellWidth: 70 }, 2: { fontStyle: 'bold', cellWidth: 38 }, 3: { cellWidth: 48 }, 4: { fontStyle: 'bold', cellWidth: 37 }, 5: { cellWidth: 64 } },
   });
@@ -483,7 +486,7 @@ export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<j
   const saltos = r.saltos.map((salto, index) => [
     index === 0 ? String(data.numero) : '', index === 0 ? periodoTexto(data.periodo) : '',
     index === 0 ? `$ ${money.format(n(r.montoBase))}` : '', index === 0 ? `$ ${money.format(n(r.deduccionAnticipo))}` : '',
-    index === 0 ? `$ ${money.format(n(r.montoNetoActualizar))}` : '', `SALTO ${salto.orden}`, salto.fap,
+    index === 0 ? `$ ${money.format(n(r.montoNetoActualizar))}` : '', `Salto ${salto.orden}`, salto.fap,
     index === 0 ? r.fapConsolidado : '', index === 0 ? `$ ${money.format(n(r.montoNetoActualizado))}` : '',
     index === 0 ? `$ ${money.format(n(r.incremento))}` : '',
   ]);
@@ -493,7 +496,7 @@ export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<j
     theme: 'grid',
     styles: { fontSize: 5.7, cellPadding: 1.2, halign: 'center', valign: 'middle' },
     headStyles: { fillColor: [239, 242, 225], textColor: 20, fontStyle: 'bold' },
-    head: [['CERTIFICADO BÁSICO N°', 'MES CERTIFICADO', 'MONTO CERTIFICADO A PRECIOS BASE', 'DESCUENTO ANTICIPO', 'MONTO NETO A ACTUALIZAR', 'SALTO', 'FACTOR DE ACTUALIZACIÓN', 'FAP CONSOLIDADO', 'MONTO NETO ACTUALIZADO', 'INCREMENTO POR ACTUALIZACIÓN']],
+    head: [['Certificado básico N°', 'Mes certificado', 'Monto certificado a precios base', 'Descuento anticipo', 'Monto neto a actualizar', 'Salto', 'Factor de actualización', 'FAP consolidado', 'Monto neto actualizado', 'Incremento por actualización']],
     body: saltos,
   });
 
@@ -504,17 +507,17 @@ export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<j
     theme: 'grid',
     styles: { fontSize: 6.5, cellPadding: 1.2 },
     body: [
-      ['TOTAL MONTO INCREMENTADO POR ACTUALIZACIONES', `$ ${money.format(n(r.incremento))}`],
-      ['DESCUENTO DE FONDO DE REPARO', `$ ${money.format(n(r.deduccionFondoReparo))}`],
-      ['TOTAL DEL INCREMENTO NETO A PAGAR', `$ ${money.format(n(r.incrementoNetoPagar))}`],
+      ['Total monto incrementado por actualizaciones', `$ ${money.format(n(r.incremento))}`],
+      ['Descuento de fondo de reparo', `$ ${money.format(n(r.deduccionFondoReparo))}`],
+      ['Total del incremento neto a pagar', `$ ${money.format(n(r.incrementoNetoPagar))}`],
     ],
     columnStyles: { 0: { cellWidth: 78, fontStyle: 'bold', halign: 'right' }, 1: { cellWidth: 26, fontStyle: 'bold', halign: 'right' } },
   });
   const letrasY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? resumenY + 20;
   doc.rect(left + 46, letrasY + 2, width - 46, 7);
   doc.setFontSize(6.2);
-  doc.text(`MONTO A PAGAR: ${montoEnLetras(n(r.incrementoNetoPagar))}`, left + 48, letrasY + 6.5);
-  doc.text('EL PRESENTE CERTIFICADO TIENE CARÁCTER DE DECLARACIÓN JURADA', left + width / 2, letrasY + 13, { align: 'center' });
+  doc.text(`Monto a pagar: ${montoEnLetras(n(r.incrementoNetoPagar))}`, left + 48, letrasY + 6.5);
+  doc.text('El presente certificado tiene carácter de declaración jurada', left + width / 2, letrasY + 13, { align: 'center' });
   return doc;
 }
 

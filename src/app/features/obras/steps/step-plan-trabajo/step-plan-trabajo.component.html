@@ -60,5 +60,65 @@
       <span>Las {{ meses.length }} columnas se calcularon a partir de {{ plazoDias }} días.</span>
       <button type="button" class="button primary" (click)="guardar()" [disabled]="guardando"><mat-icon>save</mat-icon>{{ guardando ? 'Guardando...' : 'Guardar y continuar' }}</button>
     </footer>
+
+    @if (contrato.planTrabajo) {
+      <section class="informe-avance" aria-label="Informe de avance de obra proyectado y real">
+        <header>
+          <div>
+            <span class="eyebrow">Seguimiento</span>
+            <h3>Curva de avance</h3>
+            <p>Comparación entre el avance proyectado por el plan de trabajo y el avance real certificado.</p>
+          </div>
+          <div class="leyenda-curvas">
+            <span class="previsto"><i></i>Proyectado</span>
+            <span class="real"><i></i>Real</span>
+          </div>
+        </header>
+
+        <div class="resumen-avance">
+          <div><span>Proyectado al cierre</span><strong>{{ informeAvance.at(-1)?.previstoAcumulado ?? 0 | number:'1.2-2' }}%</strong></div>
+          <div><span>Real al cierre</span><strong>{{ informeAvance.at(-1)?.realAcumulado ?? 0 | number:'1.2-2' }}%</strong></div>
+          <div><span>Monto real certificado</span><strong>{{ informeAvance.at(-1)?.realMontoAcumulado ?? 0 | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</strong></div>
+        </div>
+
+        <div class="grafico-wrap">
+          <svg viewBox="0 0 770 300" role="img" aria-label="Curvas de avance proyectado y real">
+            @for (guia of [0, 25, 50, 75, 100]; track guia) {
+              <line x1="35" x2="735" [attr.y1]="250 - guia * 2.3" [attr.y2]="250 - guia * 2.3" class="guia" />
+              <text x="4" [attr.y]="254 - guia * 2.3" class="eje-y">{{ guia }}%</text>
+            }
+            <line x1="35" y1="250" x2="735" y2="250" class="eje" />
+            <polyline [attr.points]="puntosCurva('previsto')" class="curva previsto" />
+            <polyline [attr.points]="puntosCurva('real')" class="curva real" />
+            @for (fila of informeAvance; track fila.mes) {
+              <circle [attr.cx]="35 + 700 * fila.mes / meses.length" [attr.cy]="250 - fila.previstoAcumulado * 2.3" r="3.5" class="punto previsto" />
+              <circle [attr.cx]="35 + 700 * fila.mes / meses.length" [attr.cy]="250 - fila.realAcumulado * 2.3" r="3.5" class="punto real" />
+              <text [attr.x]="35 + 700 * fila.mes / meses.length" y="274" text-anchor="middle" class="eje-x">Mes {{ fila.mes }}</text>
+            }
+          </svg>
+        </div>
+
+        <div class="table-scroll informe-tabla">
+          <table>
+            <thead><tr><th>Período</th><th>Proyectado parcial</th><th>Proyectado acumulado</th><th>Real acumulado</th><th>Financiero proyectado</th><th>Financiero real</th></tr></thead>
+            <tbody>
+              @for (fila of informeAvance; track fila.mes) {
+                <tr>
+                  <td>Mes {{ fila.mes }}</td>
+                  <td>{{ fila.previstoParcial | number:'1.2-2' }}%</td>
+                  <td>{{ fila.previstoAcumulado | number:'1.2-2' }}%</td>
+                  <td>{{ fila.realAcumulado | number:'1.2-2' }}%</td>
+                  <td>{{ fila.previstoMontoAcumulado | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</td>
+                  <td>{{ fila.realMontoAcumulado | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="acciones-informe">
+          <button type="button" class="button secondary" (click)="imprimirInforme()"><mat-icon>print</mat-icon>Imprimir informe</button>
+        </div>
+      </section>
+    }
   }
 </section>

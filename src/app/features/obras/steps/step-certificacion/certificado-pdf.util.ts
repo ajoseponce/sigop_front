@@ -482,10 +482,10 @@ function textoMovimiento(movimiento: MovimientoAnexo, moneda = false): string {
 }
 
 export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const cabecera = await cargarCabeceraInstitucional();
-  const left = 12;
-  const right = 12;
+  const left = 10;
+  const right = 10;
   const pageWidth = doc.internal.pageSize.getWidth();
   const width = pageWidth - left - right;
   const inicio = dibujarCabeceraInstitucional(doc, cabecera, left, right, 0.5) + 2;
@@ -572,7 +572,7 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
     ['Fecha inicio:', fechaTexto(data.fechaInicio)],
     ['Plazo obra:', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
   ];
-  derecha.forEach(([label, value], index) => fila(label, value, division + 1.5, datosY + 3.5 + index * 3.9, division + 32, left + width - division - 34));
+  derecha.forEach(([label, value], index) => fila(label, value, division + 1.5, datosY + 3.5 + index * 3.9, division + 29, left + width - division - 31));
 
   const fisicoAnterior = movimientoAnexo(anteriorBruto, contrato);
   const fisicoPresente = movimientoAnexo(presenteBruto, contrato);
@@ -592,7 +592,7 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
       { content: 'Avance físico obra', styles: { fontStyle: 'bold' } },
       textoMovimiento(fisicoAnterior), textoMovimiento(fisicoPresente), textoMovimiento(fisicoTotal),
     ]],
-    columnStyles: { 0: { cellWidth: 86 }, 1: { cellWidth: 45, halign: 'center' }, 2: { cellWidth: 45, halign: 'center' }, 3: { cellWidth: 45, halign: 'center' } },
+    columnStyles: { 0: { cellWidth: 70 }, 1: { cellWidth: 40, halign: 'center' }, 2: { cellWidth: 40, halign: 'center' }, 3: { cellWidth: 40, halign: 'center' } },
   });
 
   const financieroY = ((doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? tituloFisicoY + 14) + 6;
@@ -616,25 +616,20 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
     theme: 'grid',
     styles: { fontSize: 5.9, cellPadding: 1.05, valign: 'middle' },
     headStyles: { fillColor: [226, 232, 240], textColor: [17, 24, 39], halign: 'center', fontStyle: 'bold' },
-    head: [[
-      { content: 'Concepto', rowSpan: 2 },
-      { content: 'Acumulado anterior', colSpan: 2 },
-      { content: 'Presente certificado', colSpan: 2 },
-      { content: 'Acumulado total', colSpan: 2 },
-    ], ['', '%', '$', '%', '$', '%', '$']],
+    head: [['Concepto', 'Acumulado anterior', 'Presente certificado', 'Acumulado total']],
     body: filasFinancieras.map(([concepto, anterior, presente, total, destacado]) => {
       const style = destacado ? { fontStyle: 'bold' as const, fillColor: [226, 232, 240] as [number, number, number] } : undefined;
+      const celda = (importe: number, sinValor = false) => sinValor
+        ? '—'
+        : `${textoMovimiento(movimiento(importe))}\n${textoMovimiento(movimiento(importe), true)}`;
       return [
         { content: concepto, styles: style },
-        { content: textoMovimiento(movimiento(anterior)), styles: { ...style, halign: 'right' as const } },
-        { content: textoMovimiento(movimiento(anterior), true), styles: { ...style, halign: 'right' as const } },
-        { content: presente === 0 && concepto === 'Anticipo financiero' ? '—' : textoMovimiento(movimiento(presente)), styles: { ...style, halign: 'right' as const } },
-        { content: presente === 0 && concepto === 'Anticipo financiero' ? '—' : textoMovimiento(movimiento(presente), true), styles: { ...style, halign: 'right' as const } },
-        { content: textoMovimiento(movimiento(total)), styles: { ...style, halign: 'right' as const } },
-        { content: textoMovimiento(movimiento(total), true), styles: { ...style, halign: 'right' as const } },
+        { content: celda(anterior), styles: { ...style, halign: 'right' as const } },
+        { content: celda(presente, presente === 0 && concepto === 'Anticipo financiero'), styles: { ...style, halign: 'right' as const } },
+        { content: celda(total), styles: { ...style, halign: 'right' as const } },
       ];
     }),
-    columnStyles: { 0: { cellWidth: 67 }, 1: { cellWidth: 19 }, 2: { cellWidth: 31 }, 3: { cellWidth: 19 }, 4: { cellWidth: 31 }, 5: { cellWidth: 19 }, 6: { cellWidth: 31 } },
+    columnStyles: { 0: { cellWidth: 70 }, 1: { cellWidth: 40 }, 2: { cellWidth: 40 }, 3: { cellWidth: 40 } },
   });
 
   const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? financieroY + 45;
@@ -642,7 +637,7 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
   doc.setFontSize(6.2);
   const declaracion = 'Declaro que los datos consignados en este formulario son correctos y completos y que he confeccionado la presente DDJJ utilizando el software entregado y aprobado por el Tribunal de Cuentas de la Provincia de Misiones, sin omitir ni falsear dato alguno que deba contener, siendo fiel expresión de la verdad.';
   doc.text(doc.splitTextToSize(declaracion, width), left, finalY + 7);
-  const firmasY = Math.max(finalY + 24, 190);
+  const firmasY = Math.max(finalY + 24, 245);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(6.7);
   [['Firma y sello', 'Intendente'], ['Firma y sello', 'Tesorero'], ['Firma y sello', 'Contador']].forEach(([firma, cargo], index) => {

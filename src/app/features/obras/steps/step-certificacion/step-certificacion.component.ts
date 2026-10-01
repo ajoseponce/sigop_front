@@ -261,7 +261,7 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
     const operacion$ = this.editandoCertificado
       ? this.api.put<Certificado>(
         `obras/${this.obraId}/certificados/${this.editandoCertificado.id}/medicion`,
-        { detalles: payload.detalles },
+        { periodo, detalles: payload.detalles },
       )
       : this.asegurarAnticipo().pipe(
       switchMap(() => this.api.post<Foja>(`obras/${this.obraId}/fojas`, payload)),

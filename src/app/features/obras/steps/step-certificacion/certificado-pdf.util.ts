@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { RowInput, autoTable } from 'jspdf-autotable';
 import { cargarCabeceraInstitucional, dibujarCabeceraInstitucional } from '../../../../shared/pdf/pdf-header.util';
+import { redondearMoneda } from '../../../../shared/utils/money.util';
 
 interface PdfItem {
   id: number;
@@ -324,8 +325,13 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
 }
 
 function totalContrato(data: MedicionPdfData): number {
-  return data.rubros.flatMap((rubro) => rubro.items)
-    .reduce((total, item) => total + n(item.cantidad) * n(item.precioUnitario), 0);
+  return redondearMoneda(
+    data.rubros.flatMap((rubro) => rubro.items)
+      .reduce(
+        (total, item) => total + redondearMoneda(n(item.cantidad) * n(item.precioUnitario)),
+        0,
+      ),
+  );
 }
 
 function bodyConRubros(data: MedicionPdfData, certificado: boolean): RowInput[] {

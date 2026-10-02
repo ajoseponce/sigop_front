@@ -27,6 +27,23 @@ interface PdfDetalle {
   montoPeriodo: string;
 }
 
+interface CertificadoResumenPdf {
+  numero: number;
+  tipo: 'ANTICIPO_FINANCIERO' | 'OBRA';
+  estado: 'BORRADOR' | 'APROBADO' | 'ANULADO';
+  montoBruto: string | null;
+  montoPostAnticipo?: string | null;
+  deduccionAnticipo: string | null;
+  deduccionFondoReparo: string | null;
+  montoFinal: string | null;
+  readecuacion?: {
+    estado: 'BORRADOR' | 'APROBADO';
+    incremento: string;
+    deduccionFondoReparo: string;
+    incrementoNetoPagar: string;
+  } | null;
+}
+
 export interface MedicionPdfData {
   numero: number;
   numeroFoja: number;
@@ -51,6 +68,7 @@ export interface MedicionPdfData {
   montoFinal: string | null;
   rubros: PdfRubro[];
   detalles: PdfDetalle[];
+  certificados?: CertificadoResumenPdf[];
 }
 
 export interface ReadecuacionPdfData extends MedicionPdfData {
@@ -69,22 +87,7 @@ export interface ReadecuacionPdfData extends MedicionPdfData {
 }
 
 export interface AnexoIIIPdfData extends MedicionPdfData {
-  certificados: Array<{
-    numero: number;
-    tipo: 'ANTICIPO_FINANCIERO' | 'OBRA';
-    estado: 'BORRADOR' | 'APROBADO' | 'ANULADO';
-    montoBruto: string | null;
-    montoPostAnticipo?: string | null;
-    deduccionAnticipo: string | null;
-    deduccionFondoReparo: string | null;
-    montoFinal: string | null;
-    readecuacion?: {
-      estado: 'BORRADOR' | 'APROBADO';
-      incremento: string;
-      deduccionFondoReparo: string;
-      incrementoNetoPagar: string;
-    } | null;
-  }>;
+  certificados: CertificadoResumenPdf[];
 }
 
 const quantity = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
@@ -227,8 +230,8 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   const rowsRight = [
     ['Certificado', `Certificado N° ${data.numero}`],
     ['Monto contrato', `$ ${money.format(totalContrato(data))}`],
-    ['Monto total', `$ ${money.format(n(data.montoBruto))}`],
-    ['Anticipo financiero', `$ ${money.format(n(data.deduccionAnticipo))}`],
+    ['Monto actualizado', `$ ${money.format(montoActualizado(data))}`],
+    ['Anticipo financiero', `$ ${money.format(montoAnticipoFinanciero(data))}`],
   ];
   rowsRight.forEach(([label, value], index) => {
     const rowY = y + 29 + index * 6;
@@ -332,6 +335,39 @@ function totalContrato(data: MedicionPdfData): number {
         0,
       ),
   );
+}
+
+function certificadosEmitidos(data: MedicionPdfData): CertificadoResumenPdf[] {
+  return (data.certificados ?? []).filter(
+    (certificado) => certificado.tipo === 'OBRA'
+      && certificado.estado === 'APROBADO'
+      && certificado.numero <= data.numero,
+  );
+}
+
+function montoAnticipoFinanciero(data: MedicionPdfData): number {
+  return (data.certificados ?? [])
+    .filter((certificado) => certificado.tipo === 'ANTICIPO_FINANCIERO' && certificado.estado !== 'ANULADO')
+    .reduce((total, certificado) => total + n(certificado.montoBruto), 0);
+}
+
+/** Importe efectivamente invertido: anticipo + netos básicos + incrementos redeterminados. */
+function montoActualizado(data: MedicionPdfData): number {
+  const certificados = certificadosEmitidos(data);
+  const netosBasicos = certificados.reduce(
+    (total, certificado) => total + (certificado.montoPostAnticipo !== undefined
+      ? n(certificado.montoPostAnticipo)
+      : n(certificado.montoBruto) - n(certificado.deduccionAnticipo)),
+    0,
+  );
+  const redeterminaciones = certificados.reduce(
+    (total, certificado) => total + (certificado.readecuacion?.estado === 'APROBADO'
+      ? n(certificado.readecuacion.incremento)
+      : 0),
+    0,
+  );
+
+  return redondearMoneda(montoAnticipoFinanciero(data) + netosBasicos + redeterminaciones);
 }
 
 function bodyConRubros(data: MedicionPdfData, certificado: boolean): RowInput[] {

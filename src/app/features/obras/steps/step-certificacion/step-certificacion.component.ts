@@ -628,6 +628,7 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       montoFinal: certificado.montoFinal,
       rubros: this.rubros,
       detalles: certificado.detalles,
+      certificados: this.certificados,
     };
   }
 

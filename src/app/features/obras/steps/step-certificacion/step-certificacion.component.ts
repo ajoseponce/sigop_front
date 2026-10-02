@@ -620,7 +620,6 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
         this.obra?.parcela ? `Parcela ${this.obra.parcela}` : '',
         this.obra?.calles ? `Calles ${this.obra.calles}` : '',
       ].filter(Boolean).join(' - '),
-      responsableInstitucional: this.obra?.inspectorNombre,
       porcentajeAnticipo: certificado.porcentajeAnticipoSnapshot,
       montoBruto: certificado.montoBruto,
       deduccionAnticipo: certificado.deduccionAnticipo,

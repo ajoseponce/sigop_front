@@ -56,7 +56,6 @@ export interface MedicionPdfData {
   empresaCuit?: string;
   numeroContrato?: string;
   ubicacion?: string;
-  responsableInstitucional?: string;
   aprobacion?: string;
   localidad?: string;
   fechaInicio?: string;
@@ -215,7 +214,6 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     ['Programa', 'Municipal'],
     ['Modo de ejecución', data.numeroContrato ? `Concurso de precios ${data.numeroContrato}` : 'Concurso de precios'],
     ['Ubicación', data.ubicacion ? sentenceCase(data.ubicacion) : '—'],
-    ['Responsable institucional', data.responsableInstitucional ? sentenceCase(data.responsableInstitucional) : '—'],
     ['Período', periodoTexto(data.periodo)],
     ['Fecha de Carga', fechaTexto(data.fechaMedicion)],
   ];
@@ -301,7 +299,6 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
     ['Aprobación', data.aprobacion || '—'],
     ['Programa', 'Municipal'],
     ['Localidad', data.localidad ? sentenceCase(data.localidad) : 'Posadas - Misiones'],
-    ['Responsable institucional', data.responsableInstitucional ? sentenceCase(data.responsableInstitucional) : '—'],
     ['Responsable técnico', '—'],
   ], left + 2, left + 33, col1 - left - 36);
 
@@ -722,7 +719,6 @@ export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<j
       ['Organismo ejecutor:', 'Municipalidad de Posadas', 'Monto anticipo:', `$ ${money.format(n(data.deduccionAnticipo))}`, 'Nro. certificado:', String(data.numero)],
       ['Provincia:', 'Misiones', 'Empresa:', data.empresa ? sentenceCase(data.empresa) : '—', 'Tipo de certificado:', 'Actualización'],
       ['Municipio:', data.localidad ? sentenceCase(data.localidad) : 'Posadas', 'CUIT:', data.empresaCuit ?? '—', 'Fecha inicio:', fechaTexto(data.fechaInicio)],
-      ['Inspector de obra:', data.responsableInstitucional ? sentenceCase(data.responsableInstitucional) : '—', 'Expediente:', data.expediente ?? '—', 'Dispositivo de aprobación:', data.aprobacion ?? '—'],
     ],
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 30 }, 1: { cellWidth: 70 }, 2: { fontStyle: 'bold', cellWidth: 38 }, 3: { cellWidth: 48 }, 4: { fontStyle: 'bold', cellWidth: 37 }, 5: { cellWidth: 64 } },
   });

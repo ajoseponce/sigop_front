@@ -618,7 +618,7 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
   doc.text('Anexo III-B', left + width - 16, inicio + 4.7, { align: 'center' });
 
   const datosY = inicio + 8.5;
-  const division = left + width / 2;
+  const division = left + width * 0.57;
   const datosHeight = 46;
   doc.rect(left, datosY, division - left, datosHeight);
   doc.rect(division, datosY, left + width - division, datosHeight);
@@ -627,37 +627,35 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
     doc.setFont('helvetica', 'bold');
     doc.text(label, x, y);
     doc.setFont('helvetica', 'normal');
-    doc.text(doc.splitTextToSize(value, maxWidth)[0] ?? '—', valueX + maxWidth / 2, y, { align: 'center' });
+    doc.text(doc.splitTextToSize(value, maxWidth)[0] ?? '—', valueX, y);
   };
   const izquierda = [
     ['Organismo otorgante:', 'Municipalidad de Posadas'],
+    ['Convenio / proyecto:', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
+    ['Dispositivo de aprobación:', data.aprobacion ?? '—'],
     ['Obra:', data.nombreObra ? sentenceCase(data.nombreObra) : '—'],
     ['Programa:', 'Municipal'],
     ['Municipalidad:', data.localidad ? sentenceCase(data.localidad) : 'Posadas'],
     ['Provincia:', 'Misiones'],
+    ['Monto total contrato:', `$ ${money.format(contrato)}`],
+    ['Monto Nación / Provincia:', '—'],
+    ['Monto Municipio:', `$ ${money.format(contrato)}`],
     ['Empresa:', data.empresa ? sentenceCase(data.empresa) : '—'],
     ['CUIT:', data.empresaCuit ?? '—'],
     ['Domicilio:', data.ubicacion ? sentenceCase(data.ubicacion) : '—'],
-    ['Monto total contrato:', `$ ${money.format(contrato)}`],
-    ['Monto Municipio:', `$ ${money.format(contrato)}`],
   ];
   const derecha = [
     ['Certificado N°:', String(data.numero)],
-    ['Expediente madre:', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
     ['Fecha de carga:', fechaTexto(data.fechaMedicion)],
     ['Mes y año certificado:', periodoTexto(data.periodo)],
-    ['Fecha de apertura:', fechaTexto(data.fechaApertura)],
     ['Fecha de replanteo:', fechaTexto(data.fechaInicio)],
     ['Plazo obra:', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
-    ['Aprob. adjudicación:', instrumentoAprobacion(data.tipoAprobacionAdjudicacion, data.aprobacionAdjudicacion)],
-    ['Aprob. contrato:', instrumentoAprobacion(data.tipoAprobacionContrato, data.aprobacionContrato)],
-    ['Monto Nación / Provincia:', '—'],
   ];
   izquierda.forEach(([label, value], index) => fila(
-    label, value, left + 1.5, datosY + 3.5 + index * 4.2, left + 38, division - left - 40,
+    label, value, left + 1.5, datosY + 3.5 + index * 3.25, left + 35, division - left - 37,
   ));
   derecha.forEach(([label, value], index) => fila(
-    label, value, division + 1.5, datosY + 3.5 + index * 4.2, division + 42, left + width - division - 44,
+    label, value, division + 1.5, datosY + 3.5 + index * 3.9, division + 29, left + width - division - 31,
   ));
 
   const fisicoAnterior = movimientoAnexo(anteriorBruto, contrato);

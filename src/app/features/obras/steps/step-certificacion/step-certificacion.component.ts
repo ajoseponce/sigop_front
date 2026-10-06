@@ -9,10 +9,12 @@ import { ApiService } from 'src/app/core/services/api.service';
 import {
   AnexoIIIPdfData,
   crearAnexoIIIPdf,
+  crearCertificacionPdf,
   crearCertificadoPdf,
   crearFojaPdf,
   crearReadecuacionPdf,
   descargarAnexoIIIPdf,
+  descargarCertificacionPdf,
   descargarCertificadoPdf,
   descargarFojaPdf,
   descargarReadecuacionPdf,
@@ -332,6 +334,14 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
     descargarFojaPdf(this.datosPdf(certificado));
   }
 
+  imprimirCertificacion(certificado: Certificado): void {
+    if (!this.estaValidado(certificado)) {
+      this.mostrarDescargaBloqueada();
+      return;
+    }
+    descargarCertificacionPdf(this.datosPdf(certificado));
+  }
+
   imprimirAnexoIIIB(certificado: Certificado): void {
     if (!this.estaValidado(certificado)) {
       this.mostrarDescargaBloqueada();
@@ -495,7 +505,7 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
   }
 
   async abrirVistaPrevia(
-    tipo: 'foja' | 'certificado' | 'anexo-iii-b' | 'readecuacion',
+    tipo: 'foja' | 'certificado' | 'certificacion' | 'anexo-iii-b' | 'readecuacion',
     certificado: Certificado,
   ): Promise<void> {
     this.cerrarVistaPrevia();
@@ -506,6 +516,8 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
         ? await crearFojaPdf(data)
         : tipo === 'certificado'
           ? await crearCertificadoPdf(data)
+          : tipo === 'certificacion'
+            ? await crearCertificacionPdf(data)
           : tipo === 'anexo-iii-b'
             ? await crearAnexoIIIPdf(this.datosAnexoIIIPdf(certificado))
             : await crearReadecuacionPdf(this.datosReadecuacionPdf(certificado));
@@ -517,6 +529,8 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
         ? `Vista previa - Foja N° ${String(data.numeroFoja).padStart(2, '0')}`
         : tipo === 'certificado'
         ? `Vista previa - Certificado N° ${data.numero}`
+        : tipo === 'certificacion'
+          ? `Vista previa - Certificación del certificado N° ${data.numero}`
           : tipo === 'anexo-iii-b'
             ? `Vista previa - Anexo III-B del certificado N° ${data.numero}`
             : `Vista previa - Readecuación del certificado N° ${data.numero}`;

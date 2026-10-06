@@ -587,6 +587,67 @@ export async function descargarCertificadoPdf(data: MedicionPdfData): Promise<vo
   (await crearCertificadoPdf(data)).save(`certificado-${String(data.numero).padStart(2, '0')}.pdf`);
 }
 
+/** Nota formal que acompaña al certificado básico de obra. */
+export async function crearCertificacionPdf(data: MedicionPdfData): Promise<jsPDF> {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const cabecera = await cargarCabeceraInstitucional();
+  const left = 20;
+  const right = 20;
+  const width = doc.internal.pageSize.getWidth() - left - right;
+  const finCabecera = dibujarCabeceraInstitucional(doc, cabecera, left, right, 0.78);
+  const periodo = periodoTexto(data.periodo).toLocaleUpperCase('es-AR');
+  const empresa = (data.empresa || '—').toLocaleUpperCase('es-AR');
+  const obra = (data.nombreObra || '—').toLocaleUpperCase('es-AR');
+  const ubicacion = (data.ubicacion || data.localidad || '—').toLocaleUpperCase('es-AR');
+  const bruto = n(data.montoBruto);
+  const descuentoAnticipo = n(data.deduccionAnticipo);
+  const descuentoReparo = n(data.deduccionFondoReparo);
+  const neto = n(data.montoFinal);
+
+  let y = finCabecera + 7;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text(`CERTIFICADO DE OBRA N° ${data.numero} BÁSICO`, left + width / 2, y, { align: 'center' });
+  y += 6;
+  doc.setFontSize(8.4);
+  doc.text(`CONCURSO DE PRECIOS N° ${data.numeroContrato || '—'}`, left + width / 2, y, { align: 'center' });
+  y += 6;
+  doc.text(`Empresa: “${empresa}”`, left + width / 2, y, { align: 'center' });
+  y += 10;
+  doc.setFontSize(9);
+  doc.text('C E R T I F I C A C I Ó N', left + width / 2, y, { align: 'center' });
+  y += 9;
+
+  const agregarParrafo = (texto: string, destacado = false) => {
+    doc.setFont('helvetica', destacado ? 'bold' : 'normal');
+    doc.setFontSize(8.6);
+    const lineas = doc.splitTextToSize(texto, width);
+    doc.text(lineas, left, y, { align: 'justify', maxWidth: width });
+    y += lineas.length * 4.3 + 7;
+  };
+
+  agregarParrafo(
+    `En el día de la fecha se CERTIFICA que los trabajos descritos en la FOJA DE MEDICIÓN N° ${data.numeroFoja}, volcados al CERTIFICADO DE OBRAS N° ${data.numero}, fueron efectivamente ejecutados por la Contratista “${empresa}” en el período de ${periodo} y corresponden al Contrato de la Obra “${obra}”. Ubicación: ${ubicacion}.`,
+  );
+  agregarParrafo(
+    `El monto total del CERTIFICADO BÁSICO DE OBRAS N° ${data.numero} asciende a la suma de $ ${money.format(bruto)} (${montoEnLetras(bruto).toLocaleUpperCase('es-AR')}), del cual se deben descontar la suma de $ ${money.format(descuentoAnticipo)} (${montoEnLetras(descuentoAnticipo).toLocaleUpperCase('es-AR')}) correspondiente al ${money.format(n(data.porcentajeAnticipo))}% del anticipo financiero y la suma de $ ${money.format(descuentoReparo)} (${montoEnLetras(descuentoReparo).toLocaleUpperCase('es-AR')}) correspondiente al 6% del fondo de reparo, resultando un monto neto a pagar por certificado básico de $ ${money.format(neto)} (${montoEnLetras(neto).toLocaleUpperCase('es-AR')}).`,
+  );
+  agregarParrafo(
+    `El monto neto a pagar del presente certificado asciende a la suma de $ ${money.format(neto)} (${montoEnLetras(neto).toLocaleUpperCase('es-AR')}).`,
+    true,
+  );
+
+  const pieY = doc.internal.pageSize.getHeight() - 33;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.text(['INSPECCIÓN DE OBRAS.', 'DIRECCIÓN CONSTRUCCIONES.-'], left, Math.max(y + 4, pieY));
+  return doc;
+}
+
+export async function descargarCertificacionPdf(data: MedicionPdfData): Promise<void> {
+  (await crearCertificacionPdf(data)).save(`certificacion-${String(data.numero).padStart(2, '0')}.pdf`);
+}
+
 interface MovimientoAnexo {
   porcentaje: number;
   importe: number;

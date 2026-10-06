@@ -171,6 +171,9 @@
                   <button type="button" class="btn-imprimir" (click)="imprimirFoja(certificado)">
                     Descargar foja de medición
                   </button>
+                  <button type="button" class="btn-imprimir" (click)="imprimirCertificacion(certificado)">
+                    Descargar certificación
+                  </button>
                   <button type="button" class="btn-imprimir" (click)="imprimirAnexoIIIB(certificado)">
                     Anexo III-B
                   </button>
@@ -195,6 +198,14 @@
                     (click)="abrirVistaPrevia('foja', certificado)"
                   >
                     Vista previa de foja
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-imprimir"
+                    [disabled]="generandoVistaPrevia"
+                    (click)="abrirVistaPrevia('certificacion', certificado)"
+                  >
+                    Vista previa de certificación
                   </button>
                   <button
                     type="button"

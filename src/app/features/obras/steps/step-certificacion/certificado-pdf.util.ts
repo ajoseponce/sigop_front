@@ -55,6 +55,8 @@ export interface MedicionPdfData {
   empresa?: string;
   empresaCuit?: string;
   numeroContrato?: string;
+  responsableLegal?: string;
+  responsableTecnico?: string;
   ubicacion?: string;
   aprobacion?: string;
   localidad?: string;
@@ -210,27 +212,31 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   const valueX = left + 39;
   const rowsLeft = [
     ['Organismo otorgante', 'Municipalidad de Posadas'],
-    ['Convenio/proyecto N°', `${data.expediente ?? '—'}${data.anioEmision ? `-${data.anioEmision}` : ''}`],
+    ['Expediente madre N°', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
     ['Programa', 'Municipal'],
     ['Modo de ejecución', data.numeroContrato ? `Concurso de precios ${data.numeroContrato}` : 'Concurso de precios'],
     ['Ubicación', data.ubicacion ? sentenceCase(data.ubicacion) : '—'],
     ['Período', periodoTexto(data.periodo)],
     ['Fecha de Carga', fechaTexto(data.fechaMedicion)],
+    ['Responsable legal', data.responsableLegal || '—'],
+    ['Responsable técnico', data.responsableTecnico || '—'],
   ];
   rowsLeft.forEach(([label, value], index) => {
-    const rowY = y + 29 + index * 6;
+    const rowY = y + 29 + index * 5.5;
     doc.text(label, labelX, rowY);
     doc.text(doc.splitTextToSize(value, splitX - valueX - 3)[0] ?? '', valueX, rowY);
   });
 
   const rightLabelX = splitX + 2;
   const rightValueX = splitX + 29;
-  const rowsRight = [
+  const rowsRight: Array<[string, string]> = [
     ['Certificado', `Certificado N° ${data.numero}`],
     ['Monto contrato', `$ ${money.format(totalContrato(data))}`],
-    ['Monto actualizado', `$ ${money.format(montoActualizado(data))}`],
     ['Anticipo financiero', `$ ${money.format(montoAnticipoFinanciero(data))}`],
   ];
+  if (tieneReadecuacionAprobada(data)) {
+    rowsRight.splice(2, 0, ['Monto actualizado', `$ ${money.format(montoActualizado(data))}`]);
+  }
   rowsRight.forEach(([label, value], index) => {
     const rowY = y + 29 + index * 6;
     doc.text(label, rightLabelX, rowY);
@@ -295,11 +301,11 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
 
   drawRows([
     ['Organismo otorgante', 'Municipalidad de Posadas'],
-    ['Convenio/proyecto N°', `${data.expediente ?? '—'}${data.anioEmision ? `-${data.anioEmision}` : ''}`],
     ['Aprobación', data.aprobacion || '—'],
     ['Programa', 'Municipal'],
     ['Localidad', data.localidad ? sentenceCase(data.localidad) : 'Posadas - Misiones'],
-    ['Responsable técnico', '—'],
+    ['Responsable legal', data.responsableLegal || '—'],
+    ['Responsable técnico', data.responsableTecnico || '—'],
   ], left + 2, left + 33, col1 - left - 36);
 
   drawRows([
@@ -310,15 +316,20 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
     ['Empresa', data.empresa ? sentenceCase(data.empresa) : '—'],
     ['CUIT', data.empresaCuit || '—'],
     ['Monto contrato original', `$ ${money.format(totalContrato(data))}`],
-    ['Monto total actualizado', `$ ${money.format(totalContrato(data))}`],
   ], col1 + 2, col1 + 36, col2 - col1 - 39);
+
+  if (tieneReadecuacionAprobada(data)) {
+    drawRows([
+      ['Monto total actualizado', `$ ${money.format(montoTotalActualizado(data))}`],
+    ], col1 + 2, col1 + 36, col2 - col1 - 39, y + 50.85);
+  }
 
   drawRows([
     ['Período', periodoTexto(data.periodo)],
     ['Fecha de carga', fechaTexto(data.fechaMedicion)],
     ['Fecha de inicio', fechaTexto(data.fechaInicio)],
     ['Plazo de ejecución', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
-    ['Expediente de la obra', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
+    ['Expediente madre N°', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
   ], col2 + 2, col2 + 32, ancho - right - col2 - 35, y + 21.8);
 
   return y + 55;
@@ -348,6 +359,25 @@ function montoAnticipoFinanciero(data: MedicionPdfData): number {
     .reduce((total, certificado) => total + n(certificado.montoBruto), 0);
 }
 
+function incrementosReadecuacionAprobados(data: MedicionPdfData): number {
+  return certificadosEmitidos(data).reduce(
+    (total, certificado) => total + (certificado.readecuacion?.estado === 'APROBADO'
+      ? n(certificado.readecuacion.incremento)
+      : 0),
+    0,
+  );
+}
+
+function tieneReadecuacionAprobada(data: MedicionPdfData): boolean {
+  return certificadosEmitidos(data).some(
+    (certificado) => certificado.readecuacion?.estado === 'APROBADO',
+  );
+}
+
+function montoTotalActualizado(data: MedicionPdfData): number {
+  return redondearMoneda(totalContrato(data) + incrementosReadecuacionAprobados(data));
+}
+
 /** Importe efectivamente invertido: anticipo + netos básicos + incrementos redeterminados. */
 function montoActualizado(data: MedicionPdfData): number {
   const certificados = certificadosEmitidos(data);
@@ -357,14 +387,9 @@ function montoActualizado(data: MedicionPdfData): number {
       : n(certificado.montoBruto) - n(certificado.deduccionAnticipo)),
     0,
   );
-  const redeterminaciones = certificados.reduce(
-    (total, certificado) => total + (certificado.readecuacion?.estado === 'APROBADO'
-      ? n(certificado.readecuacion.incremento)
-      : 0),
-    0,
+  return redondearMoneda(
+    montoAnticipoFinanciero(data) + netosBasicos + incrementosReadecuacionAprobados(data),
   );
-
-  return redondearMoneda(montoAnticipoFinanciero(data) + netosBasicos + redeterminaciones);
 }
 
 function bodyConRubros(data: MedicionPdfData, certificado: boolean): RowInput[] {

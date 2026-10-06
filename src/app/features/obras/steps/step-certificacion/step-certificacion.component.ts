@@ -46,6 +46,8 @@ interface ContratoObra {
   plazoObraDias?: number;
   decretoAdjudicacion?: string;
   decretoContrato?: string;
+  responsableLegal?: { nombre?: string; apellido?: string } | null;
+  responsableTecnico?: { nombre?: string; apellido?: string } | null;
   rubros: RubroObra[];
 }
 
@@ -611,6 +613,8 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       empresa: this.obra?.empresa?.razonSocial,
       empresaCuit: this.obra?.empresa?.cuit,
       numeroContrato: contrato?.numeroContrato,
+      responsableLegal: this.nombreResponsable(contrato?.responsableLegal),
+      responsableTecnico: this.nombreResponsable(contrato?.responsableTecnico),
       aprobacion: contrato?.decretoContrato ?? contrato?.decretoAdjudicacion,
       localidad: this.obra?.localidad,
       fechaInicio: this.obra?.fechaInicio ?? contrato?.vigenciaDesde,
@@ -629,6 +633,11 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       detalles: certificado.detalles,
       certificados: this.certificados,
     };
+  }
+
+  private nombreResponsable(persona?: { nombre?: string; apellido?: string } | null): string | undefined {
+    const nombre = `${persona?.apellido ?? ''} ${persona?.nombre ?? ''}`.trim();
+    return nombre || undefined;
   }
 
   private datosReadecuacionPdf(certificado: Certificado): ReadecuacionPdfData {

@@ -216,8 +216,8 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   doc.text(`Obra: ${data.nombreObra ? sentenceCase(data.nombreObra) : '—'}`, left + 2, y + 17.7);
 
   // Mantener la cabecera compacta para dar más lugar útil a la planilla.
-  doc.rect(left, y + 23, splitX - left, 67);
-  doc.rect(splitX, y + 23, pageWidth - right - splitX, 67);
+  doc.rect(left, y + 23, splitX - left, 60);
+  doc.rect(splitX, y + 23, pageWidth - right - splitX, 60);
 
   const labelX = left + 2;
   const valueX = left + 39;
@@ -232,12 +232,14 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     ['Período', periodoTexto(data.periodo)],
     ['Fecha de Carga', fechaTexto(data.fechaMedicion)],
   ];
-  let leftY = y + 29;
+  // Mismo interlineado compacto que el encabezado del Anexo III-B.
+  doc.setFontSize(6.2);
+  let leftY = y + 28;
   rowsLeft.forEach(([label, value]) => {
     const lineas = doc.splitTextToSize(value, splitX - valueX - 3);
     doc.text(label, labelX, leftY);
     doc.text(lineas, valueX, leftY);
-    leftY += Math.max(5.5, lineas.length * 4.2 + 1.3);
+    leftY += Math.max(3.9, lineas.length * 3.25 + 0.65);
   });
 
   const rightLabelX = splitX + 2;
@@ -255,12 +257,12 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     rowsRight.splice(2, 0, ['Monto actualizado', `$ ${money.format(montoActualizado(data))}`]);
   }
   doc.setFontSize(6.2);
-  let rightY = y + 29;
+  let rightY = y + 28;
   rowsRight.forEach(([label, value]) => {
     const lineas = doc.splitTextToSize(value, pageWidth - right - rightValueX - 3);
     doc.text(label, rightLabelX, rightY);
     doc.text(lineas, rightValueX, rightY);
-    rightY += Math.max(6, lineas.length * 4 + 1.5);
+    rightY += Math.max(4, lineas.length * 3.25 + 0.75);
   });
   const empresaY = rightY + 4;
   doc.setFontSize(7.2);
@@ -274,7 +276,7 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     empresaY + 6,
   );
 
-  return y + 93;
+  return y + 86;
 }
 
 function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: string): number {
@@ -478,7 +480,7 @@ export async function crearFojaPdf(data: MedicionPdfData): Promise<jsPDF> {
   autoTable(doc, {
     startY: inicioTabla,
     // La franja inferior queda siempre libre para las cinco firmas.
-    margin: { top: inicioTabla, left: 16, right: 10, bottom: 32 },
+    margin: { top: inicioTabla, left: 16, right: 10, bottom: 42 },
     head: [['Ítem', 'Designación', 'Un.', 'Cant.', 'Anterior', 'Actual', 'Acumulado']],
     body: bodyConRubros(data, false),
     theme: 'grid',
@@ -508,7 +510,7 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
   const inicioTabla = encabezadoCertificado(doc, data, cabecera);
   autoTable(doc, {
     startY: inicioTabla,
-    margin: { top: inicioTabla, left: 25, right: 10, bottom: 32 },
+    margin: { top: inicioTabla, left: 25, right: 10, bottom: 42 },
     head: [[
       'Ítem', 'Designación', 'Un.', 'Cant.', 'Precio unit.', 'Monto ítem',
       'Cant. anterior', 'Cant. actual', 'Cant. acum.',
@@ -535,7 +537,7 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
   const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 60;
   const pageHeight = doc.internal.pageSize.getHeight();
   let resumenY = finalY + 5;
-  if (resumenY + 34 > pageHeight - 32) {
+  if (resumenY + 34 > pageHeight - 42) {
     doc.addPage();
     resumenY = encabezadoCertificado(doc, data, cabecera);
   }
@@ -543,7 +545,7 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
   const montoFinal = n(data.montoFinal);
   autoTable(doc, {
     startY: resumenY,
-    margin: { left: 25, right: 10, bottom: 32 },
+    margin: { left: 25, right: 10, bottom: 42 },
     theme: 'grid',
     styles: { fontSize: 7.2, cellPadding: 1.7, lineColor: [55, 65, 81], lineWidth: 0.25 },
     body: [

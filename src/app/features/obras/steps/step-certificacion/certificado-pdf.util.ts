@@ -215,8 +215,9 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   doc.rect(left, y + 12, width, 9);
   doc.text(`Obra: ${data.nombreObra ? sentenceCase(data.nombreObra) : '—'}`, left + 2, y + 17.7);
 
-  doc.rect(left, y + 23, splitX - left, 79);
-  doc.rect(splitX, y + 23, pageWidth - right - splitX, 79);
+  // Mantener la cabecera compacta para dar más lugar útil a la planilla.
+  doc.rect(left, y + 23, splitX - left, 67);
+  doc.rect(splitX, y + 23, pageWidth - right - splitX, 67);
 
   const labelX = left + 2;
   const valueX = left + 39;
@@ -273,7 +274,7 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     empresaY + 6,
   );
 
-  return y + 105;
+  return y + 93;
 }
 
 function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: string): number {
@@ -445,13 +446,7 @@ function bodyConRubros(data: MedicionPdfData, certificado: boolean): RowInput[] 
   return rows;
 }
 
-function agregarFirmas(
-  doc: jsPDF,
-  finalTablaY: number,
-  left: number,
-  right: number,
-  encabezadoNuevaPagina: () => number,
-): void {
+function dibujarFirmasPie(doc: jsPDF, left: number, right: number): void {
   const cargos = [
     'Representante legal de la empresa',
     'Representante técnico de la empresa',
@@ -464,13 +459,6 @@ function agregarFirmas(
   const ancho = pageWidth - left - right;
   const anchoFirma = ancho / cargos.length;
   const pieY = pageHeight - 24;
-  let y = pieY;
-
-  if (finalTablaY + 12 > pieY) {
-    doc.addPage();
-    encabezadoNuevaPagina();
-  }
-
   doc.setDrawColor(55, 65, 81);
   doc.setLineWidth(0.2);
   doc.setFont('helvetica', 'bold');
@@ -478,8 +466,8 @@ function agregarFirmas(
   cargos.forEach((cargo, index) => {
     const x = left + anchoFirma * index;
     const centro = x + anchoFirma / 2;
-    doc.line(x + 3, y, x + anchoFirma - 3, y);
-    doc.text(doc.splitTextToSize(cargo, anchoFirma - 5), centro, y + 4, { align: 'center' });
+    doc.line(x + 3, pieY, x + anchoFirma - 3, pieY);
+    doc.text(doc.splitTextToSize(cargo, anchoFirma - 5), centro, pieY + 4, { align: 'center' });
   });
 }
 
@@ -489,7 +477,8 @@ export async function crearFojaPdf(data: MedicionPdfData): Promise<jsPDF> {
   const inicioTabla = encabezadoFoja(doc, data, cabecera);
   autoTable(doc, {
     startY: inicioTabla,
-    margin: { top: inicioTabla, left: 16, right: 10 },
+    // La franja inferior queda siempre libre para las cinco firmas.
+    margin: { top: inicioTabla, left: 16, right: 10, bottom: 32 },
     head: [['Ítem', 'Designación', 'Un.', 'Cant.', 'Anterior', 'Actual', 'Acumulado']],
     body: bodyConRubros(data, false),
     theme: 'grid',
@@ -503,10 +492,9 @@ export async function crearFojaPdf(data: MedicionPdfData): Promise<jsPDF> {
     },
     didDrawPage: ({ pageNumber }) => {
       if (pageNumber > 1) encabezadoFoja(doc, data, cabecera);
+      dibujarFirmasPie(doc, 16, 10);
     },
   });
-  const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? inicioTabla;
-  agregarFirmas(doc, finalY, 16, 10, () => encabezadoFoja(doc, data, cabecera));
   return doc;
 }
 
@@ -520,7 +508,7 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
   const inicioTabla = encabezadoCertificado(doc, data, cabecera);
   autoTable(doc, {
     startY: inicioTabla,
-    margin: { top: inicioTabla, left: 25, right: 10 },
+    margin: { top: inicioTabla, left: 25, right: 10, bottom: 32 },
     head: [[
       'Ítem', 'Designación', 'Un.', 'Cant.', 'Precio unit.', 'Monto ítem',
       'Cant. anterior', 'Cant. actual', 'Cant. acum.',
@@ -540,13 +528,14 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
     },
     didDrawPage: ({ pageNumber }) => {
       if (pageNumber > 1) encabezadoCertificado(doc, data, cabecera);
+      dibujarFirmasPie(doc, 25, 10);
     },
   });
 
   const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 60;
   const pageHeight = doc.internal.pageSize.getHeight();
   let resumenY = finalY + 5;
-  if (resumenY + 34 > pageHeight - 10) {
+  if (resumenY + 34 > pageHeight - 32) {
     doc.addPage();
     resumenY = encabezadoCertificado(doc, data, cabecera);
   }
@@ -554,7 +543,7 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
   const montoFinal = n(data.montoFinal);
   autoTable(doc, {
     startY: resumenY,
-    margin: { left: 25, right: 10 },
+    margin: { left: 25, right: 10, bottom: 32 },
     theme: 'grid',
     styles: { fontSize: 7.2, cellPadding: 1.7, lineColor: [55, 65, 81], lineWidth: 0.25 },
     body: [
@@ -587,9 +576,8 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
       4: { cellWidth: 20 }, 5: { cellWidth: 22 }, 6: { cellWidth: 17 }, 7: { cellWidth: 16 },
       8: { cellWidth: 17 }, 9: { cellWidth: 27 }, 10: { cellWidth: 27 }, 11: { cellWidth: 27 },
     },
+    didDrawPage: () => dibujarFirmasPie(doc, 25, 10),
   });
-  const finalResumenY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? resumenY;
-  agregarFirmas(doc, finalResumenY, 25, 10, () => encabezadoCertificado(doc, data, cabecera));
   return doc;
 }
 

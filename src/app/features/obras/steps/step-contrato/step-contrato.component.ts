@@ -142,7 +142,9 @@ export class StepContratoComponent implements OnInit , OnChanges{
         estructuraPonderacion: contrato.estructuraPonderacion ?? '',
         fechaContrato: this.toDateInput(contrato.fechaFirma),
         decretoAdjudicacion: contrato.decretoAdjudicacion ?? contrato.descripcion ?? '',
+        tipoAprobacionAdjudicacion: contrato.tipoAprobacionAdjudicacion ?? 'DECRETO',
         decretoContrato: contrato.decretoContrato ?? '',
+        tipoAprobacionContrato: contrato.tipoAprobacionContrato ?? 'DECRETO',
       });
 
       this.empresaSearch.setValue(
@@ -301,7 +303,9 @@ export class StepContratoComponent implements OnInit , OnChanges{
     fechaContrato: ['', Validators.required],
 
     decretoAdjudicacion: [''],
+    tipoAprobacionAdjudicacion: ['DECRETO'],
     decretoContrato: [''],
+    tipoAprobacionContrato: ['DECRETO'],
   });
 
   save(): void {
@@ -349,7 +353,9 @@ export class StepContratoComponent implements OnInit , OnChanges{
       responsableLegalId: raw.responsableLegalId,
       responsableTecnicoId: raw.responsableTecnicoId,
       decretoAdjudicacion: raw.decretoAdjudicacion || undefined,
+      tipoAprobacionAdjudicacion: raw.tipoAprobacionAdjudicacion,
       decretoContrato: raw.decretoContrato || undefined,
+      tipoAprobacionContrato: raw.tipoAprobacionContrato,
       plazoObraDias: raw.plazoObraDias,
       estructuraPonderacion: raw.estructuraPonderacion || undefined,
     };

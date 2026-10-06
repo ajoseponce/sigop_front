@@ -151,12 +151,22 @@
 
     <div class="form-grid form-grid-2">
       <div class="form-field">
-        <label>Decreto / Resolución de adjudicación N°</label>
+        <label>Aprobación de adjudicación</label>
+        <select formControlName="tipoAprobacionAdjudicacion">
+          <option value="DECRETO">Decreto</option>
+          <option value="RESOLUCION">Resolución</option>
+        </select>
+        <label>N°</label>
         <input type="text" formControlName="decretoAdjudicacion" />
       </div>
 
       <div class="form-field">
-        <label>Decreto / Resolución de contrato N°</label>
+        <label>Aprobación de contrato</label>
+        <select formControlName="tipoAprobacionContrato">
+          <option value="DECRETO">Decreto</option>
+          <option value="RESOLUCION">Resolución</option>
+        </select>
+        <label>N°</label>
         <input type="text" formControlName="decretoContrato" />
       </div>
     </div>

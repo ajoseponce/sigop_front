@@ -46,6 +46,8 @@ interface ContratoObra {
   plazoObraDias?: number;
   decretoAdjudicacion?: string;
   decretoContrato?: string;
+  tipoAprobacionAdjudicacion?: 'DECRETO' | 'RESOLUCION';
+  tipoAprobacionContrato?: 'DECRETO' | 'RESOLUCION';
   responsableLegal?: { nombre?: string; apellido?: string } | null;
   responsableTecnico?: { nombre?: string; apellido?: string } | null;
   rubros: RubroObra[];
@@ -616,7 +618,10 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       responsableLegal: this.nombreResponsable(contrato?.responsableLegal),
       responsableTecnico: this.nombreResponsable(contrato?.responsableTecnico),
       aprobacion: contrato?.decretoContrato ?? contrato?.decretoAdjudicacion,
+      aprobacionAdjudicacion: contrato?.decretoAdjudicacion,
+      tipoAprobacionAdjudicacion: contrato?.tipoAprobacionAdjudicacion,
       aprobacionContrato: contrato?.decretoContrato,
+      tipoAprobacionContrato: contrato?.tipoAprobacionContrato,
       localidad: this.obra?.localidad,
       fechaApertura: contrato?.vigenciaDesde,
       fechaInicio: this.obra?.fechaInicio ?? contrato?.vigenciaDesde,

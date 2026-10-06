@@ -117,6 +117,7 @@
 }
 
 .form-field input,
+.form-field select,
 .form-field textarea {
   width: 100%;
   padding: 12px 14px;
@@ -128,6 +129,7 @@
 }
 
 .form-field input:focus,
+.form-field select:focus,
 .form-field textarea:focus {
   border-color: #111827;
 }

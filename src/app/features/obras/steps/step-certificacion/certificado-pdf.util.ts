@@ -59,7 +59,9 @@ export interface MedicionPdfData {
   responsableTecnico?: string;
   ubicacion?: string;
   aprobacion?: string;
+  aprobacionContrato?: string;
   localidad?: string;
+  fechaApertura?: string;
   fechaInicio?: string;
   plazoObraDias?: number;
   porcentajeAnticipo: string;
@@ -185,6 +187,10 @@ function fechaTexto(value?: string): string {
   return `${day}-${month}-${year}`;
 }
 
+function numeroResolucionDecreto(value?: string): string {
+  return value ? `Resolución/ Decreto N° ${value}` : '—';
+}
+
 function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): number {
   const left = 16;
   const right = 10;
@@ -205,8 +211,8 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   doc.rect(left, y + 12, width, 9);
   doc.text(`Obra: ${data.nombreObra ? sentenceCase(data.nombreObra) : '—'}`, left + 2, y + 17.7);
 
-  doc.rect(left, y + 23, splitX - left, 55);
-  doc.rect(splitX, y + 23, pageWidth - right - splitX, 55);
+  doc.rect(left, y + 23, splitX - left, 67);
+  doc.rect(splitX, y + 23, pageWidth - right - splitX, 67);
 
   const labelX = left + 2;
   const valueX = left + 39;
@@ -216,8 +222,10 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     ['Programa', 'Municipal'],
     ['Modo de ejecución', data.numeroContrato ? `Concurso de precios ${data.numeroContrato}` : 'Concurso de precios'],
     ['Ubicación', data.ubicacion ? sentenceCase(data.ubicacion) : '—'],
+    ['Fecha de apertura', fechaTexto(data.fechaApertura)],
     ['Período', periodoTexto(data.periodo)],
     ['Fecha de Carga', fechaTexto(data.fechaMedicion)],
+    ['Aprobación de contrato', numeroResolucionDecreto(data.aprobacionContrato)],
     ['Responsable legal', data.responsableLegal || '—'],
     ['Responsable técnico', data.responsableTecnico || '—'],
   ];
@@ -252,7 +260,7 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     y + 60,
   );
 
-  return y + 81;
+  return y + 93;
 }
 
 function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: string): number {
@@ -301,7 +309,7 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
 
   drawRows([
     ['Organismo otorgante', 'Municipalidad de Posadas'],
-    ['Aprobación', data.aprobacion || '—'],
+    ['Aprobación de contrato', numeroResolucionDecreto(data.aprobacionContrato)],
     ['Programa', 'Municipal'],
     ['Localidad', data.localidad ? sentenceCase(data.localidad) : 'Posadas - Misiones'],
     ['Responsable legal', data.responsableLegal || '—'],
@@ -327,7 +335,7 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
   drawRows([
     ['Período', periodoTexto(data.periodo)],
     ['Fecha de carga', fechaTexto(data.fechaMedicion)],
-    ['Fecha de inicio', fechaTexto(data.fechaInicio)],
+    ['Fecha de apertura', fechaTexto(data.fechaApertura)],
     ['Plazo de ejecución', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
     ['Expediente madre N°', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
   ], col2 + 2, col2 + 32, ancho - right - col2 - 35, y + 21.8);

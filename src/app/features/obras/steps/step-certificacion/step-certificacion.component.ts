@@ -616,7 +616,9 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       responsableLegal: this.nombreResponsable(contrato?.responsableLegal),
       responsableTecnico: this.nombreResponsable(contrato?.responsableTecnico),
       aprobacion: contrato?.decretoContrato ?? contrato?.decretoAdjudicacion,
+      aprobacionContrato: contrato?.decretoContrato,
       localidad: this.obra?.localidad,
+      fechaApertura: contrato?.vigenciaDesde,
       fechaInicio: this.obra?.fechaInicio ?? contrato?.vigenciaDesde,
       plazoObraDias: contrato?.plazoObraDias,
       ubicacion: [

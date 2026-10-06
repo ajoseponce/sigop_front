@@ -230,10 +230,6 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     ['Fecha de replanteo', fechaTexto(data.fechaInicio)],
     ['Período', periodoTexto(data.periodo)],
     ['Fecha de Carga', fechaTexto(data.fechaMedicion)],
-    ['Aprobación de adjudicación', instrumentoAprobacion(data.tipoAprobacionAdjudicacion, data.aprobacionAdjudicacion)],
-    ['Aprobación de contrato', instrumentoAprobacion(data.tipoAprobacionContrato, data.aprobacionContrato)],
-    ['Responsable legal', data.responsableLegal || '—'],
-    ['Responsable técnico', data.responsableTecnico || '—'],
   ];
   rowsLeft.forEach(([label, value], index) => {
     const rowY = y + 29 + index * 5.5;
@@ -242,11 +238,15 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   });
 
   const rightLabelX = splitX + 2;
-  const rightValueX = splitX + 29;
+  const rightValueX = splitX + 60;
   const rowsRight: Array<[string, string]> = [
-    ['Certificado', `Certificado N° ${data.numero}`],
+    ['Certificado', `N° ${data.numero}`],
     ['Monto contrato', `$ ${money.format(totalContrato(data))}`],
     ['Anticipo financiero', `$ ${money.format(montoAnticipoFinanciero(data))}`],
+    ['Aprobación de adjudicación', instrumentoAprobacion(data.tipoAprobacionAdjudicacion, data.aprobacionAdjudicacion)],
+    ['Aprobación de contrato', instrumentoAprobacion(data.tipoAprobacionContrato, data.aprobacionContrato)],
+    ['Responsable legal', data.responsableLegal || '—'],
+    ['Responsable técnico', data.responsableTecnico || '—'],
   ];
   if (tieneReadecuacionAprobada(data)) {
     rowsRight.splice(2, 0, ['Monto actualizado', `$ ${money.format(montoActualizado(data))}`]);
@@ -256,14 +256,15 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     doc.text(label, rightLabelX, rowY);
     doc.text(value, rightValueX, rowY);
   });
-  doc.text('Empresa:', rightLabelX, y + 54);
+  const empresaY = y + 29 + rowsRight.length * 6 + 7;
+  doc.text('Empresa:', rightLabelX, empresaY);
   doc.text(
     doc.splitTextToSize(
       `${data.empresa ? sentenceCase(data.empresa) : '—'}${data.empresaCuit ? ` - CUIT: ${data.empresaCuit}` : ''}`,
       pageWidth - right - rightLabelX - 3,
     ),
     rightLabelX,
-    y + 60,
+    empresaY + 6,
   );
 
   return y + 105;
@@ -438,6 +439,43 @@ function bodyConRubros(data: MedicionPdfData, certificado: boolean): RowInput[] 
   return rows;
 }
 
+function agregarFirmas(
+  doc: jsPDF,
+  finalTablaY: number,
+  left: number,
+  right: number,
+  encabezadoNuevaPagina: () => number,
+): void {
+  const cargos = [
+    'Representante legal de la empresa',
+    'Representante técnico de la empresa',
+    'Inspector de obra',
+    'Directora de Construcciones',
+    'Secretario de Obras Públicas',
+  ];
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const ancho = pageWidth - left - right;
+  const anchoFirma = ancho / cargos.length;
+  let y = finalTablaY + 14;
+
+  if (y + 13 > pageHeight - 10) {
+    doc.addPage();
+    y = encabezadoNuevaPagina() + 14;
+  }
+
+  doc.setDrawColor(55, 65, 81);
+  doc.setLineWidth(0.2);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.2);
+  cargos.forEach((cargo, index) => {
+    const x = left + anchoFirma * index;
+    const centro = x + anchoFirma / 2;
+    doc.line(x + 3, y, x + anchoFirma - 3, y);
+    doc.text(doc.splitTextToSize(cargo, anchoFirma - 5), centro, y + 4, { align: 'center' });
+  });
+}
+
 export async function crearFojaPdf(data: MedicionPdfData): Promise<jsPDF> {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const cabecera = await cargarCabeceraInstitucional();
@@ -460,6 +498,8 @@ export async function crearFojaPdf(data: MedicionPdfData): Promise<jsPDF> {
       if (pageNumber > 1) encabezadoFoja(doc, data, cabecera);
     },
   });
+  const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? inicioTabla;
+  agregarFirmas(doc, finalY, 16, 10, () => encabezadoFoja(doc, data, cabecera));
   return doc;
 }
 
@@ -541,6 +581,8 @@ export async function crearCertificadoPdf(data: MedicionPdfData): Promise<jsPDF>
       8: { cellWidth: 17 }, 9: { cellWidth: 27 }, 10: { cellWidth: 27 }, 11: { cellWidth: 27 },
     },
   });
+  const finalResumenY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? resumenY;
+  agregarFirmas(doc, finalResumenY, 25, 10, () => encabezadoCertificado(doc, data, cabecera));
   return doc;
 }
 

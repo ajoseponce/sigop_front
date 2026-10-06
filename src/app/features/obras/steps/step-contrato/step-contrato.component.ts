@@ -18,6 +18,7 @@ import { redondearMoneda } from '../../../../shared/utils/money.util';
 
 const FIELD_LABELS: Record<string, string> = {
   fechaApertura: 'Fecha de apertura',
+  fechaReplanteo: 'Fecha de replanteo',
   numeroLicitacion: 'N° de licitación / concurso',
   empresaId: 'Empresa',
   responsableLegalId: 'Responsable legal',
@@ -133,6 +134,7 @@ export class StepContratoComponent implements OnInit , OnChanges{
 
       this.form.patchValue({
         fechaApertura: this.toDateInput(contrato.vigenciaDesde),
+        fechaReplanteo: this.toDateInput(this.obra.fechaInicio),
         numeroLicitacion: contrato.numeroContrato,
         empresaId: this.obra.empresa?.id ?? null,
         responsableLegalId: contrato.responsableLegalId ?? null,
@@ -289,6 +291,7 @@ export class StepContratoComponent implements OnInit , OnChanges{
 
   form = this.fb.group({
     fechaApertura: ['', Validators.required],
+    fechaReplanteo: ['', Validators.required],
     numeroLicitacion: ['', Validators.required],
 
     empresaId: [null, Validators.required],
@@ -339,6 +342,7 @@ export class StepContratoComponent implements OnInit , OnChanges{
     }
 
     const payload = {
+      fechaReplanteo: raw.fechaReplanteo,
       empresaId: raw.empresaId,
       numeroContrato: raw.numeroLicitacion || undefined,
       fechaFirma: raw.fechaContrato,

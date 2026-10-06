@@ -9,6 +9,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from 'src/app/core/services/api.service';
 import { ActivatedRoute } from '@angular/router';
 import { redondearMoneda } from '../../../shared/utils/money.util';
+import { switchMap } from 'rxjs';
 
 
 @Component({
@@ -67,14 +68,17 @@ export class ObraWizardComponent {
       return;
     }
 
+    const { fechaReplanteo, ...contratoPayload } = payload;
     const contratoId = this.obra?.contratos?.find((c: any) => c.tipo === 'ORIGINAL')?.id ??
       this.obra?.contratos?.[0]?.id;
 
     const request$ = contratoId
-      ? this.api.put<any>(`obras/${this.obraId}/contrato/${contratoId}`, payload)
-      : this.api.post<any>(`obras/${this.obraId}/contrato`, payload);
+      ? this.api.put<any>(`obras/${this.obraId}/contrato/${contratoId}`, contratoPayload)
+      : this.api.post<any>(`obras/${this.obraId}/contrato`, contratoPayload);
 
-    request$.subscribe({
+    this.api.put<any>(`obras/${this.obraId}`, { fechaInicio: fechaReplanteo }).pipe(
+      switchMap(() => request$),
+    ).subscribe({
       next: () => {
         this.currentStep = 3;
 

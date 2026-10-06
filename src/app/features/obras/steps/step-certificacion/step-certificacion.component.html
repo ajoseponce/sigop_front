@@ -198,6 +198,14 @@
                   </button>
                   <button
                     type="button"
+                    class="btn-imprimir"
+                    [disabled]="generandoVistaPrevia"
+                    (click)="abrirVistaPrevia('anexo-iii-b', certificado)"
+                  >
+                    Vista previa Anexo III-B
+                  </button>
+                  <button
+                    type="button"
                     class="btn-imprimir principal"
                     [disabled]="generandoVistaPrevia"
                     (click)="abrirVistaPrevia('certificado', certificado)"

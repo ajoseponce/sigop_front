@@ -8,6 +8,7 @@ import { forkJoin, Observable, of, switchMap } from 'rxjs';
 import { ApiService } from 'src/app/core/services/api.service';
 import {
   AnexoIIIPdfData,
+  crearAnexoIIIPdf,
   crearCertificadoPdf,
   crearFojaPdf,
   crearReadecuacionPdf,
@@ -494,7 +495,7 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
   }
 
   async abrirVistaPrevia(
-    tipo: 'foja' | 'certificado' | 'readecuacion',
+    tipo: 'foja' | 'certificado' | 'anexo-iii-b' | 'readecuacion',
     certificado: Certificado,
   ): Promise<void> {
     this.cerrarVistaPrevia();
@@ -505,7 +506,9 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
         ? await crearFojaPdf(data)
         : tipo === 'certificado'
           ? await crearCertificadoPdf(data)
-          : await crearReadecuacionPdf(this.datosReadecuacionPdf(certificado));
+          : tipo === 'anexo-iii-b'
+            ? await crearAnexoIIIPdf(this.datosAnexoIIIPdf(certificado))
+            : await crearReadecuacionPdf(this.datosReadecuacionPdf(certificado));
       this.vistaPreviaObjectUrl = URL.createObjectURL(doc.output('blob'));
       this.vistaPreviaUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
         `${this.vistaPreviaObjectUrl}#toolbar=0&navpanes=0&scrollbar=1`,
@@ -513,8 +516,10 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       this.vistaPreviaTitulo = tipo === 'foja'
         ? `Vista previa - Foja N° ${String(data.numeroFoja).padStart(2, '0')}`
         : tipo === 'certificado'
-          ? `Vista previa - Certificado N° ${data.numero}`
-          : `Vista previa - Readecuación del certificado N° ${data.numero}`;
+        ? `Vista previa - Certificado N° ${data.numero}`
+          : tipo === 'anexo-iii-b'
+            ? `Vista previa - Anexo III-B del certificado N° ${data.numero}`
+            : `Vista previa - Readecuación del certificado N° ${data.numero}`;
     } catch {
       this.snack.open('No se pudo generar la vista previa', 'Cerrar', { duration: 4000 });
     } finally {

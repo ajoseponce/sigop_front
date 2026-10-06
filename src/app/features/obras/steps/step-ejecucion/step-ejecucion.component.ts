@@ -8,7 +8,6 @@ const FIELD_LABELS: Record<string, string> = {
   inspectorNombre: 'Nombre del inspector',
   inspectorDni: 'DNI del inspector',
   inspectorMatricula: 'Matrícula del inspector',
-  fechaReplanteo: 'Fecha de replanteo',
 };
 
 @Component({
@@ -32,7 +31,6 @@ export class StepEjecucionComponent implements OnChanges {
     inspectorDni: ['', Validators.required],
     inspectorMatricula: ['', Validators.required],
 
-    fechaReplanteo: ['', Validators.required],
     observaciones: [''],
     fechaNeutralizacion: [''],
     fechaReinicio: [''],
@@ -49,7 +47,6 @@ export class StepEjecucionComponent implements OnChanges {
         inspectorNombre: this.obra.inspectorNombre ?? this.obra.inspector?.nombre ?? '',
         inspectorDni: this.obra.inspectorDni ?? this.obra.inspector?.dni ?? '',
         inspectorMatricula: this.obra.inspectorMatricula ?? '',
-        fechaReplanteo: this.obra.fechaInicio ?? '',
         observaciones: this.obra.observaciones ?? '',
         fechaNeutralizacion: this.obra.fechaNeutralizacion ?? '',
         fechaReinicio: this.obra.fechaReinicio ?? '',
@@ -80,7 +77,6 @@ export class StepEjecucionComponent implements OnChanges {
 
     const raw = this.form.getRawValue();
     const payload = {
-      fechaInicio: raw.fechaReplanteo,
       inspectorNombre: raw.inspectorNombre,
       inspectorDni: raw.inspectorDni,
       inspectorMatricula: raw.inspectorMatricula,

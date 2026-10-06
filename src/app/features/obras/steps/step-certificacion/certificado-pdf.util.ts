@@ -215,8 +215,8 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   doc.rect(left, y + 12, width, 9);
   doc.text(`Obra: ${data.nombreObra ? sentenceCase(data.nombreObra) : '—'}`, left + 2, y + 17.7);
 
-  doc.rect(left, y + 23, splitX - left, 73);
-  doc.rect(splitX, y + 23, pageWidth - right - splitX, 73);
+  doc.rect(left, y + 23, splitX - left, 79);
+  doc.rect(splitX, y + 23, pageWidth - right - splitX, 79);
 
   const labelX = left + 2;
   const valueX = left + 39;
@@ -227,6 +227,7 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     ['Modo de ejecución', data.numeroContrato ? `Concurso de precios ${data.numeroContrato}` : 'Concurso de precios'],
     ['Ubicación', data.ubicacion ? sentenceCase(data.ubicacion) : '—'],
     ['Fecha de apertura', fechaTexto(data.fechaApertura)],
+    ['Fecha de replanteo', fechaTexto(data.fechaInicio)],
     ['Período', periodoTexto(data.periodo)],
     ['Fecha de Carga', fechaTexto(data.fechaMedicion)],
     ['Aprobación de adjudicación', instrumentoAprobacion(data.tipoAprobacionAdjudicacion, data.aprobacionAdjudicacion)],
@@ -265,7 +266,7 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     y + 60,
   );
 
-  return y + 99;
+  return y + 105;
 }
 
 function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: string): number {
@@ -342,6 +343,7 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
     ['Período', periodoTexto(data.periodo)],
     ['Fecha de carga', fechaTexto(data.fechaMedicion)],
     ['Fecha de apertura', fechaTexto(data.fechaApertura)],
+    ['Fecha de replanteo', fechaTexto(data.fechaInicio)],
     ['Plazo de ejecución', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
     ['Expediente madre N°', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
   ], col2 + 2, col2 + 32, ancho - right - col2 - 35, y + 21.8);
@@ -647,7 +649,7 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
     ['Certificado N°:', String(data.numero)],
     ['Fecha de carga:', fechaTexto(data.fechaMedicion)],
     ['Mes y año certificado:', periodoTexto(data.periodo)],
-    ['Fecha inicio:', fechaTexto(data.fechaInicio)],
+    ['Fecha replanteo:', fechaTexto(data.fechaInicio)],
     ['Plazo obra:', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
   ];
   derecha.forEach(([label, value], index) => fila(label, value, division + 1.5, datosY + 3.5 + index * 3.9, division + 29, left + width - division - 31));
@@ -757,7 +759,7 @@ export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<j
       ['Obra:', data.nombreObra ? sentenceCase(data.nombreObra) : '—', 'Monto contrato original:', `$ ${money.format(totalContrato(data))}`, 'Mes y año certificado:', periodoTexto(data.periodo)],
       ['Organismo ejecutor:', 'Municipalidad de Posadas', 'Monto anticipo:', `$ ${money.format(n(data.deduccionAnticipo))}`, 'Nro. certificado:', String(data.numero)],
       ['Provincia:', 'Misiones', 'Empresa:', data.empresa ? sentenceCase(data.empresa) : '—', 'Tipo de certificado:', 'Actualización'],
-      ['Municipio:', data.localidad ? sentenceCase(data.localidad) : 'Posadas', 'CUIT:', data.empresaCuit ?? '—', 'Fecha inicio:', fechaTexto(data.fechaInicio)],
+      ['Municipio:', data.localidad ? sentenceCase(data.localidad) : 'Posadas', 'CUIT:', data.empresaCuit ?? '—', 'Fecha replanteo:', fechaTexto(data.fechaInicio)],
     ],
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 30 }, 1: { cellWidth: 70 }, 2: { fontStyle: 'bold', cellWidth: 38 }, 3: { cellWidth: 48 }, 4: { fontStyle: 'bold', cellWidth: 37 }, 5: { cellWidth: 64 } },
   });

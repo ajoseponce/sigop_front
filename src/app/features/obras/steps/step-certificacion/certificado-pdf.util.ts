@@ -628,9 +628,8 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
     certificados.reduce((total, certificado) => total + selector(certificado), 0);
   const readecuacion = (certificado: typeof certificadosObra[number]) => certificado.readecuacion?.estado === 'APROBADO'
     ? certificado.readecuacion : null;
-  const netoCertificado = (certificado: typeof certificadosObra[number]) => certificado.montoPostAnticipo !== undefined
-    ? n(certificado.montoPostAnticipo)
-    : n(certificado.montoBruto) - n(certificado.deduccionAnticipo);
+  const netoCertificado = (certificado: typeof certificadosObra[number]) =>
+    n(certificado.montoBruto) - n(certificado.deduccionAnticipo);
   const actual = certificadoActual ?? {
     montoBruto: data.montoBruto,
     montoPostAnticipo: null,
@@ -640,7 +639,7 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
     readecuacion: null,
   } as typeof certificadosObra[number];
   const anticipo = data.certificados
-    .filter((certificado) => certificado.tipo === 'ANTICIPO_FINANCIERO' && certificado.estado === 'APROBADO')
+    .filter((certificado) => certificado.tipo === 'ANTICIPO_FINANCIERO' && certificado.estado !== 'ANULADO')
     .reduce((total, certificado) => total + n(certificado.montoBruto), 0);
   const anteriorBruto = suma(anteriores, (certificado) => n(certificado.montoBruto));
   const presenteBruto = n(actual.montoBruto);

@@ -238,7 +238,7 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   });
 
   const rightLabelX = splitX + 2;
-  const rightValueX = splitX + 60;
+  const rightValueX = splitX + 51;
   const rowsRight: Array<[string, string]> = [
     ['Certificado', `N° ${data.numero}`],
     ['Monto contrato', `$ ${money.format(totalContrato(data))}`],
@@ -251,12 +251,14 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   if (tieneReadecuacionAprobada(data)) {
     rowsRight.splice(2, 0, ['Monto actualizado', `$ ${money.format(montoActualizado(data))}`]);
   }
+  doc.setFontSize(6.4);
   rowsRight.forEach(([label, value], index) => {
     const rowY = y + 29 + index * 6;
     doc.text(label, rightLabelX, rowY);
     doc.text(value, rightValueX, rowY);
   });
   const empresaY = y + 29 + rowsRight.length * 6 + 7;
+  doc.setFontSize(7.2);
   doc.text('Empresa:', rightLabelX, empresaY);
   doc.text(
     doc.splitTextToSize(
@@ -457,11 +459,12 @@ function agregarFirmas(
   const pageHeight = doc.internal.pageSize.getHeight();
   const ancho = pageWidth - left - right;
   const anchoFirma = ancho / cargos.length;
-  let y = finalTablaY + 14;
+  const pieY = pageHeight - 24;
+  let y = pieY;
 
-  if (y + 13 > pageHeight - 10) {
+  if (finalTablaY + 12 > pieY) {
     doc.addPage();
-    y = encabezadoNuevaPagina() + 14;
+    encabezadoNuevaPagina();
   }
 
   doc.setDrawColor(55, 65, 81);
@@ -679,9 +682,6 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
     ['Programa:', 'Municipal'],
     ['Municipalidad:', data.localidad ? sentenceCase(data.localidad) : 'Posadas'],
     ['Provincia:', 'Misiones'],
-    ['Monto total contrato:', `$ ${money.format(contrato)}`],
-    ['Monto Nación / Provincia:', '—'],
-    ['Monto Municipio:', `$ ${money.format(contrato)}`],
     ['Empresa:', data.empresa ? sentenceCase(data.empresa) : '—'],
     ['CUIT:', data.empresaCuit ?? '—'],
     ['Domicilio:', data.ubicacion ? sentenceCase(data.ubicacion) : '—'],
@@ -692,6 +692,9 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
     ['Mes y año certificado:', periodoTexto(data.periodo)],
     ['Fecha de replanteo:', fechaTexto(data.fechaInicio)],
     ['Plazo obra:', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
+    ['Monto total contrato:', `$ ${money.format(contrato)}`],
+    ['Monto Nación / Provincia:', '—'],
+    ['Monto Municipio:', `$ ${money.format(contrato)}`],
   ];
   izquierda.forEach(([label, value], index) => fila(
     label, value, left + 1.5, datosY + 3.5 + index * 3.25, left + 35, division - left - 37,

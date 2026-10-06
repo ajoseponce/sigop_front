@@ -200,7 +200,7 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   const right = 10;
   const pageWidth = doc.internal.pageSize.getWidth();
   const width = pageWidth - left - right;
-  const splitX = left + 112;
+  const splitX = left + width / 2;
   const finCabecera = dibujarCabeceraInstitucional(doc, cabecera, left, right, 0.6);
   const y = finCabecera + 3;
 
@@ -231,14 +231,16 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     ['Período', periodoTexto(data.periodo)],
     ['Fecha de Carga', fechaTexto(data.fechaMedicion)],
   ];
-  rowsLeft.forEach(([label, value], index) => {
-    const rowY = y + 29 + index * 5.5;
-    doc.text(label, labelX, rowY);
-    doc.text(doc.splitTextToSize(value, splitX - valueX - 3)[0] ?? '', valueX, rowY);
+  let leftY = y + 29;
+  rowsLeft.forEach(([label, value]) => {
+    const lineas = doc.splitTextToSize(value, splitX - valueX - 3);
+    doc.text(label, labelX, leftY);
+    doc.text(lineas, valueX, leftY);
+    leftY += Math.max(5.5, lineas.length * 4.2 + 1.3);
   });
 
   const rightLabelX = splitX + 2;
-  const rightValueX = splitX + 51;
+  const rightValueX = splitX + 53;
   const rowsRight: Array<[string, string]> = [
     ['Certificado', `N° ${data.numero}`],
     ['Monto contrato', `$ ${money.format(totalContrato(data))}`],
@@ -251,13 +253,15 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   if (tieneReadecuacionAprobada(data)) {
     rowsRight.splice(2, 0, ['Monto actualizado', `$ ${money.format(montoActualizado(data))}`]);
   }
-  doc.setFontSize(6.4);
-  rowsRight.forEach(([label, value], index) => {
-    const rowY = y + 29 + index * 6;
-    doc.text(label, rightLabelX, rowY);
-    doc.text(value, rightValueX, rowY);
+  doc.setFontSize(6.2);
+  let rightY = y + 29;
+  rowsRight.forEach(([label, value]) => {
+    const lineas = doc.splitTextToSize(value, pageWidth - right - rightValueX - 3);
+    doc.text(label, rightLabelX, rightY);
+    doc.text(lineas, rightValueX, rightY);
+    rightY += Math.max(6, lineas.length * 4 + 1.5);
   });
-  const empresaY = y + 29 + rowsRight.length * 6 + 7;
+  const empresaY = rightY + 4;
   doc.setFontSize(7.2);
   doc.text('Empresa:', rightLabelX, empresaY);
   doc.text(

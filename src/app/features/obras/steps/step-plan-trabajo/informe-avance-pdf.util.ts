@@ -79,7 +79,7 @@ function pie(doc: jsPDF): void {
   doc.setTextColor(0, 0, 0);
 }
 
-export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Promise<void> {
+export async function crearInformeAvancePdf(data: InformeAvancePdfData): Promise<jsPDF> {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const cabecera = await cargarCabeceraInstitucional();
   const maxMesesPorPagina = 9;
@@ -232,5 +232,9 @@ export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Pro
     ]),
     didDrawPage: () => pie(doc),
   });
-  doc.save('plan-de-trabajo-y-curva-de-inversion.pdf');
+  return doc;
+}
+
+export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Promise<void> {
+  (await crearInformeAvancePdf(data)).save('plan-de-trabajo-y-curva-de-inversion.pdf');
 }

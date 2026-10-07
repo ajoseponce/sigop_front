@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, inject } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from 'src/app/core/services/api.service';
-import { descargarInformeAvancePdf } from './informe-avance-pdf.util';
+import { crearInformeAvancePdf, descargarInformeAvancePdf } from './informe-avance-pdf.util';
 
 interface ItemPlan {
   id?: number;
@@ -98,13 +99,14 @@ interface PlanGuardado {
   templateUrl: './step-plan-trabajo.component.html',
   styleUrl: './step-plan-trabajo.component.scss',
 })
-export class StepPlanTrabajoComponent implements OnChanges {
+export class StepPlanTrabajoComponent implements OnChanges, OnDestroy {
   @Input() obraId: number | null = null;
   @Input() obra: ObraPlan | null = null;
   @Output() planSaved = new EventEmitter<void>();
 
   private readonly api = inject(ApiService);
   private readonly snack = inject(MatSnackBar);
+  private readonly sanitizer = inject(DomSanitizer);
 
   contrato: ContratoPlan | null = null;
   filas: FilaPlan[] = [];
@@ -112,6 +114,9 @@ export class StepPlanTrabajoComponent implements OnChanges {
   certificados: CertificadoPlan[] = [];
   anticipoFinanciero = 0;
   guardando = false;
+  vistaPreviaUrl: SafeResourceUrl | null = null;
+  generandoVistaPrevia = false;
+  private vistaPreviaObjectUrl: string | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['obra']) this.cargarPlan();
@@ -229,7 +234,37 @@ export class StepPlanTrabajoComponent implements OnChanges {
   }
 
   imprimirInforme(): void {
-    descargarInformeAvancePdf({
+    descargarInformeAvancePdf(this.datosInformePdf());
+  }
+
+  async abrirVistaPrevia(): Promise<void> {
+    this.cerrarVistaPrevia();
+    this.generandoVistaPrevia = true;
+    try {
+      const doc = await crearInformeAvancePdf(this.datosInformePdf());
+      this.vistaPreviaObjectUrl = URL.createObjectURL(doc.output('blob'));
+      this.vistaPreviaUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        `${this.vistaPreviaObjectUrl}#toolbar=0&navpanes=0&scrollbar=1`,
+      );
+    } catch {
+      this.snack.open('No se pudo generar la vista previa', 'Cerrar', { duration: 4000 });
+    } finally {
+      this.generandoVistaPrevia = false;
+    }
+  }
+
+  cerrarVistaPrevia(): void {
+    if (this.vistaPreviaObjectUrl) URL.revokeObjectURL(this.vistaPreviaObjectUrl);
+    this.vistaPreviaObjectUrl = null;
+    this.vistaPreviaUrl = null;
+  }
+
+  ngOnDestroy(): void {
+    this.cerrarVistaPrevia();
+  }
+
+  private datosInformePdf() {
+    return {
       nombreObra: this.obra?.nombre ?? '—',
       numeroContrato: this.contrato?.numeroContrato ?? undefined,
       fechaInicio: this.obra?.fechaInicio,
@@ -261,7 +296,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
         pagoAcumulado: fila.pagoAcumulado,
         realDisponible: fila.realDisponible,
       })),
-    });
+    };
   }
 
   guardar(): void {
@@ -362,7 +397,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
     this.api.get<CertificadoPlan[]>(`obras/${this.obraId}/certificados`).subscribe({
       next: (certificados) => {
         this.anticipoFinanciero = certificados
-          .filter((certificado) => certificado.tipo === 'ANTICIPO_FINANCIERO' && certificado.estado === 'APROBADO')
+          .filter((certificado) => certificado.tipo === 'ANTICIPO_FINANCIERO' && certificado.estado !== 'ANULADO')
           .reduce((total, certificado) => total + this.valorNumerico(certificado.montoBruto), 0);
         this.certificados = certificados
           .filter((certificado) => certificado.tipo === 'OBRA'

@@ -126,9 +126,22 @@
           </table>
         </div>
         <div class="acciones-informe">
+          <button type="button" class="button secondary" (click)="abrirVistaPrevia()" [disabled]="generandoVistaPrevia"><mat-icon>visibility</mat-icon>{{ generandoVistaPrevia ? 'Generando...' : 'Vista previa' }}</button>
           <button type="button" class="button secondary" (click)="imprimirInforme()"><mat-icon>print</mat-icon>Imprimir plan y curva</button>
         </div>
       </section>
     }
   }
 </section>
+
+@if (vistaPreviaUrl) {
+  <div class="preview-overlay" (click)="cerrarVistaPrevia()">
+    <section class="preview-modal" role="dialog" aria-modal="true" aria-label="Vista previa del plan y curva" (click)="$event.stopPropagation()">
+      <header>
+        <h3>Vista previa - Plan de trabajo y curva de inversión</h3>
+        <button type="button" aria-label="Cerrar vista previa" (click)="cerrarVistaPrevia()">×</button>
+      </header>
+      <iframe [src]="vistaPreviaUrl" title="Vista previa del plan de trabajo y curva"></iframe>
+    </section>
+  </div>
+}

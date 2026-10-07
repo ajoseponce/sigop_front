@@ -69,6 +69,7 @@ interface FilaInformeAvance {
   realMontoAcumulado: number;
   deduccionesParcial: number;
   deduccionesAcumuladas: number;
+  deduccionAnticipoAcumulada: number;
   readecuacionesParcial: number;
   readecuacionesAcumuladas: number;
   pagoAcumulado: number;
@@ -158,6 +159,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
     let previstoMontoAcumulado = 0;
     let realMontoAcumulado = 0;
     let deduccionesAcumuladas = 0;
+    let deduccionAnticipoAcumulada = 0;
     let readecuacionesAcumuladas = 0;
     let pagoAcumulado = 0;
     return this.meses.map((mes, indice) => {
@@ -176,6 +178,9 @@ export class StepPlanTrabajoComponent implements OnChanges {
           + this.valorNumerico(certificado.deduccionFondoReparo), 0,
       ));
       deduccionesAcumuladas = this.redondear(deduccionesAcumuladas + deduccionesParcial);
+      deduccionAnticipoAcumulada = this.redondear(deduccionAnticipoAcumulada + certificadosMes.reduce(
+        (total, certificado) => total + this.valorNumerico(certificado.deduccionAnticipo), 0,
+      ));
       const readecuacionesParcial = this.redondear(certificadosMes.reduce(
         (total, certificado) => total + (certificado.readecuacion?.estado === 'APROBADO'
           ? this.valorNumerico(certificado.readecuacion.incremento) : 0), 0,
@@ -193,7 +198,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
         ) * 100 / this.totalContrato)
         : 0;
       const realParcial = this.totalContrato > 0 ? this.redondear(realMontoParcial * 100 / this.totalContrato) : 0;
-      return { mes, previstoParcial, previstoAcumulado, previstoMontoParcial, previstoMontoAcumulado, realParcial, realAcumulado, realMontoParcial, realMontoAcumulado, deduccionesParcial, deduccionesAcumuladas, readecuacionesParcial, readecuacionesAcumuladas, pagoAcumulado, realDisponible };
+      return { mes, previstoParcial, previstoAcumulado, previstoMontoParcial, previstoMontoAcumulado, realParcial, realAcumulado, realMontoParcial, realMontoAcumulado, deduccionesParcial, deduccionesAcumuladas, deduccionAnticipoAcumulada, readecuacionesParcial, readecuacionesAcumuladas, pagoAcumulado, realDisponible };
     });
   }
 
@@ -250,6 +255,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
         realMontoAcumulado: fila.realMontoAcumulado,
         deduccionesParcial: fila.deduccionesParcial,
         deduccionesAcumuladas: fila.deduccionesAcumuladas,
+        deduccionAnticipoAcumulada: fila.deduccionAnticipoAcumulada,
         readecuacionesParcial: fila.readecuacionesParcial,
         readecuacionesAcumuladas: fila.readecuacionesAcumuladas,
         pagoAcumulado: fila.pagoAcumulado,

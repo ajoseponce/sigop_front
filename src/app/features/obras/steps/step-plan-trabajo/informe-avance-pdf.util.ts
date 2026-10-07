@@ -14,6 +14,7 @@ export interface InformeAvancePdfFila {
   realMontoAcumulado: number;
   deduccionesParcial: number;
   deduccionesAcumuladas: number;
+  deduccionAnticipoAcumulada: number;
   readecuacionesParcial: number;
   readecuacionesAcumuladas: number;
   pagoAcumulado: number;
@@ -61,7 +62,7 @@ function encabezado(doc: jsPDF, cabecera: string, data: InformeAvancePdfData, ti
   doc.setFontSize(6.8);
   doc.rect(left, inicio + 9.5, width, 12);
   doc.text(`Obra: ${data.nombreObra || '—'}`, left + 2, inicio + 14);
-  doc.text(`Contrato: ${data.numeroContrato || '—'}`, left + 2, inicio + 18.3);
+  doc.text(`Concurso N°: ${data.numeroContrato || '—'}`, left + 2, inicio + 18.3);
   doc.text(`Inicio: ${data.fechaInicio ? data.fechaInicio.slice(0, 10).split('-').reverse().join('-') : '—'}`, left + width - 2, inicio + 14, { align: 'right' });
   doc.text(`Monto contrato: ${formatoMonto(data.totalContrato)}`, left + width - 2, inicio + 18.3, { align: 'right' });
   return inicio + 25;
@@ -130,12 +131,12 @@ export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Pro
       filaResumen('Avance mensual real', grupo.map((fila) => fila.realDisponible ? `${percent.format(fila.realParcial)}%` : '')),
       filaResumen('Avance mensual acumulado real', grupo.map((fila) => fila.realDisponible ? `${percent.format(fila.realAcumulado)}%` : '')),
       filaResumen('INVERSIONES', grupo.map(() => ''), true),
-      filaResumen('Anticipo financiero', grupo.map((fila) => fila.mes === 1 && data.anticipoFinanciero > 0 ? formatoMonto(data.anticipoFinanciero) : '')),
+      filaResumen('Anticipo financiero', grupo.map((fila) => fila.mes === 1 && data.anticipoFinanciero > 0 ? formatoMonto(data.anticipoFinanciero) : ''), true),
       filaResumen('Inversión mensual real a precio base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoParcial) : '')),
-      filaResumen('Deducciones de precios', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.deduccionesParcial) : '')),
+      filaResumen('Deducciones legales (anticipo financiero + fondo de reparo)', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.deduccionesParcial) : '')),
       filaResumen('Inversión real acumulada (certificados básicos)', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoAcumulado) : '')),
       filaResumen('Readecuaciones de precios', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.readecuacionesParcial) : '')),
-      filaResumen('Inversión real acumulada a precios base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoAcumulado + fila.readecuacionesAcumuladas) : '')),
+      filaResumen('Inversión real acumulada a precios base', grupo.map((fila) => fila.realDisponible ? formatoMonto(data.anticipoFinanciero + fila.realMontoAcumulado - fila.deduccionAnticipoAcumulada) : '')),
       filaResumen('Inversión real acumulada neta', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.pagoAcumulado) : ''), true),
     );
     autoTable(doc, {

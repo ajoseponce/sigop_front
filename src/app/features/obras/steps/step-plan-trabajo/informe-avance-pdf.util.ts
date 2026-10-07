@@ -100,7 +100,7 @@ export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Pro
         'REAL',
         ...grupo.map((fila) => {
           const valor = rubro.reales[fila.mes - 1] ?? 0;
-          return valor > 0 ? `${percent.format(valor)}%` : '—';
+          return valor > 0 ? `${percent.format(valor)}%` : '';
         }),
       ],
       [
@@ -114,8 +114,10 @@ export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Pro
       { content: 'PROYECTADO', styles: { fontStyle: 'bold', halign: 'center' } },
       ...grupo.map((fila) => ({ content: `${percent.format(fila.proyectadoParcial)}%`, styles: { fontStyle: 'bold' as const, halign: 'right' as const } })),
     ]);
+    // Separa el plan por rubro del resumen físico-financiero.
+    body.push([{ content: '', colSpan: 5 + grupo.length, styles: { minCellHeight: 10, lineWidth: 0 } }]);
     const filaResumen = (etiqueta: string, valores: string[], destacado = false): RowInput => [
-      { content: etiqueta, colSpan: 3, styles: { fontStyle: destacado ? 'bold' as const : 'normal' as const, fillColor: destacado ? [226, 232, 240] as [number, number, number] : undefined } },
+      { content: etiqueta, colSpan: 3, styles: { fontStyle: destacado ? 'bold' as const : 'normal' as const, halign: destacado ? 'center' as const : 'left' as const, fillColor: destacado ? [226, 232, 240] as [number, number, number] : undefined } },
       { content: '', styles: { fillColor: destacado ? [226, 232, 240] as [number, number, number] : undefined } },
       { content: '', styles: { fillColor: destacado ? [226, 232, 240] as [number, number, number] : undefined } },
       ...valores.map((valor) => ({ content: valor, styles: { halign: 'right' as const, fontStyle: destacado ? 'bold' as const : 'normal' as const, fillColor: destacado ? [226, 232, 240] as [number, number, number] : undefined } })),
@@ -125,16 +127,16 @@ export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Pro
       filaResumen('Avance mensual acumulado proyectado', grupo.map((fila) => `${percent.format(fila.proyectadoAcumulado)}%`)),
       filaResumen('Inversión mensual proyectada', grupo.map((fila) => formatoMonto(fila.proyectadoMontoParcial))),
       filaResumen('Inversión mensual acumulada proyectada', grupo.map((fila) => formatoMonto(fila.proyectadoMontoAcumulado))),
-      filaResumen('Avance mensual real', grupo.map((fila) => fila.realDisponible ? `${percent.format(fila.realParcial)}%` : '—')),
-      filaResumen('Avance mensual acumulado real', grupo.map((fila) => fila.realDisponible ? `${percent.format(fila.realAcumulado)}%` : '—')),
+      filaResumen('Avance mensual real', grupo.map((fila) => fila.realDisponible ? `${percent.format(fila.realParcial)}%` : '')),
+      filaResumen('Avance mensual acumulado real', grupo.map((fila) => fila.realDisponible ? `${percent.format(fila.realAcumulado)}%` : '')),
       filaResumen('INVERSIONES', grupo.map(() => ''), true),
-      filaResumen('Anticipo financiero', grupo.map((fila) => fila.mes === 1 && data.anticipoFinanciero > 0 ? formatoMonto(data.anticipoFinanciero) : '—')),
-      filaResumen('Inversión mensual real a precio base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoParcial) : '—')),
-      filaResumen('Deducciones de precios', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.deduccionesParcial) : '—')),
-      filaResumen('Inversión real acumulada (certificados básicos)', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoAcumulado) : '—')),
-      filaResumen('Readecuaciones de precios', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.readecuacionesParcial) : '—')),
-      filaResumen('Inversión real acumulada a precios base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoAcumulado + fila.readecuacionesAcumuladas) : '—')),
-      filaResumen('Inversión real acumulada neta', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.pagoAcumulado) : '—'), true),
+      filaResumen('Anticipo financiero', grupo.map((fila) => fila.mes === 1 && data.anticipoFinanciero > 0 ? formatoMonto(data.anticipoFinanciero) : '')),
+      filaResumen('Inversión mensual real a precio base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoParcial) : '')),
+      filaResumen('Deducciones de precios', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.deduccionesParcial) : '')),
+      filaResumen('Inversión real acumulada (certificados básicos)', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoAcumulado) : '')),
+      filaResumen('Readecuaciones de precios', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.readecuacionesParcial) : '')),
+      filaResumen('Inversión real acumulada a precios base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoAcumulado + fila.readecuacionesAcumuladas) : '')),
+      filaResumen('Inversión real acumulada neta', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.pagoAcumulado) : ''), true),
     );
     autoTable(doc, {
       startY: tablaY,
@@ -147,10 +149,10 @@ export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Pro
       bodyStyles: { lineColor: [75, 85, 99], lineWidth: 0.18 },
       columnStyles: {
         0: { cellWidth: 12, halign: 'center' },
-        1: { cellWidth: 50 },
+        1: { cellWidth: 48, halign: 'left' },
         2: { cellWidth: 22, halign: 'right' },
         3: { cellWidth: 12, halign: 'right' },
-        4: { cellWidth: 14, halign: 'center' },
+        4: { cellWidth: 22, halign: 'center' },
         ...Object.fromEntries(grupo.map((_, posicion) => [posicion + 5, { cellWidth: 16, halign: 'right' as const }])),
       },
       didDrawPage: () => pie(doc),

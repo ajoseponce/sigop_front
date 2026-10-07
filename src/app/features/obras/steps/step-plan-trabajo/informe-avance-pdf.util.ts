@@ -6,9 +6,17 @@ export interface InformeAvancePdfFila {
   mes: number;
   proyectadoParcial: number;
   proyectadoAcumulado: number;
+  proyectadoMontoParcial: number;
   proyectadoMontoAcumulado: number;
+  realParcial: number;
   realAcumulado: number;
+  realMontoParcial: number;
   realMontoAcumulado: number;
+  deduccionesParcial: number;
+  deduccionesAcumuladas: number;
+  readecuacionesParcial: number;
+  readecuacionesAcumuladas: number;
+  pagoAcumulado: number;
   realDisponible: boolean;
 }
 
@@ -18,6 +26,7 @@ export interface InformeAvancePdfRubro {
   monto: number;
   incidencia: number;
   porcentajes: number[];
+  reales: number[];
 }
 
 export interface InformeAvancePdfData {
@@ -25,6 +34,7 @@ export interface InformeAvancePdfData {
   numeroContrato?: string;
   fechaInicio?: string | null;
   totalContrato: number;
+  anticipoFinanciero: number;
   rubros: InformeAvancePdfRubro[];
   filas: InformeAvancePdfFila[];
 }
@@ -80,20 +90,52 @@ export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Pro
   gruposMeses.forEach((grupo, indiceGrupo) => {
     if (indiceGrupo > 0) doc.addPage();
     const tablaY = encabezado(doc, cabecera, data, 'PLAN DE TRABAJO');
-    const head = [['Rubro', 'Descripción', 'Monto', '%', ...grupo.map((fila) => `Mes ${fila.mes}`)]];
-    const body: RowInput[] = data.rubros.map((rubro) => [
-      rubro.rubroRef,
-      rubro.nombre,
-      formatoMonto(rubro.monto),
-      `${percent.format(rubro.incidencia)}%`,
-      ...grupo.map((fila) => `${percent.format(rubro.porcentajes[fila.mes - 1] ?? 0)}%`),
+    const head = [['Rubro', 'Descripción', 'Monto', '%', 'Real / Proy.', ...grupo.map((fila) => `Mes ${fila.mes}`)]];
+    const body: RowInput[] = data.rubros.flatMap((rubro) => [
+      [
+        rubro.rubroRef,
+        rubro.nombre,
+        formatoMonto(rubro.monto),
+        `${percent.format(rubro.incidencia)}%`,
+        'REAL',
+        ...grupo.map((fila) => {
+          const valor = rubro.reales[fila.mes - 1] ?? 0;
+          return valor > 0 ? `${percent.format(valor)}%` : '—';
+        }),
+      ],
+      [
+        '', '', '', '', 'PROYECTADO',
+        ...grupo.map((fila) => `${percent.format(rubro.porcentajes[fila.mes - 1] ?? 0)}%`),
+      ],
     ]);
     body.push([
-      { content: 'TOTAL OBRA', colSpan: 2, styles: { fontStyle: 'bold', halign: 'right' } },
-      { content: formatoMonto(data.totalContrato), styles: { fontStyle: 'bold', halign: 'right' } },
+      { content: 'TOTAL OBRA', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right' } },
       { content: '100,00%', styles: { fontStyle: 'bold', halign: 'right' } },
+      { content: 'PROYECTADO', styles: { fontStyle: 'bold', halign: 'center' } },
       ...grupo.map((fila) => ({ content: `${percent.format(fila.proyectadoParcial)}%`, styles: { fontStyle: 'bold' as const, halign: 'right' as const } })),
     ]);
+    const filaResumen = (etiqueta: string, valores: string[], destacado = false): RowInput => [
+      { content: etiqueta, colSpan: 3, styles: { fontStyle: destacado ? 'bold' as const : 'normal' as const, fillColor: destacado ? [226, 232, 240] as [number, number, number] : undefined } },
+      { content: '', styles: { fillColor: destacado ? [226, 232, 240] as [number, number, number] : undefined } },
+      { content: '', styles: { fillColor: destacado ? [226, 232, 240] as [number, number, number] : undefined } },
+      ...valores.map((valor) => ({ content: valor, styles: { halign: 'right' as const, fontStyle: destacado ? 'bold' as const : 'normal' as const, fillColor: destacado ? [226, 232, 240] as [number, number, number] : undefined } })),
+    ];
+    body.push(
+      filaResumen('Avance mensual proyectado', grupo.map((fila) => `${percent.format(fila.proyectadoParcial)}%`)),
+      filaResumen('Avance mensual acumulado proyectado', grupo.map((fila) => `${percent.format(fila.proyectadoAcumulado)}%`)),
+      filaResumen('Inversión mensual proyectada', grupo.map((fila) => formatoMonto(fila.proyectadoMontoParcial))),
+      filaResumen('Inversión mensual acumulada proyectada', grupo.map((fila) => formatoMonto(fila.proyectadoMontoAcumulado))),
+      filaResumen('Avance mensual real', grupo.map((fila) => fila.realDisponible ? `${percent.format(fila.realParcial)}%` : '—')),
+      filaResumen('Avance mensual acumulado real', grupo.map((fila) => fila.realDisponible ? `${percent.format(fila.realAcumulado)}%` : '—')),
+      filaResumen('INVERSIONES', grupo.map(() => ''), true),
+      filaResumen('Anticipo financiero', grupo.map((fila) => fila.mes === 1 && data.anticipoFinanciero > 0 ? formatoMonto(data.anticipoFinanciero) : '—')),
+      filaResumen('Inversión mensual real a precio base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoParcial) : '—')),
+      filaResumen('Deducciones de precios', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.deduccionesParcial) : '—')),
+      filaResumen('Inversión real acumulada (certificados básicos)', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoAcumulado) : '—')),
+      filaResumen('Readecuaciones de precios', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.readecuacionesParcial) : '—')),
+      filaResumen('Inversión real acumulada a precios base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoAcumulado + fila.readecuacionesAcumuladas) : '—')),
+      filaResumen('Inversión real acumulada neta', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.pagoAcumulado) : '—'), true),
+    );
     autoTable(doc, {
       startY: tablaY,
       margin: { left: 10, right: 10, bottom: 31 },
@@ -105,10 +147,11 @@ export async function descargarInformeAvancePdf(data: InformeAvancePdfData): Pro
       bodyStyles: { lineColor: [75, 85, 99], lineWidth: 0.18 },
       columnStyles: {
         0: { cellWidth: 12, halign: 'center' },
-        1: { cellWidth: 55 },
-        2: { cellWidth: 25, halign: 'right' },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 22, halign: 'right' },
         3: { cellWidth: 12, halign: 'right' },
-        ...Object.fromEntries(grupo.map((_, posicion) => [posicion + 4, { cellWidth: 18, halign: 'right' as const }])),
+        4: { cellWidth: 14, halign: 'center' },
+        ...Object.fromEntries(grupo.map((_, posicion) => [posicion + 5, { cellWidth: 16, halign: 'right' as const }])),
       },
       didDrawPage: () => pie(doc),
     });

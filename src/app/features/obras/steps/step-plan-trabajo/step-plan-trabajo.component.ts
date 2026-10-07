@@ -46,7 +46,15 @@ interface CertificadoPlan {
   estado: 'BORRADOR' | 'APROBADO' | 'ANULADO';
   periodo: string | null;
   montoBruto: string | null;
-  detalles: Array<{ precioUnitarioSnapshot: string; cantidadAcumulada: string }>;
+  deduccionAnticipo?: string | null;
+  deduccionFondoReparo?: string | null;
+  montoFinal?: string | null;
+  readecuacion?: {
+    estado: 'BORRADOR' | 'APROBADO';
+    incremento: string;
+    incrementoNetoPagar: string;
+  } | null;
+  detalles: Array<{ itemId: number; precioUnitarioSnapshot: string; cantidadAcumulada: string; montoPeriodo: string }>;
 }
 
 interface FilaInformeAvance {
@@ -56,8 +64,14 @@ interface FilaInformeAvance {
   previstoMontoParcial: number;
   previstoMontoAcumulado: number;
   realAcumulado: number;
+  realParcial: number;
   realMontoParcial: number;
   realMontoAcumulado: number;
+  deduccionesParcial: number;
+  deduccionesAcumuladas: number;
+  readecuacionesParcial: number;
+  readecuacionesAcumuladas: number;
+  pagoAcumulado: number;
   realDisponible: boolean;
 }
 
@@ -67,6 +81,7 @@ interface FilaPlan {
   nombre: string;
   incidencia: number;
   porcentajes: number[];
+  itemIds: number[];
 }
 
 interface PlanGuardado {
@@ -94,6 +109,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
   filas: FilaPlan[] = [];
   meses: number[] = [];
   certificados: CertificadoPlan[] = [];
+  anticipoFinanciero = 0;
   guardando = false;
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -141,6 +157,9 @@ export class StepPlanTrabajoComponent implements OnChanges {
     let previstoAcumulado = 0;
     let previstoMontoAcumulado = 0;
     let realMontoAcumulado = 0;
+    let deduccionesAcumuladas = 0;
+    let readecuacionesAcumuladas = 0;
+    let pagoAcumulado = 0;
     return this.meses.map((mes, indice) => {
       const previstoParcial = this.totalMes(indice);
       previstoAcumulado = this.redondear(previstoAcumulado + previstoParcial);
@@ -152,13 +171,29 @@ export class StepPlanTrabajoComponent implements OnChanges {
         (total, certificado) => total + this.valorNumerico(certificado.montoBruto), 0,
       ));
       realMontoAcumulado = this.redondear(realMontoAcumulado + realMontoParcial);
+      const deduccionesParcial = this.redondear(certificadosMes.reduce(
+        (total, certificado) => total + this.valorNumerico(certificado.deduccionAnticipo)
+          + this.valorNumerico(certificado.deduccionFondoReparo), 0,
+      ));
+      deduccionesAcumuladas = this.redondear(deduccionesAcumuladas + deduccionesParcial);
+      const readecuacionesParcial = this.redondear(certificadosMes.reduce(
+        (total, certificado) => total + (certificado.readecuacion?.estado === 'APROBADO'
+          ? this.valorNumerico(certificado.readecuacion.incremento) : 0), 0,
+      ));
+      readecuacionesAcumuladas = this.redondear(readecuacionesAcumuladas + readecuacionesParcial);
+      pagoAcumulado = this.redondear(pagoAcumulado + certificadosMes.reduce(
+        (total, certificado) => total + this.valorNumerico(certificado.montoFinal)
+          + (certificado.readecuacion?.estado === 'APROBADO'
+            ? this.valorNumerico(certificado.readecuacion.incrementoNetoPagar) : 0), 0,
+      ));
       const ultimo = this.ultimoCertificadoHastaMes(indice);
       const realAcumulado = ultimo && this.totalContrato > 0
         ? this.redondear(ultimo.detalles.reduce((total, detalle) => total
           + this.valorNumerico(detalle.cantidadAcumulada) * this.valorNumerico(detalle.precioUnitarioSnapshot), 0,
         ) * 100 / this.totalContrato)
         : 0;
-      return { mes, previstoParcial, previstoAcumulado, previstoMontoParcial, previstoMontoAcumulado, realAcumulado, realMontoParcial, realMontoAcumulado, realDisponible };
+      const realParcial = this.totalContrato > 0 ? this.redondear(realMontoParcial * 100 / this.totalContrato) : 0;
+      return { mes, previstoParcial, previstoAcumulado, previstoMontoParcial, previstoMontoAcumulado, realParcial, realAcumulado, realMontoParcial, realMontoAcumulado, deduccionesParcial, deduccionesAcumuladas, readecuacionesParcial, readecuacionesAcumuladas, pagoAcumulado, realDisponible };
     });
   }
 
@@ -194,20 +229,30 @@ export class StepPlanTrabajoComponent implements OnChanges {
       numeroContrato: this.contrato?.numeroContrato ?? undefined,
       fechaInicio: this.obra?.fechaInicio,
       totalContrato: this.totalContrato,
+      anticipoFinanciero: this.anticipoFinanciero,
       rubros: this.filas.map((fila) => ({
         rubroRef: fila.rubroRef,
         nombre: fila.nombre,
         monto: this.redondear(this.totalContrato * fila.incidencia / 100),
         incidencia: fila.incidencia,
         porcentajes: fila.porcentajes,
+        reales: this.avanceRealRubroPorMes(fila),
       })),
       filas: this.informeAvance.map((fila) => ({
         mes: fila.mes,
         proyectadoParcial: fila.previstoParcial,
         proyectadoAcumulado: fila.previstoAcumulado,
+        proyectadoMontoParcial: fila.previstoMontoParcial,
         proyectadoMontoAcumulado: fila.previstoMontoAcumulado,
+        realParcial: fila.realParcial,
         realAcumulado: fila.realAcumulado,
+        realMontoParcial: fila.realMontoParcial,
         realMontoAcumulado: fila.realMontoAcumulado,
+        deduccionesParcial: fila.deduccionesParcial,
+        deduccionesAcumuladas: fila.deduccionesAcumuladas,
+        readecuacionesParcial: fila.readecuacionesParcial,
+        readecuacionesAcumuladas: fila.readecuacionesAcumuladas,
+        pagoAcumulado: fila.pagoAcumulado,
         realDisponible: fila.realDisponible,
       })),
     });
@@ -296,6 +341,7 @@ export class StepPlanTrabajoComponent implements OnChanges {
         nombre: rubro.nombre,
         incidencia: montoTotal > 0 ? this.redondear((this.montoRubro(rubro) / montoTotal) * 100) : 0,
         porcentajes: this.meses.map((_, index) => this.numero(anteriores[index])),
+        itemIds: rubro.items.map((item) => item.id).filter((id): id is number => id !== undefined),
       };
     });
     this.cargarCertificados();
@@ -304,10 +350,14 @@ export class StepPlanTrabajoComponent implements OnChanges {
   private cargarCertificados(): void {
     if (!this.obraId || !this.contrato?.planTrabajo) {
       this.certificados = [];
+      this.anticipoFinanciero = 0;
       return;
     }
     this.api.get<CertificadoPlan[]>(`obras/${this.obraId}/certificados`).subscribe({
       next: (certificados) => {
+        this.anticipoFinanciero = certificados
+          .filter((certificado) => certificado.tipo === 'ANTICIPO_FINANCIERO' && certificado.estado === 'APROBADO')
+          .reduce((total, certificado) => total + this.valorNumerico(certificado.montoBruto), 0);
         this.certificados = certificados
           .filter((certificado) => certificado.tipo === 'OBRA'
             && certificado.estado === 'APROBADO'
@@ -340,6 +390,17 @@ export class StepPlanTrabajoComponent implements OnChanges {
     const diferencia = (periodo.getFullYear() - inicio.getFullYear()) * 12
       + periodo.getMonth() - inicio.getMonth();
     return Math.max(0, Math.min(diferencia, this.meses.length - 1));
+  }
+
+  private avanceRealRubroPorMes(fila: FilaPlan): number[] {
+    const montoRubro = this.redondear(this.totalContrato * fila.incidencia / 100);
+    if (!montoRubro || fila.itemIds.length === 0) return this.meses.map(() => 0);
+    return this.meses.map((_, indice) => this.redondear(
+      this.certificadosDelMes(indice).reduce((total, certificado) => total + certificado.detalles
+        .filter((detalle) => fila.itemIds.includes(detalle.itemId))
+        .reduce((subtotal, detalle) => subtotal + this.valorNumerico(detalle.montoPeriodo), 0), 0,
+      ) * 100 / montoRubro,
+    ));
   }
 
   private leerPlan(valor?: string | null): PlanGuardado | null {

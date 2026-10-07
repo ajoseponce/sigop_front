@@ -192,6 +192,15 @@ export class StepPlanTrabajoComponent implements OnChanges {
     descargarInformeAvancePdf({
       nombreObra: this.obra?.nombre ?? '—',
       numeroContrato: this.contrato?.numeroContrato ?? undefined,
+      fechaInicio: this.obra?.fechaInicio,
+      totalContrato: this.totalContrato,
+      rubros: this.filas.map((fila) => ({
+        rubroRef: fila.rubroRef,
+        nombre: fila.nombre,
+        monto: this.redondear(this.totalContrato * fila.incidencia / 100),
+        incidencia: fila.incidencia,
+        porcentajes: fila.porcentajes,
+      })),
       filas: this.informeAvance.map((fila) => ({
         mes: fila.mes,
         proyectadoParcial: fila.previstoParcial,
@@ -310,20 +319,23 @@ export class StepPlanTrabajoComponent implements OnChanges {
   }
 
   private certificadosDelMes(indice: number): CertificadoPlan[] {
-    return this.certificados.filter((certificado, certificadoIndice) =>
-      this.indiceMesCertificado(certificado, certificadoIndice) === indice,
+    return this.certificados.filter((certificado) =>
+      this.indiceMesCertificado(certificado) === indice,
     );
   }
 
   private ultimoCertificadoHastaMes(indice: number): CertificadoPlan | null {
-    return this.certificados.reduce<CertificadoPlan | null>((ultimo, certificado, certificadoIndice) =>
-      this.indiceMesCertificado(certificado, certificadoIndice) <= indice ? certificado : ultimo,
+    return this.certificados.reduce<CertificadoPlan | null>((ultimo, certificado) =>
+      this.indiceMesCertificado(certificado) <= indice ? certificado : ultimo,
     null);
   }
 
-  private indiceMesCertificado(certificado: CertificadoPlan, fallback: number): number {
-    if (!this.obra?.fechaInicio || !certificado.periodo) return Math.min(fallback, this.meses.length - 1);
-    const inicio = new Date(`${this.obra.fechaInicio.slice(0, 10)}T00:00:00`);
+  private indiceMesCertificado(certificado: CertificadoPlan): number {
+    const primerPeriodo = this.certificados[0]?.periodo;
+    if (!primerPeriodo || !certificado.periodo) return 0;
+    // El primer certificado siempre corresponde al mes 1, aunque la obra haya
+    // iniciado al final del mes calendario anterior.
+    const inicio = new Date(`${primerPeriodo.slice(0, 10)}T00:00:00`);
     const periodo = new Date(`${certificado.periodo.slice(0, 10)}T00:00:00`);
     const diferencia = (periodo.getFullYear() - inicio.getFullYear()) * 12
       + periodo.getMonth() - inicio.getMonth();

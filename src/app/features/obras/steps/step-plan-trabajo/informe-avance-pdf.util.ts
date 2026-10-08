@@ -57,6 +57,11 @@ function formatoMonto(value: number): string {
   return `$ ${money.format(value)}`;
 }
 
+function sentenceCase(value: string): string {
+  const normalized = value.trim().toLocaleLowerCase('es-AR');
+  return normalized ? `${normalized[0].toLocaleUpperCase('es-AR')}${normalized.slice(1)}` : normalized;
+}
+
 function formatoPeriodo(value?: string | null): string {
   if (!value) return '—';
   const fecha = new Date(`${value.slice(0, 10)}T12:00:00`);
@@ -77,7 +82,7 @@ function encabezado(doc: jsPDF, cabecera: string, data: InformeAvancePdfData, ti
   doc.rect(left, inicio, width, 7);
   doc.text(titulo.toLocaleUpperCase('es-AR'), left + width / 2, inicio + 4.7, { align: 'center' });
   doc.rect(left, inicio + 8.5, width, 7);
-  doc.text(`Obra: ${data.nombreObra || '—'}`, left + 2, inicio + 13.2);
+  doc.text(`Obra: ${data.nombreObra ? sentenceCase(data.nombreObra) : '—'}`, left + 2, inicio + 13.2);
 
   const datosY = inicio + 17;
   const col1 = left + width / 3;
@@ -94,12 +99,12 @@ function encabezado(doc: jsPDF, cabecera: string, data: InformeAvancePdfData, ti
   fila('Organismo otorgante', 'Municipalidad de Posadas', left + 2, datosY + 4.5, col1 - left - 34);
   fila('Expediente madre N°', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`, left + 2, datosY + 8.6, col1 - left - 34);
   fila('Programa', 'Municipal', left + 2, datosY + 12.7, col1 - left - 34);
-  fila('Localidad', data.localidad ?? 'Posadas - Misiones', left + 2, datosY + 16.8, col1 - left - 34);
-  fila('Ubicación', data.ubicacion ?? '—', left + 2, datosY + 20.9, col1 - left - 34);
+  fila('Localidad', data.localidad ? sentenceCase(data.localidad) : 'Posadas - Misiones', left + 2, datosY + 16.8, col1 - left - 34);
+  fila('Ubicación', data.ubicacion ? sentenceCase(data.ubicacion) : '—', left + 2, datosY + 20.9, col1 - left - 34);
   fila('Monto total', formatoMonto(data.totalContrato), col1 + 2, datosY + 4.5, col2 - col1 - 34);
   fila('Monto municipio', formatoMonto(data.totalContrato), col1 + 2, datosY + 8.6, col2 - col1 - 34);
   fila('Modo de ejecución', data.numeroContrato ? `Concurso ${data.numeroContrato}` : 'Concurso', col1 + 2, datosY + 12.7, col2 - col1 - 34);
-  fila('Empresa', data.empresa ?? '—', col1 + 2, datosY + 16.8, col2 - col1 - 34);
+  fila('Empresa', data.empresa ? sentenceCase(data.empresa) : '—', col1 + 2, datosY + 16.8, col2 - col1 - 34);
   fila('CUIT', data.empresaCuit ?? '—', col1 + 2, datosY + 20.9, col2 - col1 - 34);
   fila('Certificado N°', data.numeroCertificado ? String(data.numeroCertificado) : '—', col2 + 2, datosY + 4.5, left + width - col2 - 34);
   fila('Fecha de replanteo', fecha(data.fechaInicio), col2 + 2, datosY + 8.6, left + width - col2 - 34);

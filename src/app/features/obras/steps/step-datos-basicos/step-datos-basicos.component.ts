@@ -15,6 +15,7 @@ const FIELD_LABELS: Record<string, string> = {
   nombre: 'Nombre de la obra',
   sistemaContratacion: 'Sistema de contratación',
   anticipo: 'Anticipo financiero (%)',
+  montoAnticipo: 'Monto de anticipo financiero',
 };
 
 @Component({
@@ -51,6 +52,7 @@ export class StepDatosBasicosComponent implements OnChanges {
 
     presupuestoOficial: [null, [Validators.min(0)]],
     anticipo: [null, [Validators.min(0), Validators.max(100)]],
+    montoAnticipo: this.fb.control<number | null>(null, [Validators.min(0)]),
 
     tipoObraId: [null],
   });
@@ -88,6 +90,9 @@ export class StepDatosBasicosComponent implements OnChanges {
     const porcentajeAnticipo = raw.anticipo === null
       ? undefined
       : Number(raw.anticipo);
+    const montoAnticipo = raw.montoAnticipo === null
+      ? undefined
+      : Number(raw.montoAnticipo);
 
     const payload = {
       tipoObraId,
@@ -110,6 +115,7 @@ export class StepDatosBasicosComponent implements OnChanges {
 
       presupuestoOficial,
       porcentajeAnticipo,
+      montoAnticipo,
     };
     this.obraSaved.emit(payload);
   }
@@ -156,6 +162,7 @@ export class StepDatosBasicosComponent implements OnChanges {
         calles: this.obra.calles ?? '',
         presupuestoOficial: this.obra.presupuestoOficial ?? null,
         anticipo: this.obra.porcentajeAnticipo ?? null,
+        montoAnticipo: this.obra.montoAnticipo ?? null,
       });
 
       if (tipoObraNombre) {
@@ -174,6 +181,12 @@ export class StepDatosBasicosComponent implements OnChanges {
         }
       }
     }
+  }
+
+  actualizarMontoAnticipoSugerido(): void {
+    const presupuesto = Number(this.form.get('presupuestoOficial')?.value ?? 0);
+    const porcentaje = Number(this.form.get('anticipo')?.value ?? 0);
+    this.form.patchValue({ montoAnticipo: Math.round(presupuesto * porcentaje) / 100 }, { emitEvent: false });
   }
 
   private toDateInput(value: string | Date | null | undefined): string {

@@ -350,6 +350,7 @@ export class StepContratoComponent implements OnInit , OnChanges{
       // El monto nace en 0 y se actualiza automáticamente al guardar el cómputo.
       montoDelta: presupuestoAdjudicado,
       porcentajeAnticipo,
+      montoAnticipo: this.obra?.montoAnticipo ?? undefined,
       porcentajeFondoReparo: 0,
       montoPresupuestoOficial: presupuestoAdjudicado || undefined,
       fechaPresupuesto: raw.fechaContrato || undefined,

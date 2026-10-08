@@ -71,6 +71,7 @@ interface FilaInformeAvance {
   deduccionesParcial: number;
   deduccionesAcumuladas: number;
   deduccionAnticipoAcumulada: number;
+  inversionRealAcumuladaBase: number;
   readecuacionesParcial: number;
   readecuacionesAcumuladas: number;
   pagoAcumulado: number;
@@ -186,6 +187,9 @@ export class StepPlanTrabajoComponent implements OnChanges, OnDestroy {
       deduccionAnticipoAcumulada = this.redondear(deduccionAnticipoAcumulada + certificadosMes.reduce(
         (total, certificado) => total + this.valorNumerico(certificado.deduccionAnticipo), 0,
       ));
+      const inversionRealAcumuladaBase = this.redondear(
+        this.anticipoFinanciero + realMontoAcumulado - deduccionAnticipoAcumulada,
+      );
       const readecuacionesParcial = this.redondear(certificadosMes.reduce(
         (total, certificado) => total + (certificado.readecuacion?.estado === 'APROBADO'
           ? this.valorNumerico(certificado.readecuacion.incremento) : 0), 0,
@@ -203,7 +207,7 @@ export class StepPlanTrabajoComponent implements OnChanges, OnDestroy {
         ) * 100 / this.totalContrato)
         : 0;
       const realParcial = this.totalContrato > 0 ? this.redondear(realMontoParcial * 100 / this.totalContrato) : 0;
-      return { mes, previstoParcial, previstoAcumulado, previstoMontoParcial, previstoMontoAcumulado, realParcial, realAcumulado, realMontoParcial, realMontoAcumulado, deduccionesParcial, deduccionesAcumuladas, deduccionAnticipoAcumulada, readecuacionesParcial, readecuacionesAcumuladas, pagoAcumulado, realDisponible };
+      return { mes, previstoParcial, previstoAcumulado, previstoMontoParcial, previstoMontoAcumulado, realParcial, realAcumulado, realMontoParcial, realMontoAcumulado, deduccionesParcial, deduccionesAcumuladas, deduccionAnticipoAcumulada, inversionRealAcumuladaBase, readecuacionesParcial, readecuacionesAcumuladas, pagoAcumulado, realDisponible };
     });
   }
 
@@ -291,6 +295,7 @@ export class StepPlanTrabajoComponent implements OnChanges, OnDestroy {
         deduccionesParcial: fila.deduccionesParcial,
         deduccionesAcumuladas: fila.deduccionesAcumuladas,
         deduccionAnticipoAcumulada: fila.deduccionAnticipoAcumulada,
+        inversionRealAcumuladaBase: fila.inversionRealAcumuladaBase,
         readecuacionesParcial: fila.readecuacionesParcial,
         readecuacionesAcumuladas: fila.readecuacionesAcumuladas,
         pagoAcumulado: fila.pagoAcumulado,

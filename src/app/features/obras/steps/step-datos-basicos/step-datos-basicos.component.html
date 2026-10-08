@@ -110,7 +110,13 @@
 
       <div class="form-field">
         <label>Anticipo financiero (%)</label>
-        <input type="number" min="0" max="100" formControlName="anticipo" />
+        <input type="number" min="0" max="100" formControlName="anticipo" (input)="actualizarMontoAnticipoSugerido()" />
+      </div>
+
+      <div class="form-field">
+        <label>Monto de anticipo financiero</label>
+        <input type="number" min="0" formControlName="montoAnticipo" />
+        <small>Se propone según el porcentaje y el presupuesto oficial; podés editarlo.</small>
       </div>
     </div>
   </div>

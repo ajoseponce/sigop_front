@@ -15,6 +15,7 @@ export interface InformeAvancePdfFila {
   deduccionesParcial: number;
   deduccionesAcumuladas: number;
   deduccionAnticipoAcumulada: number;
+  inversionRealAcumuladaBase: number;
   readecuacionesParcial: number;
   readecuacionesAcumuladas: number;
   pagoAcumulado: number;
@@ -58,14 +59,19 @@ function encabezado(doc: jsPDF, cabecera: string, data: InformeAvancePdfData, ti
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.rect(left, inicio, width, 8);
-  doc.text(titulo, left + width / 2, inicio + 5.3, { align: 'center' });
+  doc.text(titulo.toLocaleUpperCase('es-AR'), left + width / 2, inicio + 5.3, { align: 'center' });
+
+  // Misma composición compacta de los imprimibles de certificación.
+  const datosY = inicio + 9.5;
   doc.setFontSize(6.8);
-  doc.rect(left, inicio + 9.5, width, 12);
-  doc.text(`Obra: ${data.nombreObra || '—'}`, left + 2, inicio + 14);
-  doc.text(`Concurso N°: ${data.numeroContrato || '—'}`, left + 2, inicio + 18.3);
-  doc.text(`Inicio: ${data.fechaInicio ? data.fechaInicio.slice(0, 10).split('-').reverse().join('-') : '—'}`, left + width - 2, inicio + 14, { align: 'right' });
-  doc.text(`Monto contrato: ${formatoMonto(data.totalContrato)}`, left + width - 2, inicio + 18.3, { align: 'right' });
-  return inicio + 25;
+  doc.rect(left, datosY, width, 14);
+  const obra = (data.nombreObra || '—').toLocaleUpperCase('es-AR');
+  const inicioObra = data.fechaInicio ? data.fechaInicio.slice(0, 10).split('-').reverse().join('-') : '—';
+  doc.text(`Obra: ${obra}`, left + 2, datosY + 4.7, { maxWidth: width * 0.62 });
+  doc.text(`Concurso N°: ${data.numeroContrato || '—'}`, left + 2, datosY + 9.4);
+  doc.text(`Inicio: ${inicioObra}`, left + width - 2, datosY + 4.7, { align: 'right' });
+  doc.text(`Monto contrato: ${formatoMonto(data.totalContrato)}`, left + width - 2, datosY + 9.4, { align: 'right' });
+  return inicio + 27;
 }
 
 function pie(doc: jsPDF): void {
@@ -156,7 +162,7 @@ export async function crearInformeAvancePdf(data: InformeAvancePdfData): Promise
       filaResumen('Deducciones legales (anticipo financiero + fondo de reparo)', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.deduccionesParcial) : '')),
       filaResumen('Inversión real acumulada (certificados básicos)', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoAcumulado) : '')),
       filaResumen('Readecuaciones de precios', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.readecuacionesParcial) : '')),
-      filaResumen('Inversión real acumulada a precios base', grupo.map((fila) => fila.realDisponible ? formatoMonto(data.anticipoFinanciero + fila.realMontoAcumulado - fila.deduccionAnticipoAcumulada) : '')),
+      filaResumen('Inversión real acumulada a precios base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.inversionRealAcumuladaBase) : '')),
       filaResumen('Inversión real acumulada neta', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.pagoAcumulado) : ''), true),
     );
     autoTable(doc, {

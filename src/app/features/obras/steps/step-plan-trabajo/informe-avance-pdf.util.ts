@@ -230,7 +230,8 @@ export async function crearInformeAvancePdf(data: InformeAvancePdfData): Promise
   const pageWidth = doc.internal.pageSize.getWidth();
   const chartLeft = 25;
   const chartWidth = pageWidth - 50;
-  const chartHeight = 105;
+  // Una altura más compacta deja aire para las etiquetas y las firmas del pie.
+  const chartHeight = 88;
   const montoMaximo = Math.max(data.totalContrato, ...data.filas.map((fila) => Math.max(fila.proyectadoMontoAcumulado, fila.realMontoAcumulado)), 1);
   const escala = (valor: number) => chartTop + chartHeight - chartHeight * valor / montoMaximo;
   doc.setFont('helvetica', 'normal');
@@ -260,7 +261,11 @@ export async function crearInformeAvancePdf(data: InformeAvancePdfData): Promise
       doc.circle(actual.x, actual.y, 1.2, 'F');
       doc.setTextColor(...color);
       doc.setFontSize(5.3);
-      doc.text(formatoMonto(monto), actual.x, Math.max(chartTop + 3, actual.y + (tipo === 'proyectado' ? -3.5 : 6)), { align: 'center' });
+      // Mantener cada serie en un lado fijo del punto evita que se tapen entre sí.
+      const etiquetaY = tipo === 'proyectado'
+        ? Math.max(chartTop + 4, actual.y - 6)
+        : Math.min(chartTop + chartHeight - 3, actual.y + 9);
+      doc.text(formatoMonto(monto), actual.x, etiquetaY, { align: 'center' });
       anterior = actual;
     });
   };

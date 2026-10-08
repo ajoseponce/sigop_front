@@ -167,7 +167,8 @@ export async function crearInformeAvancePdf(data: InformeAvancePdfData): Promise
     );
     autoTable(doc, {
       startY: tablaY,
-      margin: { left: 10, right: 10, bottom: 31 },
+      // Reservar la cabecera y el pie con firmas también en las páginas de continuación.
+      margin: { top: tablaY, left: 10, right: 10, bottom: 42 },
       head,
       body,
       theme: 'grid',
@@ -182,7 +183,10 @@ export async function crearInformeAvancePdf(data: InformeAvancePdfData): Promise
         4: { cellWidth: 22, halign: 'center' },
         ...Object.fromEntries(grupo.map((_, posicion) => [posicion + 5, { cellWidth: 16, halign: 'right' as const }])),
       },
-      didDrawPage: () => pie(doc),
+      didDrawPage: ({ pageNumber }) => {
+        if (pageNumber > 1) encabezado(doc, cabecera, data, 'PLAN DE TRABAJO');
+        pie(doc);
+      },
     });
   });
 

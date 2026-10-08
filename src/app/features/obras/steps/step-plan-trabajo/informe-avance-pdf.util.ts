@@ -71,7 +71,27 @@ function encabezado(doc: jsPDF, cabecera: string, data: InformeAvancePdfData, ti
 function pie(doc: jsPDF): void {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
+  const left = 10;
+  const right = 10;
+  const cargos = [
+    'Representante legal',
+    'Representante técnico',
+    'Inspector de obra',
+    'Directora de Construcciones',
+    'Secretario de Obras y Servicios Públicos',
+  ];
+  const anchoFirma = (pageWidth - left - right) / cargos.length;
+  const pieY = pageHeight - 24;
+  doc.setDrawColor(55, 65, 81);
+  doc.setLineWidth(0.2);
   doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.2);
+  cargos.forEach((cargo, index) => {
+    const x = left + anchoFirma * index;
+    const centro = x + anchoFirma / 2;
+    doc.line(x + 3, pieY, x + anchoFirma - 3, pieY);
+    doc.text(doc.splitTextToSize(cargo, anchoFirma - 5), centro, pieY + 4, { align: 'center' });
+  });
   doc.setFontSize(6.5);
   doc.setTextColor(55, 65, 81);
   doc.text(['INSPECCIÓN DE OBRAS', 'DIRECCIÓN DE CONSTRUCCIONES'], 12, pageHeight - 12);
@@ -215,23 +235,7 @@ export async function crearInformeAvancePdf(data: InformeAvancePdfData): Promise
   doc.rect(pageWidth / 2 + 9, chartTop + chartHeight + 12, 5, 1.3, 'F');
   doc.text('Real certificado', pageWidth / 2 + 16, chartTop + chartHeight + 13.3);
 
-  autoTable(doc, {
-    startY: chartTop + chartHeight + 20,
-    margin: { left: 10, right: 10, bottom: 31 },
-    theme: 'grid',
-    styles: { fontSize: 6.5, cellPadding: 1.2, halign: 'right' },
-    headStyles: { fillColor: [255, 255, 255], textColor: [17, 24, 39], lineColor: [31, 41, 55], lineWidth: 0.3, halign: 'center' },
-    head: [['Período', 'Proyectado parcial', 'Proyectado acumulado', 'Real acumulado', 'Financiero proyectado', 'Financiero real']],
-    body: data.filas.map((fila) => [
-      `Mes ${fila.mes}`,
-      `${percent.format(fila.proyectadoParcial)}%`,
-      `${percent.format(fila.proyectadoAcumulado)}%`,
-      fila.realDisponible ? `${percent.format(fila.realAcumulado)}%` : '—',
-      formatoMonto(fila.proyectadoMontoAcumulado),
-      fila.realDisponible ? formatoMonto(fila.realMontoAcumulado) : '—',
-    ]),
-    didDrawPage: () => pie(doc),
-  });
+  pie(doc);
   return doc;
 }
 

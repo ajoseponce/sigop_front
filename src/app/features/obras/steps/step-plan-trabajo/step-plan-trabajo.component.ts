@@ -406,7 +406,7 @@ export class StepPlanTrabajoComponent implements OnChanges, OnDestroy {
           .reduce((total, certificado) => total + this.valorNumerico(certificado.montoBruto), 0);
         this.certificados = certificados
           .filter((certificado) => certificado.tipo === 'OBRA'
-            && certificado.estado === 'APROBADO'
+            && certificado.estado !== 'ANULADO'
             && certificado.periodo)
           .sort((a, b) => String(a.periodo).localeCompare(String(b.periodo)));
       },

@@ -42,6 +42,9 @@ interface ObraPlan {
   expediente?: string | null;
   anioEmision?: number | null;
   localidad?: string | null;
+  seccion?: string | null;
+  parcela?: string | null;
+  calles?: string | null;
   empresa?: { razonSocial?: string | null; cuit?: string | null } | null;
   contratos?: ContratoPlan[];
 }
@@ -274,15 +277,23 @@ export class StepPlanTrabajoComponent implements OnChanges, OnDestroy {
   }
 
   private datosInformePdf() {
+    const certificadoActual = this.certificados.at(-1);
+    const ubicacion = [
+      this.obra?.seccion ? `Sección ${this.obra.seccion}` : '',
+      this.obra?.parcela ? `Parcela ${this.obra.parcela}` : '',
+      this.obra?.calles ? `Calles ${this.obra.calles}` : '',
+    ].filter(Boolean).join(' - ');
     return {
       nombreObra: this.obra?.nombre ?? '—',
       numeroContrato: this.contrato?.numeroContrato ?? undefined,
       fechaInicio: this.obra?.fechaInicio,
       expediente: this.obra?.expediente,
       anioEmision: this.obra?.anioEmision,
-      fechaApertura: this.contrato?.vigenciaDesde,
+      numeroCertificado: certificadoActual?.numero,
+      periodoCertificado: certificadoActual?.periodo,
       plazoObraDias: this.contrato?.plazoObraDias,
       localidad: this.obra?.localidad,
+      ubicacion: ubicacion || undefined,
       empresa: this.obra?.empresa?.razonSocial,
       empresaCuit: this.obra?.empresa?.cuit,
       totalContrato: this.totalContrato,

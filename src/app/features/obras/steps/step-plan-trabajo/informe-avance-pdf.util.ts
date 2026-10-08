@@ -37,9 +37,11 @@ export interface InformeAvancePdfData {
   fechaInicio?: string | null;
   expediente?: string | null;
   anioEmision?: number | null;
-  fechaApertura?: string | null;
+  numeroCertificado?: number | null;
+  periodoCertificado?: string | null;
   plazoObraDias?: number | null;
   localidad?: string | null;
+  ubicacion?: string | null;
   empresa?: string | null;
   empresaCuit?: string | null;
   totalContrato: number;
@@ -53,6 +55,13 @@ const percent = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maxim
 
 function formatoMonto(value: number): string {
   return `$ ${money.format(value)}`;
+}
+
+function formatoPeriodo(value?: string | null): string {
+  if (!value) return '—';
+  const fecha = new Date(`${value.slice(0, 10)}T12:00:00`);
+  if (Number.isNaN(fecha.getTime())) return '—';
+  return new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fecha);
 }
 
 function encabezado(doc: jsPDF, cabecera: string, data: InformeAvancePdfData, titulo: string): number {
@@ -86,14 +95,16 @@ function encabezado(doc: jsPDF, cabecera: string, data: InformeAvancePdfData, ti
   fila('Expediente madre N°', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`, left + 2, datosY + 8.6, col1 - left - 34);
   fila('Programa', 'Municipal', left + 2, datosY + 12.7, col1 - left - 34);
   fila('Localidad', data.localidad ?? 'Posadas - Misiones', left + 2, datosY + 16.8, col1 - left - 34);
+  fila('Ubicación', data.ubicacion ?? '—', left + 2, datosY + 20.9, col1 - left - 34);
   fila('Monto total', formatoMonto(data.totalContrato), col1 + 2, datosY + 4.5, col2 - col1 - 34);
   fila('Monto municipio', formatoMonto(data.totalContrato), col1 + 2, datosY + 8.6, col2 - col1 - 34);
   fila('Modo de ejecución', data.numeroContrato ? `Concurso ${data.numeroContrato}` : 'Concurso', col1 + 2, datosY + 12.7, col2 - col1 - 34);
   fila('Empresa', data.empresa ?? '—', col1 + 2, datosY + 16.8, col2 - col1 - 34);
   fila('CUIT', data.empresaCuit ?? '—', col1 + 2, datosY + 20.9, col2 - col1 - 34);
-  fila('Fecha de apertura', fecha(data.fechaApertura), col2 + 2, datosY + 4.5, left + width - col2 - 34);
+  fila('Certificado N°', data.numeroCertificado ? String(data.numeroCertificado) : '—', col2 + 2, datosY + 4.5, left + width - col2 - 34);
   fila('Fecha de replanteo', fecha(data.fechaInicio), col2 + 2, datosY + 8.6, left + width - col2 - 34);
   fila('Plazo de ejecución', data.plazoObraDias ? `${data.plazoObraDias} días` : '—', col2 + 2, datosY + 12.7, left + width - col2 - 34);
+  fila('Período', formatoPeriodo(data.periodoCertificado), col2 + 2, datosY + 16.8, left + width - col2 - 34);
   return inicio + 50;
 }
 
@@ -123,7 +134,6 @@ function pie(doc: jsPDF): void {
   });
   doc.setFontSize(6.5);
   doc.setTextColor(55, 65, 81);
-  doc.text(['INSPECCIÓN DE OBRAS', 'DIRECCIÓN DE CONSTRUCCIONES'], 12, pageHeight - 12);
   doc.text(`Página ${doc.getNumberOfPages()}`, pageWidth - 12, pageHeight - 8, { align: 'right' });
   doc.setTextColor(0, 0, 0);
 }
@@ -188,6 +198,9 @@ export async function crearInformeAvancePdf(data: InformeAvancePdfData): Promise
       filaResumen('Inversión real acumulada a precios base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.inversionRealAcumuladaBase) : '')),
       filaResumen('Inversión real acumulada neta', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.pagoAcumulado) : ''), true),
     );
+    const anchoTabla = doc.internal.pageSize.getWidth() - 20;
+    const anchoColumnasFijas = 12 + 60 + 25 + 12 + 20;
+    const anchoMes = (anchoTabla - anchoColumnasFijas) / grupo.length;
     autoTable(doc, {
       startY: tablaY,
       // Reservar la cabecera y el pie con firmas también en las páginas de continuación.
@@ -200,11 +213,11 @@ export async function crearInformeAvancePdf(data: InformeAvancePdfData): Promise
       bodyStyles: { lineColor: [75, 85, 99], lineWidth: 0.18 },
       columnStyles: {
         0: { cellWidth: 12, halign: 'center' },
-        1: { cellWidth: 48, halign: 'left' },
-        2: { cellWidth: 22, halign: 'right' },
+        1: { cellWidth: 60, halign: 'left' },
+        2: { cellWidth: 25, halign: 'right' },
         3: { cellWidth: 12, halign: 'right' },
-        4: { cellWidth: 22, halign: 'center' },
-        ...Object.fromEntries(grupo.map((_, posicion) => [posicion + 5, { cellWidth: 16, halign: 'right' as const }])),
+        4: { cellWidth: 20, halign: 'center' },
+        ...Object.fromEntries(grupo.map((_, posicion) => [posicion + 5, { cellWidth: anchoMes, halign: 'right' as const }])),
       },
       didDrawPage: ({ pageNumber }) => {
         if (pageNumber > 1) encabezado(doc, cabecera, data, 'PLAN DE TRABAJO');

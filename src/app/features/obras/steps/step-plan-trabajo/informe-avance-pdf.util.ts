@@ -18,7 +18,7 @@ export interface InformeAvancePdfFila {
   inversionRealAcumuladaBase: number;
   readecuacionesParcial: number;
   readecuacionesAcumuladas: number;
-  pagoAcumulado: number;
+  inversionRealAcumulada: number;
   realDisponible: boolean;
 }
 
@@ -190,13 +190,12 @@ export async function crearInformeAvancePdf(data: InformeAvancePdfData): Promise
       filaResumen('Avance mensual real', grupo.map((fila) => fila.realDisponible ? `${percent.format(fila.realParcial)}%` : '')),
       filaResumen('Avance mensual acumulado real', grupo.map((fila) => fila.realDisponible ? `${percent.format(fila.realAcumulado)}%` : '')),
       filaResumen('INVERSIONES', grupo.map(() => ''), true),
-      filaResumen('Anticipo financiero', grupo.map((fila) => fila.mes === 1 && data.anticipoFinanciero > 0 ? formatoMonto(data.anticipoFinanciero) : ''), true),
+      filaResumen('Anticipo financiero', grupo.map((fila) => fila.mes === 1 && data.anticipoFinanciero > 0 ? formatoMonto(data.anticipoFinanciero) : '')),
       filaResumen('Inversión mensual real a precio base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoParcial) : '')),
-      filaResumen('Deducciones legales (anticipo financiero + fondo de reparo)', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.deduccionesParcial) : '')),
-      filaResumen('Inversión real acumulada (certificados básicos)', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoAcumulado) : '')),
-      filaResumen('Readecuaciones de precios', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.readecuacionesParcial) : '')),
+      filaResumen('Deducción anticipo financiero', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.deduccionesParcial) : '')),
       filaResumen('Inversión real acumulada a precios base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.inversionRealAcumuladaBase) : '')),
-      filaResumen('Inversión real acumulada neta', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.pagoAcumulado) : ''), true),
+      filaResumen('Readecuaciones emitidas', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.readecuacionesAcumuladas) : '')),
+      filaResumen('Inversión real acumulada', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.inversionRealAcumulada) : ''), true),
     );
     const anchoTabla = doc.internal.pageSize.getWidth() - 20;
     const anchoColumnasFijas = 12 + 60 + 25 + 12 + 20;

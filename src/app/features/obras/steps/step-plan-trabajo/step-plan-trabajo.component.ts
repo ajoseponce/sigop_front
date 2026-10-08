@@ -30,6 +30,8 @@ interface ContratoPlan {
   plazoObraDias?: number | null;
   planTrabajo?: string | null;
   numeroContrato?: string | null;
+  vigenciaDesde?: string | null;
+  montoAnticipo?: string | null;
   rubros?: RubroPlan[];
 }
 
@@ -37,6 +39,10 @@ interface ObraPlan {
   estado?: 'BORRADOR' | 'ACTIVA' | 'FINALIZADA';
   nombre?: string;
   fechaInicio?: string | null;
+  expediente?: string | null;
+  anioEmision?: number | null;
+  localidad?: string | null;
+  empresa?: { razonSocial?: string | null; cuit?: string | null } | null;
   contratos?: ContratoPlan[];
 }
 
@@ -272,6 +278,13 @@ export class StepPlanTrabajoComponent implements OnChanges, OnDestroy {
       nombreObra: this.obra?.nombre ?? '—',
       numeroContrato: this.contrato?.numeroContrato ?? undefined,
       fechaInicio: this.obra?.fechaInicio,
+      expediente: this.obra?.expediente,
+      anioEmision: this.obra?.anioEmision,
+      fechaApertura: this.contrato?.vigenciaDesde,
+      plazoObraDias: this.contrato?.plazoObraDias,
+      localidad: this.obra?.localidad,
+      empresa: this.obra?.empresa?.razonSocial,
+      empresaCuit: this.obra?.empresa?.cuit,
       totalContrato: this.totalContrato,
       anticipoFinanciero: this.anticipoFinanciero,
       rubros: this.filas.map((fila) => ({

@@ -35,6 +35,13 @@ export interface InformeAvancePdfData {
   nombreObra: string;
   numeroContrato?: string;
   fechaInicio?: string | null;
+  expediente?: string | null;
+  anioEmision?: number | null;
+  fechaApertura?: string | null;
+  plazoObraDias?: number | null;
+  localidad?: string | null;
+  empresa?: string | null;
+  empresaCuit?: string | null;
   totalContrato: number;
   anticipoFinanciero: number;
   rubros: InformeAvancePdfRubro[];
@@ -57,21 +64,37 @@ function encabezado(doc: jsPDF, cabecera: string, data: InformeAvancePdfData, ti
   doc.setDrawColor(31, 41, 55);
   doc.setLineWidth(0.35);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.rect(left, inicio, width, 8);
-  doc.text(titulo.toLocaleUpperCase('es-AR'), left + width / 2, inicio + 5.3, { align: 'center' });
+  doc.setFontSize(8);
+  doc.rect(left, inicio, width, 7);
+  doc.text(titulo.toLocaleUpperCase('es-AR'), left + width / 2, inicio + 4.7, { align: 'center' });
+  doc.rect(left, inicio + 8.5, width, 7);
+  doc.text(`Obra: ${data.nombreObra || '—'}`, left + 2, inicio + 13.2);
 
-  // Misma composición compacta de los imprimibles de certificación.
-  const datosY = inicio + 9.5;
-  doc.setFontSize(6.8);
-  doc.rect(left, datosY, width, 14);
-  const obra = (data.nombreObra || '—').toLocaleUpperCase('es-AR');
-  const inicioObra = data.fechaInicio ? data.fechaInicio.slice(0, 10).split('-').reverse().join('-') : '—';
-  doc.text(`Obra: ${obra}`, left + 2, datosY + 4.7, { maxWidth: width * 0.62 });
-  doc.text(`Concurso N°: ${data.numeroContrato || '—'}`, left + 2, datosY + 9.4);
-  doc.text(`Inicio: ${inicioObra}`, left + width - 2, datosY + 4.7, { align: 'right' });
-  doc.text(`Monto contrato: ${formatoMonto(data.totalContrato)}`, left + width - 2, datosY + 9.4, { align: 'right' });
-  return inicio + 27;
+  const datosY = inicio + 17;
+  const col1 = left + width / 3;
+  const col2 = left + width * 2 / 3;
+  doc.rect(left, datosY, col1 - left, 31);
+  doc.rect(col1, datosY, col2 - col1, 31);
+  doc.rect(col2, datosY, left + width - col2, 31);
+  doc.setFontSize(5.7);
+  const fecha = (value?: string | null) => value ? value.slice(0, 10).split('-').reverse().join('-') : '—';
+  const fila = (label: string, value: string, x: number, y: number, ancho: number) => {
+    doc.text(label, x, y);
+    doc.text(doc.splitTextToSize(value, ancho)[0] ?? '—', x + 30, y);
+  };
+  fila('Organismo otorgante', 'Municipalidad de Posadas', left + 2, datosY + 4.5, col1 - left - 34);
+  fila('Expediente madre N°', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`, left + 2, datosY + 8.6, col1 - left - 34);
+  fila('Programa', 'Municipal', left + 2, datosY + 12.7, col1 - left - 34);
+  fila('Localidad', data.localidad ?? 'Posadas - Misiones', left + 2, datosY + 16.8, col1 - left - 34);
+  fila('Monto total', formatoMonto(data.totalContrato), col1 + 2, datosY + 4.5, col2 - col1 - 34);
+  fila('Monto municipio', formatoMonto(data.totalContrato), col1 + 2, datosY + 8.6, col2 - col1 - 34);
+  fila('Modo de ejecución', data.numeroContrato ? `Concurso ${data.numeroContrato}` : 'Concurso', col1 + 2, datosY + 12.7, col2 - col1 - 34);
+  fila('Empresa', data.empresa ?? '—', col1 + 2, datosY + 16.8, col2 - col1 - 34);
+  fila('CUIT', data.empresaCuit ?? '—', col1 + 2, datosY + 20.9, col2 - col1 - 34);
+  fila('Fecha de apertura', fecha(data.fechaApertura), col2 + 2, datosY + 4.5, left + width - col2 - 34);
+  fila('Fecha de replanteo', fecha(data.fechaInicio), col2 + 2, datosY + 8.6, left + width - col2 - 34);
+  fila('Plazo de ejecución', data.plazoObraDias ? `${data.plazoObraDias} días` : '—', col2 + 2, datosY + 12.7, left + width - col2 - 34);
+  return inicio + 50;
 }
 
 function pie(doc: jsPDF): void {

@@ -18,7 +18,6 @@ import { redondearMoneda } from '../../../../shared/utils/money.util';
 
 const FIELD_LABELS: Record<string, string> = {
   fechaApertura: 'Fecha de apertura',
-  fechaReplanteo: 'Fecha de replanteo',
   numeroLicitacion: 'N° de licitación / concurso',
   empresaId: 'Empresa',
   responsableLegalId: 'Responsable legal',
@@ -292,7 +291,7 @@ export class StepContratoComponent implements OnInit , OnChanges{
 
   form = this.fb.group({
     fechaApertura: ['', Validators.required],
-    fechaReplanteo: ['', Validators.required],
+    fechaReplanteo: [''],
     numeroLicitacion: ['', Validators.required],
 
     empresaId: [null, Validators.required],

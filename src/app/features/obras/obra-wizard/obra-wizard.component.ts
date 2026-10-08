@@ -76,9 +76,13 @@ export class ObraWizardComponent {
       ? this.api.put<any>(`obras/${this.obraId}/contrato/${contratoId}`, contratoPayload)
       : this.api.post<any>(`obras/${this.obraId}/contrato`, contratoPayload);
 
-    this.api.put<any>(`obras/${this.obraId}`, { fechaInicio: fechaReplanteo }).pipe(
-      switchMap(() => request$),
-    ).subscribe({
+    const guardar$ = fechaReplanteo
+      ? this.api.put<any>(`obras/${this.obraId}`, { fechaInicio: fechaReplanteo }).pipe(
+        switchMap(() => request$),
+      )
+      : request$;
+
+    guardar$.subscribe({
       next: () => {
         this.currentStep = 3;
 

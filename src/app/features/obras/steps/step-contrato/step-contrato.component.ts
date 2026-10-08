@@ -140,6 +140,7 @@ export class StepContratoComponent implements OnInit , OnChanges{
         responsableLegalId: contrato.responsableLegalId ?? null,
         responsableTecnicoId: contrato.responsableTecnicoId ?? null,
         presupuestoAdjudicado: this.totalComputo(contrato) ?? contrato.montoDelta,
+        montoAnticipo: contrato.montoAnticipo ?? this.montoAnticipoSugerido(this.totalComputo(contrato) ?? contrato.montoDelta),
         plazoObraDias: contrato.plazoObraDias ?? null,
         estructuraPonderacion: contrato.estructuraPonderacion ?? '',
         fechaContrato: this.toDateInput(contrato.fechaFirma),
@@ -300,6 +301,7 @@ export class StepContratoComponent implements OnInit , OnChanges{
     responsableTecnicoId: [null, Validators.required],
 
     presupuestoAdjudicado: [null],
+    montoAnticipo: this.fb.control<number | null>(null, [Validators.min(0)]),
     plazoObraDias: [null, Validators.required],
     estructuraPonderacion: [''],
 
@@ -350,7 +352,9 @@ export class StepContratoComponent implements OnInit , OnChanges{
       // El monto nace en 0 y se actualiza automáticamente al guardar el cómputo.
       montoDelta: presupuestoAdjudicado,
       porcentajeAnticipo,
-      montoAnticipo: this.obra?.montoAnticipo ?? undefined,
+      montoAnticipo: raw.montoAnticipo === null
+        ? this.montoAnticipoSugerido(presupuestoAdjudicado)
+        : Number(raw.montoAnticipo),
       porcentajeFondoReparo: 0,
       montoPresupuestoOficial: presupuestoAdjudicado || undefined,
       fechaPresupuesto: raw.fechaContrato || undefined,
@@ -366,6 +370,15 @@ export class StepContratoComponent implements OnInit , OnChanges{
     };
 
     this.adjudicacionCreated.emit(payload);
+  }
+
+  montoAnticipoSugerido(presupuesto = Number(this.form.get('presupuestoAdjudicado')?.value ?? 0)): number {
+    const porcentaje = Number(this.obra?.porcentajeAnticipo ?? 0);
+    return redondearMoneda(presupuesto * porcentaje / 100);
+  }
+
+  usarMontoAnticipoSugerido(): void {
+    this.form.patchValue({ montoAnticipo: this.montoAnticipoSugerido() });
   }
 
   hasError(controlName: string, errorName: string): boolean {

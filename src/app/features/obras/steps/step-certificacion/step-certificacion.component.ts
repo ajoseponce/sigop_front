@@ -44,6 +44,7 @@ interface RubroObra {
 interface ContratoObra {
   tipo: string;
   montoDelta?: string;
+  montoAnticipo?: string | null;
   numeroContrato?: string;
   vigenciaDesde?: string;
   plazoObraDias?: number;
@@ -651,6 +652,7 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
         this.obra?.calles ? `Calles ${this.obra.calles}` : '',
       ].filter(Boolean).join(' - '),
       porcentajeAnticipo: certificado.porcentajeAnticipoSnapshot,
+      montoAnticipoConfigurado: contrato?.montoAnticipo ?? null,
       montoBruto: certificado.montoBruto,
       deduccionAnticipo: certificado.deduccionAnticipo,
       deduccionFondoReparo: certificado.deduccionFondoReparo,

@@ -68,6 +68,7 @@ export interface MedicionPdfData {
   fechaInicio?: string;
   plazoObraDias?: number;
   porcentajeAnticipo: string;
+  montoAnticipoConfigurado?: string | number | null;
   montoBruto: string | null;
   deduccionAnticipo: string | null;
   deduccionFondoReparo: string | null;
@@ -380,6 +381,9 @@ function certificadosEmitidos(data: MedicionPdfData): CertificadoResumenPdf[] {
 }
 
 function montoAnticipoFinanciero(data: MedicionPdfData): number {
+  if (data.montoAnticipoConfigurado !== null && data.montoAnticipoConfigurado !== undefined) {
+    return n(data.montoAnticipoConfigurado);
+  }
   return (data.certificados ?? [])
     .filter((certificado) => certificado.tipo === 'ANTICIPO_FINANCIERO' && certificado.estado !== 'ANULADO')
     .reduce((total, certificado) => total + n(certificado.montoBruto), 0);
@@ -689,9 +693,7 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
     montoFinal: data.montoFinal,
     readecuacion: null,
   } as typeof certificadosObra[number];
-  const anticipo = data.certificados
-    .filter((certificado) => certificado.tipo === 'ANTICIPO_FINANCIERO' && certificado.estado !== 'ANULADO')
-    .reduce((total, certificado) => total + n(certificado.montoBruto), 0);
+  const anticipo = montoAnticipoFinanciero(data);
   const anteriorBruto = suma(anteriores, (certificado) => n(certificado.montoBruto));
   const presenteBruto = n(actual.montoBruto);
   const anteriorReadecuacion = suma(anteriores, (certificado) => n(readecuacion(certificado)?.incremento));

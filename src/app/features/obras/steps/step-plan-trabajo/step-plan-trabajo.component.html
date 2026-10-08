@@ -93,14 +93,14 @@
             @for (fila of informeAvance; track fila.mes) {
               <circle [attr.cx]="posicionX(fila.mes)" [attr.cy]="posicionY(fila.previstoAcumulado)" r="3.5" class="punto previsto" />
               <g class="etiqueta previsto">
-                <text [attr.x]="posicionX(fila.mes)" [attr.y]="posicionEtiqueta(fila.previstoAcumulado, -18)" text-anchor="middle">{{ fila.previstoMontoAcumulado | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</text>
-                <text [attr.x]="posicionX(fila.mes)" [attr.y]="posicionEtiqueta(fila.previstoAcumulado, -6)" text-anchor="middle">{{ fila.previstoAcumulado | number:'1.2-2' }}%</text>
+                <text [attr.x]="posicionX(fila.mes)" [attr.y]="posicionEtiqueta(fila.previstoAcumulado, -36)" text-anchor="middle">{{ fila.previstoMontoAcumulado | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</text>
+                <text [attr.x]="posicionX(fila.mes)" [attr.y]="posicionEtiqueta(fila.previstoAcumulado, -24)" text-anchor="middle">{{ fila.previstoAcumulado | number:'1.2-2' }}%</text>
               </g>
               @if (fila.realDisponible) {
                 <circle [attr.cx]="posicionX(fila.mes)" [attr.cy]="posicionY(fila.realAcumulado)" r="3.5" class="punto real" />
                 <g class="etiqueta real">
-                  <text [attr.x]="posicionX(fila.mes)" [attr.y]="posicionEtiqueta(fila.realAcumulado, 17)" text-anchor="middle">{{ fila.realMontoAcumulado | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</text>
-                  <text [attr.x]="posicionX(fila.mes)" [attr.y]="posicionEtiqueta(fila.realAcumulado, 29)" text-anchor="middle">{{ fila.realAcumulado | number:'1.2-2' }}%</text>
+                  <text [attr.x]="posicionX(fila.mes)" [attr.y]="posicionEtiqueta(fila.realAcumulado, 25)" text-anchor="middle">{{ fila.realMontoAcumulado | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</text>
+                  <text [attr.x]="posicionX(fila.mes)" [attr.y]="posicionEtiqueta(fila.realAcumulado, 37)" text-anchor="middle">{{ fila.realAcumulado | number:'1.2-2' }}%</text>
                 </g>
               }
               <text [attr.x]="posicionX(fila.mes)" y="274" text-anchor="middle" class="eje-x">Mes {{ fila.mes }}</text>

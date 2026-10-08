@@ -414,9 +414,11 @@ export class StepPlanTrabajoComponent implements OnChanges, OnDestroy {
     }
     this.api.get<CertificadoPlan[]>(`obras/${this.obraId}/certificados`).subscribe({
       next: (certificados) => {
-        this.anticipoFinanciero = certificados
+        const anticipoEmitido = certificados
           .filter((certificado) => certificado.tipo === 'ANTICIPO_FINANCIERO' && certificado.estado !== 'ANULADO')
           .reduce((total, certificado) => total + this.valorNumerico(certificado.montoBruto), 0);
+        const anticipoConfigurado = this.valorNumerico(this.contrato?.montoAnticipo);
+        this.anticipoFinanciero = anticipoConfigurado > 0 ? anticipoConfigurado : anticipoEmitido;
         this.certificados = certificados
           .filter((certificado) => certificado.tipo === 'OBRA'
             && certificado.estado !== 'ANULADO'

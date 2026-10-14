@@ -1,0 +1,27 @@
+<section class="page-container fade-in-up">
+  <div class="page-header">
+    <div>
+      <h1>Informe · Obras pendientes de ejecución</h1>
+      <p>El monto pendiente surge de contrato menos certificados aprobados; el avance físico se calcula sobre el monto certificado de obra.</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="exportarPdf()" [disabled]="!filas.length">
+      <mat-icon>picture_as_pdf</mat-icon> Exportar PDF
+    </button>
+  </div>
+
+  <div class="card table-card">
+    <table mat-table [dataSource]="filas">
+      <ng-container matColumnDef="anio"><th mat-header-cell *matHeaderCellDef>Año</th><td mat-cell *matCellDef="let fila">{{ fila.anio ?? '—' }}</td></ng-container>
+      <ng-container matColumnDef="contratacion"><th mat-header-cell *matHeaderCellDef>Forma de contratación</th><td mat-cell *matCellDef="let fila">{{ fila.contratacion }}</td></ng-container>
+      <ng-container matColumnDef="obra"><th mat-header-cell *matHeaderCellDef>Nombre de la obra</th><td mat-cell *matCellDef="let fila">{{ fila.obra }}</td></ng-container>
+      <ng-container matColumnDef="empresa"><th mat-header-cell *matHeaderCellDef>Empresa</th><td mat-cell *matCellDef="let fila">{{ fila.empresa }}</td></ng-container>
+      <ng-container matColumnDef="evolucion"><th mat-header-cell *matHeaderCellDef>Evolución de la obra</th><td mat-cell *matCellDef="let fila"><div>1. Avance físico acumulado: {{ fila.avanceFisicoAcumulado | number:'1.2-2':'es-AR' }}%</div><div>2. Avance financiero acumulado: {{ money.format(fila.avanceFinancieroAcumulado) }}</div><div>3. Anticipo financiero certificado: {{ money.format(fila.montoAnticipoCertificado) }}</div><div>4. Deuda de anticipo: {{ money.format(fila.deudaAnticipoFinanciero) }}</div><div>5. Estado actual: {{ fila.estadoActual }}</div></td></ng-container>
+      <ng-container matColumnDef="montoPendiente"><th mat-header-cell *matHeaderCellDef>Monto pendiente actualizado</th><td mat-cell *matCellDef="let fila">{{ money.format(fila.montoPendiente) }}</td></ng-container>
+      <ng-container matColumnDef="avancePendiente"><th mat-header-cell *matHeaderCellDef>Avance físico pendiente</th><td mat-cell *matCellDef="let fila">{{ fila.avancePendiente | number:'1.2-2':'es-AR' }}%</td></ng-container>
+      <ng-container matColumnDef="observaciones"><th mat-header-cell *matHeaderCellDef>Observaciones</th><td mat-cell *matCellDef="let fila">{{ fila.observaciones || '—' }}</td></ng-container>
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr><tr mat-row *matRowDef="let row; columns: columnas;"></tr>
+    </table>
+    @if (!cargando && !filas.length) { <p class="empty">No hay obras pendientes de ejecución.</p> }
+    <footer>Total financiamiento pendiente: <strong>{{ money.format(totalPendiente) }}</strong></footer>
+  </div>
+</section>

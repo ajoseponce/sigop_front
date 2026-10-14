@@ -5,6 +5,7 @@ import { StepContratoComponent } from '../steps/step-contrato/step-contrato.comp
 import { StepCertificacionComponent } from '../steps/step-certificacion/step-certificacion.component';
 import { StepRubrosComponent } from '../steps/step-rubros/step-rubros.component';
 import { StepPlanTrabajoComponent } from '../steps/step-plan-trabajo/step-plan-trabajo.component';
+import { StepEjecucionComponent } from '../steps/step-ejecucion/step-ejecucion.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from 'src/app/core/services/api.service';
 import { ActivatedRoute } from '@angular/router';
@@ -15,7 +16,7 @@ import { switchMap } from 'rxjs';
 @Component({
   selector: 'app-obra-wizard',
   standalone: true,
-  imports: [SeguimientoObraComponent, StepDatosBasicosComponent, StepContratoComponent, StepRubrosComponent, StepPlanTrabajoComponent, StepCertificacionComponent],
+  imports: [SeguimientoObraComponent, StepDatosBasicosComponent, StepContratoComponent, StepRubrosComponent, StepPlanTrabajoComponent, StepCertificacionComponent, StepEjecucionComponent],
   templateUrl: './obra-wizard.component.html',
   styleUrl: './obra-wizard.component.scss',
 })
@@ -68,7 +69,11 @@ export class ObraWizardComponent {
       return;
     }
 
-    const { fechaReplanteo, ...contratoPayload } = payload;
+    const {
+      fechaReplanteo, modalidadContratacionId, estadoActual,
+      avanceFisicoManual, avanceFinancieroManual, montoAnticipoCertificadoManual, deudaAnticipoManual, fapConsolidadoManual,
+      ...contratoPayload
+    } = payload;
     const contratoId = this.obra?.contratos?.find((c: any) => c.tipo === 'ORIGINAL')?.id ??
       this.obra?.contratos?.[0]?.id;
 
@@ -76,11 +81,26 @@ export class ObraWizardComponent {
       ? this.api.put<any>(`obras/${this.obraId}/contrato/${contratoId}`, contratoPayload)
       : this.api.post<any>(`obras/${this.obraId}/contrato`, contratoPayload);
 
-    const guardar$ = fechaReplanteo
+    let guardar$ = fechaReplanteo
       ? this.api.put<any>(`obras/${this.obraId}`, { fechaInicio: fechaReplanteo }).pipe(
         switchMap(() => request$),
       )
       : request$;
+
+    guardar$ = guardar$.pipe(
+      switchMap(() => this.api.put<any>(`obras/${this.obraId}`, {
+        avanceFisicoManual, avanceFinancieroManual, montoAnticipoCertificadoManual, deudaAnticipoManual, fapConsolidadoManual,
+      })),
+    );
+
+    if (modalidadContratacionId || estadoActual) {
+      guardar$ = guardar$.pipe(
+        switchMap(() => this.api.put<any>(`obras/${this.obraId}/seguimiento`, {
+          ...(modalidadContratacionId ? { modalidadContratacionId } : {}),
+          ...(estadoActual ? { estadoActual } : {}),
+        })),
+      );
+    }
 
     guardar$.subscribe({
       next: () => {
@@ -139,6 +159,10 @@ export class ObraWizardComponent {
 
   planGuardado(): void {
     this.currentStep = 5;
+    if (this.obraId) this.cargarObra(this.obraId);
+  }
+
+  ejecucionGuardada(): void {
     if (this.obraId) this.cargarObra(this.obraId);
   }
 

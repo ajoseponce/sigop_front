@@ -35,6 +35,7 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
   { label: 'Obras', icon: 'engineering', hijos: [
     { label: 'Nueva Obra', icon: 'local_shipping', ruta: '/obras/nueva', roles: ['ADMIN','SUPERVISOR'] },
     { label: 'Lista de Obras', icon: 'list', ruta: '/obras', roles: ['ADMIN','SUPERVISOR'] },
+    { label: 'Pendientes de ejecución', icon: 'summarize', ruta: '/obras/informe-pendientes', roles: ['ADMIN','SUPERVISOR'] },
     { label: 'FAP', icon: 'query_stats', ruta: '/obras/fap', roles: ['ADMIN','SUPERVISOR'] },
     { label: 'Análisis documental', icon: 'difference', ruta: '/obras/analisis-documental', roles: ['ADMIN','SUPERVISOR'] },
   ]},

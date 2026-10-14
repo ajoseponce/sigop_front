@@ -1,14 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ApiService } from 'src/app/core/services/api.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-
-const FIELD_LABELS: Record<string, string> = {
-  inspectorNombre: 'Nombre del inspector',
-  inspectorDni: 'DNI del inspector',
-  inspectorMatricula: 'Matrícula del inspector',
-};
 
 @Component({
   selector: 'app-step-ejecucion',
@@ -27,9 +21,9 @@ export class StepEjecucionComponent implements OnChanges {
   @Output() ejecucionSaved = new EventEmitter<void>();
 
   form = this.fb.group({
-    inspectorNombre: ['', Validators.required],
-    inspectorDni: ['', Validators.required],
-    inspectorMatricula: ['', Validators.required],
+    inspectorNombre: [''],
+    inspectorDni: [''],
+    inspectorMatricula: [''],
 
     observaciones: [''],
     fechaNeutralizacion: [''],
@@ -69,12 +63,6 @@ export class StepEjecucionComponent implements OnChanges {
       return;
     }
 
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.mostrarFormularioInvalido();
-      return;
-    }
-
     const raw = this.form.getRawValue();
     const payload = {
       inspectorNombre: raw.inspectorNombre,
@@ -106,20 +94,4 @@ export class StepEjecucionComponent implements OnChanges {
     });
   }
 
-  private mostrarFormularioInvalido(): void {
-    const faltantes = Object.entries(this.form.controls)
-      .filter(([, control]) => control.hasError('required'))
-      .map(([name]) => FIELD_LABELS[name] ?? name);
-
-    this.snack.open(
-      faltantes.length
-        ? `Faltan campos obligatorios: ${faltantes.join(', ')}`
-        : 'Revisá los campos marcados antes de continuar',
-      'Cerrar',
-      {
-        duration: 5000,
-        panelClass: 'snack-error',
-      },
-    );
-  }
 }

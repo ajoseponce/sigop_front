@@ -49,6 +49,7 @@ export class StepContratoComponent implements OnInit , OnChanges{
   private snack = inject(MatSnackBar);
   empresaSearch = new FormControl('');
   empresasFiltradas: any[] = [];
+  modalidadesContratacion: { id: number; nombre: string; activo: boolean }[] = [];
   empresaModalOpen = signal(false);
   guardandoEmpresa = signal(false);
   empresaRapidaForm = this.fb.group({
@@ -60,6 +61,7 @@ export class StepContratoComponent implements OnInit , OnChanges{
   ngOnInit(): void {
     this.cargarEmpresas();
     this.cargarPersonas();
+    this.cargarModalidadesContratacion();
 
     this.responsableLegalSearch.valueChanges.subscribe(() => {
       this.filtrarPersonasLegal();
@@ -147,6 +149,13 @@ export class StepContratoComponent implements OnInit , OnChanges{
         tipoAprobacionAdjudicacion: contrato.tipoAprobacionAdjudicacion ?? 'DECRETO',
         decretoContrato: contrato.decretoContrato ?? '',
         tipoAprobacionContrato: contrato.tipoAprobacionContrato ?? 'DECRETO',
+        modalidadContratacionId: this.obra.modalidadContratacionId ?? null,
+        avanceFisicoManual: this.obra.avanceFisicoManual ?? null,
+        avanceFinancieroManual: this.obra.avanceFinancieroManual ?? null,
+        montoAnticipoCertificadoManual: this.obra.montoAnticipoCertificadoManual ?? null,
+        deudaAnticipoManual: this.obra.deudaAnticipoManual ?? null,
+        fapConsolidadoManual: this.obra.fapConsolidadoManual ?? null,
+        estadoActual: this.obra.estadoActual ?? '',
       });
 
       this.empresaSearch.setValue(
@@ -155,6 +164,17 @@ export class StepContratoComponent implements OnInit , OnChanges{
       );
       this.actualizarNombresResponsables();
     }
+  }
+  cargarModalidadesContratacion(): void {
+    this.api.get<{ id: number; grupo: string; nombre: string; activo: boolean }[]>('obras/parametros').subscribe({
+      next: (parametros) => {
+        const seleccionada = this.obra?.modalidadContratacionId;
+        this.modalidadesContratacion = parametros.filter((parametro) =>
+          parametro.grupo === 'MODALIDAD_CONTRATACION' && (parametro.activo || parametro.id === seleccionada),
+        );
+      },
+      error: () => this.snack.open('No se pudieron cargar las modalidades de contratación', 'Cerrar', { duration: 3500 }),
+    });
   }
 
   filtrarEmpresas(): void {
@@ -310,6 +330,13 @@ export class StepContratoComponent implements OnInit , OnChanges{
     tipoAprobacionAdjudicacion: ['DECRETO'],
     decretoContrato: [''],
     tipoAprobacionContrato: ['DECRETO'],
+    modalidadContratacionId: [null],
+    avanceFisicoManual: [null],
+    avanceFinancieroManual: [null],
+    montoAnticipoCertificadoManual: [null],
+    deudaAnticipoManual: [null],
+    fapConsolidadoManual: [null],
+    estadoActual: [''],
   });
 
   save(): void {
@@ -366,6 +393,13 @@ export class StepContratoComponent implements OnInit , OnChanges{
       tipoAprobacionContrato: raw.tipoAprobacionContrato,
       plazoObraDias: raw.plazoObraDias,
       estructuraPonderacion: raw.estructuraPonderacion || undefined,
+      modalidadContratacionId: raw.modalidadContratacionId,
+      avanceFisicoManual: raw.avanceFisicoManual === null ? null : Number(raw.avanceFisicoManual),
+      avanceFinancieroManual: raw.avanceFinancieroManual === null ? null : Number(raw.avanceFinancieroManual),
+      montoAnticipoCertificadoManual: raw.montoAnticipoCertificadoManual === null ? null : Number(raw.montoAnticipoCertificadoManual),
+      deudaAnticipoManual: raw.deudaAnticipoManual === null ? null : Number(raw.deudaAnticipoManual),
+      fapConsolidadoManual: raw.fapConsolidadoManual === null ? null : Number(raw.fapConsolidadoManual),
+      estadoActual: raw.estadoActual?.trim() || null,
     };
 
     this.adjudicacionCreated.emit(payload);

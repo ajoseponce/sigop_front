@@ -30,6 +30,19 @@
         <input type="text" [value]="mesBase" disabled />
       </div>
     </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Forma de contratación</label>
+        <select formControlName="modalidadContratacionId">
+          <option [ngValue]="null">Seleccionar…</option>
+          @for (modalidad of modalidadesContratacion; track modalidad.id) {
+            <option [ngValue]="modalidad.id">{{ modalidad.nombre }}</option>
+          }
+        </select>
+        <small>Se utilizará en el informe de obras pendientes de ejecución.</small>
+      </div>
+    </div>
   </div>
 
   <div class="form-section">
@@ -163,6 +176,19 @@
         <input type="date" formControlName="fechaContrato" />
       </div>
     </div>
+  </div>
+
+  <div class="form-section">
+    <h3>Datos históricos para informe</h3>
+    <p>Solo para obras antiguas sin certificados cargados en SIGOP. En obras nuevas, estos valores se calculan automáticamente desde los certificados aprobados.</p>
+    <div class="form-grid form-grid-2">
+      <div class="form-field"><label>Avance físico acumulado (%)</label><input type="number" min="0" max="100" step="0.01" formControlName="avanceFisicoManual" /></div>
+      <div class="form-field"><label>Avance financiero acumulado ($)</label><input type="number" min="0" step="0.01" formControlName="avanceFinancieroManual" /></div>
+      <div class="form-field"><label>Monto de anticipo financiero certificado ($)</label><input type="number" min="0" step="0.01" formControlName="montoAnticipoCertificadoManual" /></div>
+      <div class="form-field"><label>Deuda de anticipo financiero de la empresa ($)</label><input type="number" min="0" step="0.01" formControlName="deudaAnticipoManual" /></div>
+      <div class="form-field"><label>Último FAP consolidado</label><input type="number" min="0.000001" step="0.000001" placeholder="Ej.: 1,253400" formControlName="fapConsolidadoManual" /><small>Solo si la obra histórica tuvo actualización de precios.</small></div>
+    </div>
+    <div class="form-grid"><div class="form-field"><label>Estado actual de la obra</label><textarea rows="3" formControlName="estadoActual"></textarea></div></div>
   </div>
 
   <div class="form-section">

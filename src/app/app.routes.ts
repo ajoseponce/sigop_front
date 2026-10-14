@@ -104,6 +104,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/obras/analisis-documental/analisis-documental.component').then(m => m.AnalisisDocumentalComponent),
       },
       {
+        path: 'obras/informe-pendientes',
+        loadComponent: () => import('./features/obras/informe-pendientes/informe-pendientes.component').then(m => m.InformePendientesComponent),
+      },
+      {
         path: 'obras',
         loadComponent: () =>
           import('./features/obras/obras-list/obras-list.component').then(m => m.ObrasListComponent),

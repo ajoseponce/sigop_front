@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
@@ -9,7 +10,7 @@ import { crearInformePendientesPdf, InformePendienteFila } from './informe-pendi
 @Component({
   selector: 'app-informe-pendientes',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatTableModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatTableModule],
   templateUrl: './informe-pendientes.component.html',
   styleUrl: './informe-pendientes.component.scss',
 })
@@ -17,6 +18,9 @@ export class InformePendientesComponent implements OnInit {
   private api = inject(ApiService);
   filas: InformePendienteFila[] = [];
   cargando = false;
+  filtroAnio = '';
+  comparadorAvance: 'MAYOR' | 'MENOR' = 'MAYOR';
+  porcentajeAvance: number | null = null;
   columnas = ['anio', 'contratacion', 'obra', 'empresa', 'evolucion', 'montoPendiente', 'avancePendiente', 'observaciones'];
   readonly money = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 2 });
 
@@ -37,11 +41,27 @@ export class InformePendientesComponent implements OnInit {
   }
 
   async exportarPdf(): Promise<void> {
-    const doc = await crearInformePendientesPdf(this.filas);
+    const doc = await crearInformePendientesPdf(this.filasFiltradas);
     doc.save('informe-obras-pendientes-de-ejecucion.pdf');
   }
 
-  get totalPendiente(): number { return this.filas.reduce((total, fila) => total + fila.montoPendiente, 0); }
+  get anios(): number[] {
+    return [...new Set(this.filas.map((fila) => fila.anio).filter((anio): anio is number => anio !== null))]
+      .sort((a, b) => b - a);
+  }
+
+  get filasFiltradas(): InformePendienteFila[] {
+    const porcentaje = this.porcentajeAvance;
+    return this.filas.filter((fila) => {
+      if (this.filtroAnio && fila.anio !== Number(this.filtroAnio)) return false;
+      if (porcentaje === null || porcentaje === undefined) return true;
+      return this.comparadorAvance === 'MAYOR'
+        ? fila.avanceFisicoAcumulado > porcentaje
+        : fila.avanceFisicoAcumulado < porcentaje;
+    });
+  }
+
+  get totalPendiente(): number { return this.filasFiltradas.reduce((total, fila) => total + fila.montoPendiente, 0); }
 
   private aFila(obra: any): InformePendienteFila | null {
     const informe = obra.informePendiente;

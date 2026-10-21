@@ -29,6 +29,24 @@
     <small>Elegí el período de la foja. La fecha de carga se asigna automáticamente.</small>
   </section>
 
+  @if (!editandoCertificado) {
+    <section class="datos-periodo" aria-label="Datos del expediente del certificado">
+      <div class="form-field">
+        <label for="numeroExpediente">Número de expediente</label>
+        <input id="numeroExpediente" type="text" inputmode="numeric" formControlName="numeroExpediente" placeholder="Ej.: 27812" />
+      </div>
+      <div class="form-field">
+        <label for="fechaExpediente">Fecha del expediente</label>
+        <input id="fechaExpediente" type="date" formControlName="fechaExpediente" />
+      </div>
+      <div class="form-field">
+        <label for="referenciaExpediente">Referencia</label>
+        <input id="referenciaExpediente" type="text" formControlName="referenciaExpediente" placeholder="Ej.: Certificado básico N° 1 - CP 1/26" />
+      </div>
+      <small>Se identificará como: referencia - Expediente N° número/año de la fecha.</small>
+    </section>
+  }
+
   @if (cargando) {
     <div class="estado-vacio">Cargando ítems y mediciones anteriores…</div>
   } @else if (rubros.length === 0) {
@@ -118,6 +136,9 @@
             <div>
               <strong>Certificado N° {{ certificado.numero }}</strong>
               <span>{{ certificado.periodo | date:'MMMM yyyy':'UTC':'es-AR' }}</span>
+              @if (certificado.nomenclaturaExpediente) {
+                <span>{{ certificado.nomenclaturaExpediente }}</span>
+              }
               <span
                 class="chip-validacion"
                 [class.validado]="estaValidado(certificado)"

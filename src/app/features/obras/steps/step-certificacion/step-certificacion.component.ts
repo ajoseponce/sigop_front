@@ -79,6 +79,10 @@ interface Certificado {
   periodo: string | null;
   fojaId: number | null;
   estado: 'BORRADOR' | 'APROBADO' | 'ANULADO';
+  numeroExpediente: string | null;
+  fechaExpediente: string | null;
+  referenciaExpediente: string | null;
+  nomenclaturaExpediente: string | null;
   porcentajeAnticipoSnapshot: string;
   montoBruto: string | null;
   montoPostAnticipo?: string | null;
@@ -158,6 +162,9 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
     periodo: ['', Validators.required],
     fechaMedicion: ['', Validators.required],
     descripcion: [''],
+    numeroExpediente: ['', [Validators.required, Validators.pattern(/^\d+$/), Validators.maxLength(50)]],
+    fechaExpediente: ['', Validators.required],
+    referenciaExpediente: ['', [Validators.required, Validators.maxLength(255)]],
     items: this.fb.array([]),
   });
 
@@ -238,9 +245,10 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
   }
 
   guardarYGenerar(): void {
-    if (!this.obraId || this.form.invalid || this.rubros.length === 0) {
+    const medicionInvalida = this.form.controls.periodo.invalid || this.form.controls.fechaMedicion.invalid;
+    if (!this.obraId || medicionInvalida || (!this.editandoCertificado && this.form.invalid) || this.rubros.length === 0) {
       this.form.markAllAsTouched();
-      this.snack.open('Completá el período, la fecha y las cantidades actuales', 'Cerrar', {
+      this.snack.open('Completá el período, los datos del expediente y las cantidades actuales', 'Cerrar', {
         duration: 4000,
       });
       return;
@@ -283,6 +291,9 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
         this.api.post<Certificado>(`obras/${this.obraId}/certificados`, {
           periodo,
           fojaId: foja.id,
+          numeroExpediente: this.form.controls.numeroExpediente.value,
+          fechaExpediente: this.form.controls.fechaExpediente.value,
+          referenciaExpediente: this.form.controls.referenciaExpediente.value?.trim(),
         }),
       ),
       switchMap((certificado) =>
@@ -303,7 +314,12 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
           { duration: 4500 },
         );
         this.editandoCertificado = null;
-        this.form.patchValue({ descripcion: '' });
+        this.form.patchValue({
+          descripcion: '',
+          numeroExpediente: '',
+          fechaExpediente: '',
+          referenciaExpediente: '',
+        });
         this.items.controls.forEach((control) => control.setValue(0));
         this.preparandoSiguiente = true;
         this.cargarDatos();
@@ -607,6 +623,9 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
     this.form.patchValue({
       periodo: certificado.periodo?.slice(0, 7) ?? '',
       fechaMedicion: foja?.fechaMedicion ?? '',
+      numeroExpediente: certificado.numeroExpediente ?? '',
+      fechaExpediente: certificado.fechaExpediente ?? '',
+      referenciaExpediente: certificado.referenciaExpediente ?? '',
     });
     const porItem = new Map(certificado.detalles.map((detalle) => [detalle.itemId, detalle.cantidadPeriodo]));
     this.itemsContrato().forEach((item, index) => {
@@ -758,7 +777,14 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate(),
     ).padStart(2, '0')}`;
 
-    this.form.patchValue({ periodo, fechaMedicion, descripcion: '' });
+    this.form.patchValue({
+      periodo,
+      fechaMedicion,
+      descripcion: '',
+      numeroExpediente: '',
+      fechaExpediente: '',
+      referenciaExpediente: '',
+    });
   }
 
   private contratoVigente(): ContratoObra | undefined {

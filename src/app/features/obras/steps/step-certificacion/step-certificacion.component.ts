@@ -8,6 +8,9 @@ import { forkJoin, Observable, of, switchMap } from 'rxjs';
 import { ApiService } from 'src/app/core/services/api.service';
 import {
   AnexoIIIPdfData,
+  AnexoIIPdfData,
+  crearAnexoIIPdf,
+  descargarAnexoIIPdf,
   crearAnexoIIIPdf,
   crearCertificacionPdf,
   crearCertificadoPdf,
@@ -130,7 +133,25 @@ interface OpcionesReadecuacion {
   estructuraNombre: string;
   estructuras: Array<{ id: number; nombre: string }>;
   saltos: Array<Omit<SaltoReadecuacion, 'seleccionado' | 'fap'>>;
+  planilla: PlanillaFap | null;
   guardada: ReadecuacionGuardada | null;
+}
+
+interface PlanillaFap {
+  mesBase: string;
+  mesCorte: string;
+  filas: Array<{
+    insumo: string;
+    indice: string | null;
+    estructura: string;
+    valorBase: string | null;
+    valorCorte: string | null;
+    variacion: string | null;
+    factor: string | null;
+  }>;
+  fr: string;
+  variacionTotal: string;
+  fap: string;
 }
 
 interface Foja {
@@ -622,6 +643,54 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
   imprimirReadecuacion(certificado: Certificado): void {
     if (!certificado.readecuacion || certificado.readecuacion.estado !== 'APROBADO') return;
     descargarReadecuacionPdf(this.datosReadecuacionPdf(certificado));
+  }
+
+  imprimirAnexoII(certificado: Certificado): void {
+    if (!this.obraId || !certificado.readecuacion || this.generandoVistaPrevia) return;
+    this.generandoVistaPrevia = true;
+    this.api.get<OpcionesReadecuacion>(`obras/${this.obraId}/certificados/${certificado.id}/readecuacion/opciones`).subscribe({
+      next: (opciones) => {
+        this.generandoVistaPrevia = false;
+        if (!opciones.planilla) {
+          this.snack.open('No hay datos de índices para generar el Anexo II', 'Cerrar', { duration: 4000 });
+          return;
+        }
+        const data: AnexoIIPdfData = { ...this.datosPdf(certificado), planilla: opciones.planilla };
+        void descargarAnexoIIPdf(data);
+      },
+      error: (error) => {
+        this.generandoVistaPrevia = false;
+        this.snack.open(error?.error?.message || 'No se pudo generar el Anexo II', 'Cerrar', { duration: 4500 });
+      },
+    });
+  }
+
+  abrirVistaPreviaAnexoII(certificado: Certificado): void {
+    if (!this.obraId || !certificado.readecuacion || this.generandoVistaPrevia) return;
+    this.cerrarVistaPrevia();
+    this.generandoVistaPrevia = true;
+    this.api.get<OpcionesReadecuacion>(`obras/${this.obraId}/certificados/${certificado.id}/readecuacion/opciones`).subscribe({
+      next: async (opciones) => {
+        try {
+          if (!opciones.planilla) throw new Error('Sin índices');
+          const data: AnexoIIPdfData = { ...this.datosPdf(certificado), planilla: opciones.planilla };
+          const doc = await crearAnexoIIPdf(data);
+          this.vistaPreviaObjectUrl = URL.createObjectURL(doc.output('blob'));
+          this.vistaPreviaUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+            `${this.vistaPreviaObjectUrl}#toolbar=0&navpanes=0&scrollbar=1`,
+          );
+          this.vistaPreviaTitulo = `Vista previa - Anexo II (FAP) del certificado N° ${data.numero}`;
+        } catch {
+          this.snack.open('No se pudo generar la vista previa del Anexo II', 'Cerrar', { duration: 4000 });
+        } finally {
+          this.generandoVistaPrevia = false;
+        }
+      },
+      error: (error) => {
+        this.generandoVistaPrevia = false;
+        this.snack.open(error?.error?.message || 'No se pudo generar el Anexo II', 'Cerrar', { duration: 4500 });
+      },
+    });
   }
 
   cerrarVistaPrevia(): void {

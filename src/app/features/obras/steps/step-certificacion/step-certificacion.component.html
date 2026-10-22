@@ -168,6 +168,9 @@
                     <button type="button" class="btn-imprimir" [disabled]="generandoVistaPrevia" (click)="abrirVistaPrevia('readecuacion', certificado)">
                       Vista previa readecuación
                     </button>
+                    <button type="button" class="btn-imprimir" [disabled]="generandoVistaPrevia" (click)="abrirVistaPreviaAnexoII(certificado)">
+                      Vista previa Anexo II (FAP)
+                    </button>
                     <button type="button" class="btn-validacion" [disabled]="cambiandoValidacionId !== null" (click)="validarReadecuacion(certificado)">
                       Validar readecuación
                     </button>
@@ -177,6 +180,9 @@
                     </button>
                     <button type="button" class="btn-imprimir principal" (click)="imprimirReadecuacion(certificado)">
                       Descargar readecuación
+                    </button>
+                    <button type="button" class="btn-imprimir" [disabled]="generandoVistaPrevia" (click)="imprimirAnexoII(certificado)">
+                      {{ generandoVistaPrevia ? 'Generando Anexo II…' : 'Descargar Anexo II (FAP)' }}
                     </button>
                   }
                   @if (puedeEditar(certificado)) {
@@ -285,6 +291,41 @@
             <span>Monto neto a actualizar <b>{{ numero(opcionesReadecuacion.certificado.montoNetoActualizar) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
           </div>
           <p class="ayuda-ajustes">El FAP se calcula desde el mes anterior a la apertura hasta el mes del certificado.</p>
+          @if (opcionesReadecuacion.planilla; as planilla) {
+            <section class="planilla-fap" aria-label="Planilla Anexo II de cálculo FAP">
+              <div class="planilla-fap-titulo">
+                <div>
+                  <strong>Anexo II · Cálculo del factor de actualización de precios</strong>
+                  <span>Metodología Decreto 48/23</span>
+                </div>
+                <span>Base: {{ planilla.mesBase | date:'MMMM yyyy':'UTC':'es-AR' }} · Corte: {{ planilla.mesCorte | date:'MMMM yyyy':'UTC':'es-AR' }}</span>
+              </div>
+              <div class="planilla-fap-tabla">
+                <table>
+                  <thead>
+                    <tr><th>Insumo</th><th>Índice INDEC</th><th class="numero">Estructura</th><th class="numero">Mes base</th><th class="numero">Mes corte</th><th class="numero">Var.</th><th class="numero">FRᵢ</th></tr>
+                  </thead>
+                  <tbody>
+                    @for (fila of planilla.filas; track fila.insumo) {
+                      <tr>
+                        <td>{{ fila.insumo }}</td><td>{{ fila.indice || '—' }}</td>
+                        <td class="numero">{{ numero(fila.estructura) | number:'1.0-2':'es-AR' }}%</td>
+                        <td class="numero">{{ fila.valorBase ? (numero(fila.valorBase) | number:'1.0-4':'es-AR') : '—' }}</td>
+                        <td class="numero">{{ fila.valorCorte ? (numero(fila.valorCorte) | number:'1.0-4':'es-AR') : '—' }}</td>
+                        <td class="numero">{{ fila.variacion ? (numero(fila.variacion) | number:'1.4-4':'es-AR') : '—' }}</td>
+                        <td class="numero">{{ fila.factor ? (numero(fila.factor) | number:'1.4-4':'es-AR') : '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <div class="planilla-fap-total">
+                <span>ΣFRᵢ <b>{{ numero(planilla.fr) | number:'1.4-4':'es-AR' }}</b></span>
+                <span>FR = (ΣFRᵢ - 1) <b>{{ numero(planilla.variacionTotal) | number:'1.4-4':'es-AR' }}</b></span>
+                <span class="fap">FAP = 1 + (0,90 × FR) <b>{{ numero(planilla.fap) | number:'1.4-4':'es-AR' }}</b></span>
+              </div>
+            </section>
+          }
           <div class="lista-saltos">
             @for (salto of saltosReadecuacion; track salto.orden) {
               <div class="salto" [class.seleccionado]="salto.seleccionado">

@@ -97,6 +97,17 @@ export interface AnexoIIIPdfData extends MedicionPdfData {
   certificados: CertificadoResumenPdf[];
 }
 
+export interface AnexoIIPdfData extends MedicionPdfData {
+  planilla: {
+    mesBase: string;
+    mesCorte: string;
+    filas: Array<{ insumo: string; indice: string | null; estructura: string; valorBase: string | null; valorCorte: string | null; variacion: string | null; factor: string | null }>;
+    fr: string;
+    variacionTotal: string;
+    fap: string;
+  };
+}
+
 const quantity = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 const money = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -915,4 +926,72 @@ export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<j
 
 export async function descargarReadecuacionPdf(data: ReadecuacionPdfData): Promise<void> {
   (await crearReadecuacionPdf(data)).save(`readecuacion-certificado-${String(data.numero).padStart(2, '0')}.pdf`);
+}
+
+/** Anexo II: detalle de índices y ponderaciones que originan el FAP. */
+export async function crearAnexoIIPdf(data: AnexoIIPdfData): Promise<jsPDF> {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const cabecera = await cargarCabeceraInstitucional();
+  const left = 8;
+  const right = 8;
+  const width = doc.internal.pageSize.getWidth() - left - right;
+  const inicio = dibujarCabeceraInstitucional(doc, cabecera, left, right, 1) + 3;
+  const p = data.planilla;
+
+  doc.setDrawColor(45);
+  doc.setLineWidth(.35);
+  doc.rect(left, inicio, width, 10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.4);
+  doc.text('ANEXO II - CÁLCULO DE FACTOR DE ACTUALIZACIÓN DE PRECIOS', left + width / 2, inicio + 4.3, { align: 'center' });
+  doc.setFontSize(6.5);
+  doc.text('Según metodología descripta en Anexo I del Decreto 48/23', left + width / 2, inicio + 7.5, { align: 'center' });
+
+  autoTable(doc, {
+    startY: inicio + 13,
+    margin: { left, right },
+    theme: 'plain',
+    styles: { fontSize: 5.8, cellPadding: 1 },
+    body: [
+      ['Obra:', data.nombreObra || '—', 'Empresa:', data.empresa || '—', 'CUIT:', data.empresaCuit || '—'],
+      ['Certificado N°:', String(data.numero), 'Monto contrato original:', `$ ${money.format(totalContrato(data))}`, 'Período certificado:', periodoTexto(data.periodo)],
+      ['Mes base:', periodoTexto(p.mesBase), 'Mes de corte:', periodoTexto(p.mesCorte), 'Estructura:', 'FAP'],
+    ],
+    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 20 }, 1: { cellWidth: 48 }, 2: { fontStyle: 'bold', cellWidth: 20 }, 3: { cellWidth: 40 }, 4: { fontStyle: 'bold', cellWidth: 20 }, 5: { cellWidth: 38 } },
+  });
+
+  const datosY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? inicio + 35;
+  autoTable(doc, {
+    startY: datosY + 3,
+    margin: { left, right },
+    theme: 'grid',
+    styles: { fontSize: 5.1, cellPadding: 1.1, valign: 'middle' },
+    headStyles: { fillColor: [225, 231, 235], textColor: 15, fontStyle: 'bold', halign: 'center' },
+    head: [['Insumos', 'Índice INDEC', 'Estructura', 'Mes base', 'Mes corte', 'VAR', 'FRᵢ']],
+    body: p.filas.map((fila) => [
+      fila.insumo, fila.indice ?? '—', `${n(fila.estructura).toLocaleString('es-AR', { maximumFractionDigits: 2 })}%`,
+      fila.valorBase ? n(fila.valorBase).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : '—',
+      fila.valorCorte ? n(fila.valorCorte).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : '—',
+      fila.variacion ? n(fila.variacion).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : '—',
+      fila.factor ? n(fila.factor).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : '—',
+    ]),
+    columnStyles: { 0: { cellWidth: 33 }, 1: { cellWidth: 55 }, 2: { cellWidth: 17, halign: 'right' }, 3: { cellWidth: 20, halign: 'right' }, 4: { cellWidth: 20, halign: 'right' }, 5: { cellWidth: 17, halign: 'right' }, 6: { cellWidth: 17, halign: 'right' } },
+  });
+  const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? datosY + 55;
+  const x = left + width - 83;
+  autoTable(doc, {
+    startY: finalY + 4, margin: { left: x, right }, theme: 'grid', styles: { fontSize: 6.2, cellPadding: 1.3 },
+    body: [
+      ['Σ FRᵢ', n(p.fr).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })],
+      ['FR = (Σ FRᵢ - 1)', n(p.variacionTotal).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })],
+      ['FAP = 1 + (0,90 × FR)', n(p.fap).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })],
+    ],
+    columnStyles: { 0: { cellWidth: 56, fontStyle: 'bold', halign: 'right' }, 1: { cellWidth: 27, fontStyle: 'bold', halign: 'right' } },
+    didParseCell: (hook) => { if (hook.row.index === 2) { hook.cell.styles.fillColor = [219, 234, 254]; } },
+  });
+  return doc;
+}
+
+export async function descargarAnexoIIPdf(data: AnexoIIPdfData): Promise<void> {
+  (await crearAnexoIIPdf(data)).save(`anexo-ii-fap-certificado-${String(data.numero).padStart(2, '0')}.pdf`);
 }

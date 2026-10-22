@@ -182,3 +182,15 @@ html, body {
 }
 
 .fade-in-up { animation: fadeInUp .35s ease both; }
+/* Planilla de actualización de precios — Anexo II */
+.planilla-fap { overflow: hidden; border: 1px solid #94a3b8; border-radius: 10px; background: #fff; }
+.planilla-fap-titulo { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 12px 14px; border-bottom: 1px solid #cbd5e1; background: #f8fafc; color: #334155; font-size: 11px; }
+.planilla-fap-titulo div { display: flex; flex-direction: column; gap: 3px; }
+.planilla-fap-titulo strong { color: #0f172a; font-size: 12px; text-transform: uppercase; }
+.planilla-fap-tabla { overflow-x: auto; }.planilla-fap table { min-width: 720px; font-size: 11px; }
+.planilla-fap th, .planilla-fap td { padding: 7px 8px; border: 1px solid #dbe3ed; }
+.planilla-fap th { background: #e2e8f0; color: #1e293b; font-size: 10px; }
+.planilla-fap-total { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 1px; padding: 1px; background: #cbd5e1; }
+.planilla-fap-total span { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f8fafc; color: #475569; font-size: 11px; }
+.planilla-fap-total .fap { background: #dbeafe; color: #1e3a8a; }
+@media (max-width: 900px) { .planilla-fap-titulo { align-items: flex-start; flex-direction: column; } }

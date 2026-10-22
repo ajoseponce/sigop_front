@@ -420,11 +420,18 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       next: (opciones) => {
         const guardados = new Map((opciones.guardada?.saltos ?? []).map((salto) => [salto.orden, salto]));
         this.opcionesReadecuacion = opciones;
-        this.saltosReadecuacion = opciones.saltos.map((salto) => ({
-          ...salto,
-          seleccionado: guardados.has(salto.orden),
-          fap: guardados.get(salto.orden)?.fap ?? salto.fapCalculado ?? '',
-        }));
+        this.saltosReadecuacion = opciones.saltos.map((salto) => {
+          const guardado = guardados.get(salto.orden);
+          return {
+            ...salto,
+            seleccionado: Boolean(guardado),
+            // Un valor automático se recalcula cuando aparecen índices que antes faltaban.
+            // Los FAP cargados manualmente por el usuario se preservan.
+            fap: guardado?.automatico && salto.fapCalculado !== null
+              ? salto.fapCalculado
+              : guardado?.fap ?? salto.fapCalculado ?? '',
+          };
+        });
         this.cargandoReadecuacion = false;
       },
       error: (error) => {

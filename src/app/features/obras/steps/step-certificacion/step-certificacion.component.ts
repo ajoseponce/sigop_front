@@ -468,7 +468,9 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
           orden: salto.orden,
           mesBase: salto.mesBase,
           mesCorte: salto.mesCorte,
-          fap: salto.fap === salto.fapCalculado ? undefined : salto.fap,
+          // Los inputs type="number" entregan un number aunque el modelo lo tipa como string.
+          // La API recibe el FAP como cadena decimal para conservar la precisión exacta.
+          fap: String(salto.fap) === salto.fapCalculado ? undefined : String(salto.fap),
         })),
       },
     ).subscribe({

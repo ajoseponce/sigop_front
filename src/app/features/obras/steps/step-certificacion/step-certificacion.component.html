@@ -284,7 +284,7 @@
             <span>Estructura FAP <b>{{ opcionesReadecuacion.estructuraNombre }}</b></span>
             <span>Monto neto a actualizar <b>{{ numero(opcionesReadecuacion.certificado.montoNetoActualizar) | currency:'ARS':'symbol-narrow':'1.2-2':'es-AR' }}</b></span>
           </div>
-          <p class="ayuda-ajustes">Marcá exactamente los meses que querés aplicar. Podés elegir Ajuste 1 y 2, solamente el 2, o cualquier combinación disponible.</p>
+          <p class="ayuda-ajustes">El FAP se calcula desde el mes anterior a la apertura hasta el mes del certificado.</p>
           <div class="lista-saltos">
             @for (salto of saltosReadecuacion; track salto.orden) {
               <div class="salto" [class.seleccionado]="salto.seleccionado">

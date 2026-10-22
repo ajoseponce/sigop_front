@@ -322,8 +322,13 @@
           </div>
         </div>
         <footer>
+          @if (opcionesReadecuacion.guardada) {
+            <button type="button" class="btn-siguiente" [disabled]="guardandoReadecuacion || eliminandoReadecuacion" (click)="eliminarReadecuacionPrecio()">
+              {{ eliminandoReadecuacion ? 'Eliminando…' : 'Eliminar readecuación' }}
+            </button>
+          }
           <button type="button" class="btn-siguiente" (click)="cerrarReadecuacion()">Cancelar</button>
-          <button type="button" class="btn-primary" [disabled]="guardandoReadecuacion || saltosReadecuacion.length === 0" (click)="guardarReadecuacionPrecio()">
+          <button type="button" class="btn-primary" [disabled]="guardandoReadecuacion || eliminandoReadecuacion || saltosReadecuacion.length === 0" (click)="guardarReadecuacionPrecio()">
             {{ guardandoReadecuacion ? 'Guardando…' : 'Guardar readecuación' }}
           </button>
         </footer>

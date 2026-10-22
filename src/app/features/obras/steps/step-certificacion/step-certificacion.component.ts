@@ -184,6 +184,7 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
   saltosReadecuacion: SaltoReadecuacion[] = [];
   cargandoReadecuacion = false;
   guardandoReadecuacion = false;
+  eliminandoReadecuacion = false;
   private vistaPreviaObjectUrl: string | null = null;
 
   get proximoNumeroFoja(): number {
@@ -491,6 +492,25 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       error: (error) => {
         this.guardandoReadecuacion = false;
         this.snack.open(error?.error?.message || 'No se pudo guardar la readecuación', 'Cerrar', { duration: 5000 });
+      },
+    });
+  }
+
+  eliminarReadecuacionPrecio(): void {
+    if (!this.obraId || !this.readecuacionCertificado || !this.opcionesReadecuacion || this.eliminandoReadecuacion) return;
+    if (!window.confirm(`¿Eliminar la readecuación del certificado N° ${this.readecuacionCertificado.numero}? El certificado básico no se eliminará.`)) return;
+    this.eliminandoReadecuacion = true;
+    this.api.delete<void>(`obras/${this.obraId}/certificados/${this.readecuacionCertificado.id}/readecuacion`).subscribe({
+      next: () => {
+        const numeroCertificado = this.readecuacionCertificado?.numero;
+        this.eliminandoReadecuacion = false;
+        this.cerrarReadecuacion();
+        this.snack.open(`Readecuación del certificado N° ${numeroCertificado} eliminada`, 'Cerrar', { duration: 4000 });
+        this.cargarDatos();
+      },
+      error: (error) => {
+        this.eliminandoReadecuacion = false;
+        this.snack.open(error?.error?.message || 'No se pudo eliminar la readecuación', 'Cerrar', { duration: 5000 });
       },
     });
   }

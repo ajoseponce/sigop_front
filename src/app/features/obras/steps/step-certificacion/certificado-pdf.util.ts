@@ -266,9 +266,6 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     ['Responsable legal', data.responsableLegal || '—'],
     ['Responsable técnico', data.responsableTecnico || '—'],
   ];
-  if (tieneReadecuacionAprobada(data)) {
-    rowsRight.splice(2, 0, ['Monto actualizado', `$ ${money.format(montoActualizado(data))}`]);
-  }
   doc.setFontSize(6.2);
   let rightY = y + 28;
   rowsRight.forEach(([label, value]) => {

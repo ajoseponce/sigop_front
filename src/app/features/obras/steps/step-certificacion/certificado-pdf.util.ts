@@ -258,6 +258,7 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
   const rightValueX = splitX + 53;
   const rowsRight: Array<[string, string]> = [
     ['Certificado', `N° ${data.numero}`],
+    ['Empresa', `${data.empresa ? sentenceCase(data.empresa) : '—'}${data.empresaCuit ? ` - CUIT: ${data.empresaCuit}` : ''}`],
     ['Monto contrato', `$ ${money.format(totalContrato(data))}`],
     ['Anticipo financiero', `$ ${money.format(montoAnticipoFinanciero(data))}`],
     ['Aprobación de adjudicación', instrumentoAprobacion(data.tipoAprobacionAdjudicacion, data.aprobacionAdjudicacion)],
@@ -276,18 +277,6 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     doc.text(lineas, rightValueX, rightY);
     rightY += Math.max(4, lineas.length * 3.25 + 0.75);
   });
-  const empresaY = rightY + 4;
-  doc.setFontSize(7.2);
-  doc.text('Empresa:', rightLabelX, empresaY);
-  doc.text(
-    doc.splitTextToSize(
-      `${data.empresa ? sentenceCase(data.empresa) : '—'}${data.empresaCuit ? ` - CUIT: ${data.empresaCuit}` : ''}`,
-      pageWidth - right - rightLabelX - 3,
-    ),
-    rightLabelX,
-    empresaY + 6,
-  );
-
   return y + 86;
 }
 

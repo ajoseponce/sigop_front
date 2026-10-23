@@ -6,7 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from 'src/app/core/services/api.service';
 import { descargarComputoPdf } from './computo-pdf.util';
-import { forkJoin } from 'rxjs';
 import { redondearMoneda } from '../../../../shared/utils/money.util';
 import {
   descargarReporteErroresImportacion,
@@ -80,7 +79,6 @@ export class StepRubrosComponent implements OnChanges {
   guardando = false;
   importando = false;
   archivoSeleccionado = '';
-  computoBloqueado = false;
 
   get tieneComparacionImportada(): boolean {
     return this.rubros.controls.some((_, rubroIndex) =>
@@ -113,7 +111,6 @@ export class StepRubrosComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['obra'] && this.obra) {
       this.cargarRubrosExistentes();
-      this.actualizarBloqueo();
     }
   }
 
@@ -122,7 +119,6 @@ export class StepRubrosComponent implements OnChanges {
   }
 
   agregarRubro(): void {
-    if (this.computoBloqueado) return;
     const numero = this.rubros.length + 1;
     this.rubros.push(this.crearRubro({
       rubroRef: String(numero),
@@ -134,13 +130,11 @@ export class StepRubrosComponent implements OnChanges {
   }
 
   eliminarRubro(index: number): void {
-    if (this.computoBloqueado) return;
     this.rubros.removeAt(index);
     this.reordenarRubros();
   }
 
   agregarItem(rubroIndex: number): void {
-    if (this.computoBloqueado) return;
     const items = this.itemsDe(rubroIndex);
     const rubroRef = String(this.rubros.at(rubroIndex).get('rubroRef')?.value || rubroIndex + 1);
     items.push(this.crearItem({
@@ -153,7 +147,6 @@ export class StepRubrosComponent implements OnChanges {
   }
 
   eliminarItem(rubroIndex: number, itemIndex: number): void {
-    if (this.computoBloqueado) return;
     const items = this.itemsDe(rubroIndex);
     if (items.length === 1) {
       this.snack.open('Cada rubro debe contener al menos un ítem', 'Cerrar', { duration: 3000 });
@@ -200,10 +193,6 @@ export class StepRubrosComponent implements OnChanges {
   }
 
   guardar(): void {
-    if (this.computoBloqueado) {
-      this.mostrarBloqueo();
-      return;
-    }
     if (this.tieneDiferenciasImportadas) {
       this.snack.open(
         'No se puede guardar mientras existan diferencias con el parcial del archivo',
@@ -274,11 +263,6 @@ export class StepRubrosComponent implements OnChanges {
 
   importarExcel(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (this.computoBloqueado) {
-      this.mostrarBloqueo();
-      input.value = '';
-      return;
-    }
     const file = input.files?.[0];
     if (!file || !this.obraId || !this.tieneContrato) {
       input.value = '';
@@ -331,29 +315,6 @@ export class StepRubrosComponent implements OnChanges {
     if (this.rubros.length === 0 && this.tieneContrato) {
       this.agregarRubro();
     }
-  }
-
-  private actualizarBloqueo(): void {
-    if (!this.obraId) return;
-    this.computoBloqueado = false;
-    this.form.enable({ emitEvent: false });
-    forkJoin({
-      fojas: this.api.get<unknown[]>(`obras/${this.obraId}/fojas`),
-      certificados: this.api.get<unknown[]>(`obras/${this.obraId}/certificados`),
-    }).subscribe({
-      next: ({ fojas, certificados }) => {
-        this.computoBloqueado = fojas.length > 0 || certificados.length > 0;
-        if (this.computoBloqueado) this.form.disable({ emitEvent: false });
-      },
-    });
-  }
-
-  private mostrarBloqueo(): void {
-    this.snack.open(
-      'El cómputo ya no puede modificarse porque existe una foja de medición o un certificado',
-      'Cerrar',
-      { duration: 5000 },
-    );
   }
 
   private crearRubro(rubro: RubroObra): FormGroup {

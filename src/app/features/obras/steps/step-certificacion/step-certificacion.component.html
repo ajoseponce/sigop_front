@@ -26,6 +26,13 @@
       <span>Fecha de carga</span>
       <strong>{{ form.controls.fechaMedicion.value | date:'dd/MM/yyyy':'UTC':'es-AR' }}</strong>
     </div>
+    <div>
+      <span>Empresa</span>
+      <strong>{{ obra?.empresa?.razonSocial || 'Sin empresa asignada' }}</strong>
+      @if (obra?.empresa?.cuit) {
+        <span>CUIT: {{ obra?.empresa?.cuit }}</span>
+      }
+    </div>
     <small>Elegí el período de la foja. La fecha de carga se asigna automáticamente.</small>
   </section>
 

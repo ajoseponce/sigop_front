@@ -150,9 +150,6 @@ export class EmpresasComponent implements OnInit {
         activo: empresa.activo ?? true,
       });
 
-      this.form.get('cuit')?.disable();
-    } else {
-      this.form.get('cuit')?.enable();
     }
 
     this.modalOpen.set(true);
@@ -218,6 +215,7 @@ export class EmpresasComponent implements OnInit {
     const bodyUpdate = {
       razonSocial: raw.razonSocial || undefined,
       nombreFantasia: raw.nombreFantasia || undefined,
+      cuit: raw.cuit,
       estado: raw.estado || undefined,
       direccion: raw.direccion || undefined,
       ciudad: raw.ciudad || undefined,

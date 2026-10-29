@@ -937,7 +937,7 @@ export async function crearAnexoIIPdf(data: AnexoIIPdfData): Promise<jsPDF> {
     startY: inicio + 13,
     margin: { left, right },
     theme: 'plain',
-    styles: { fontSize: 5.8, cellPadding: 1 },
+    styles: { fontSize: 5.8, cellPadding: 1, valign: 'middle' },
     body: [
       ['Obra:', data.nombreObra || '—', 'Empresa:', data.empresa || '—', 'CUIT:', data.empresaCuit || '—'],
       ['Certificado N°:', String(data.numero), 'Monto contrato original:', `$ ${money.format(totalContrato(data))}`, 'Período certificado:', periodoTexto(data.periodo)],
@@ -953,6 +953,7 @@ export async function crearAnexoIIPdf(data: AnexoIIPdfData): Promise<jsPDF> {
     theme: 'grid',
     styles: { fontSize: 5.1, cellPadding: 1.1, valign: 'middle' },
     headStyles: { fillColor: [225, 231, 235], textColor: 15, fontStyle: 'bold', halign: 'center' },
+    footStyles: { fillColor: [255, 255, 255], textColor: 15, fontStyle: 'bold', halign: 'right' },
     head: [['Insumos', 'Índice INDEC', 'Estructura', 'Mes base', 'Mes corte', 'VAR', 'FRᵢ']],
     body: p.filas.map((fila) => [
       fila.insumo, fila.indice ?? '—', `${n(fila.estructura).toLocaleString('es-AR', { maximumFractionDigits: 2 })}%`,
@@ -961,20 +962,31 @@ export async function crearAnexoIIPdf(data: AnexoIIPdfData): Promise<jsPDF> {
       fila.variacion ? n(fila.variacion).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : '—',
       fila.factor ? n(fila.factor).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : '—',
     ]),
+    foot: [['', '', '100%', '', '', '', '']],
     columnStyles: { 0: { cellWidth: 33 }, 1: { cellWidth: 55 }, 2: { cellWidth: 17, halign: 'right' }, 3: { cellWidth: 20, halign: 'right' }, 4: { cellWidth: 20, halign: 'right' }, 5: { cellWidth: 17, halign: 'right' }, 6: { cellWidth: 17, halign: 'right' } },
   });
   const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? datosY + 55;
-  const x = left + width - 83;
-  autoTable(doc, {
-    startY: finalY + 4, margin: { left: x, right }, theme: 'grid', styles: { fontSize: 6.2, cellPadding: 1.3 },
-    body: [
-      ['Σ FRᵢ', n(p.fr).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })],
-      ['FR = (Σ FRᵢ - 1)', n(p.variacionTotal).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })],
-      ['FAP = 1 + (0,90 × FR)', n(p.fap).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })],
-    ],
-    columnStyles: { 0: { cellWidth: 56, fontStyle: 'bold', halign: 'right' }, 1: { cellWidth: 27, fontStyle: 'bold', halign: 'right' } },
-    didParseCell: (hook) => { if (hook.row.index === 2) { hook.cell.styles.fillColor = [219, 234, 254]; } },
+  const resumenY = finalY + 10;
+  const etiquetaX = left + 17;
+  const formulaX = left + 76;
+  const valorX = left + 109;
+  const formato4 = (valor: unknown) => n(valor).toLocaleString('es-AR', {
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
   });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.text('Total Variación', etiquetaX, resumenY);
+  doc.setFont('helvetica', 'bold');
+  doc.text('FR = ( Σ FRᵢ - 1 )', formulaX, resumenY, { align: 'right' });
+  doc.text(formato4(p.variacionTotal), valorX, resumenY, { align: 'right' });
+  doc.text('0,90 · FR', formulaX, resumenY + 6, { align: 'right' });
+  doc.text(formato4(n(p.variacionTotal) * 0.9), valorX, resumenY + 6, { align: 'right' });
+  doc.text('FAP = 1 + (0,90 · FR)', formulaX, resumenY + 12, { align: 'right' });
+  doc.setTextColor(190, 45, 45);
+  doc.text(formato4(p.fap), valorX, resumenY + 12, { align: 'right' });
+  doc.setTextColor(0, 0, 0);
   return doc;
 }
 

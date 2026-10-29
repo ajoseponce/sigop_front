@@ -401,7 +401,9 @@ export class StepPlanTrabajoComponent implements OnChanges, OnDestroy {
         clave,
         rubroRef: rubro.rubroRef,
         nombre: rubro.nombre,
-        incidencia: montoTotal > 0 ? this.redondear((this.montoRubro(rubro) / montoTotal) * 100) : 0,
+        // Se conserva la precisión para que la suma ponderada del plan sea 100%;
+        // el redondeo a dos decimales se aplica únicamente al mostrar el dato.
+        incidencia: montoTotal > 0 ? (this.montoRubro(rubro) / montoTotal) * 100 : 0,
         porcentajes: this.meses.map((_, index) => this.numero(anteriores[index])),
         itemIds: rubro.items.map((item) => item.id).filter((id): id is number => id !== undefined),
       };

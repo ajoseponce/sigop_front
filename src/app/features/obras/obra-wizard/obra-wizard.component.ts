@@ -10,7 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from 'src/app/core/services/api.service';
 import { ActivatedRoute } from '@angular/router';
 import { redondearMoneda } from '../../../shared/utils/money.util';
-import { switchMap } from 'rxjs';
+import { of, switchMap } from 'rxjs';
 
 
 @Component({
@@ -81,26 +81,27 @@ export class ObraWizardComponent {
       ? this.api.put<any>(`obras/${this.obraId}/contrato/${contratoId}`, contratoPayload)
       : this.api.post<any>(`obras/${this.obraId}/contrato`, contratoPayload);
 
-    let guardar$ = fechaReplanteo
-      ? this.api.put<any>(`obras/${this.obraId}`, { fechaInicio: fechaReplanteo }).pipe(
-        switchMap(() => request$),
-      )
-      : request$;
+    const seguimientoPayload = {
+      ...(modalidadContratacionId ? { modalidadContratacionId } : {}),
+      ...(estadoActual ? { estadoActual } : {}),
+    };
+    const actualizarSeguimiento$ = Object.keys(seguimientoPayload).length
+      ? this.api.put<any>(`obras/${this.obraId}/seguimiento`, seguimientoPayload)
+      : of(null);
+
+    let guardar$ = actualizarSeguimiento$.pipe(
+      switchMap(() => fechaReplanteo
+        ? this.api.put<any>(`obras/${this.obraId}`, { fechaInicio: fechaReplanteo })
+        : of(null),
+      ),
+      switchMap(() => request$),
+    );
 
     guardar$ = guardar$.pipe(
       switchMap(() => this.api.put<any>(`obras/${this.obraId}`, {
         avanceFisicoManual, avanceFinancieroManual, montoAnticipoCertificadoManual, deudaAnticipoManual, fapConsolidadoManual,
       })),
     );
-
-    if (modalidadContratacionId || estadoActual) {
-      guardar$ = guardar$.pipe(
-        switchMap(() => this.api.put<any>(`obras/${this.obraId}/seguimiento`, {
-          ...(modalidadContratacionId ? { modalidadContratacionId } : {}),
-          ...(estadoActual ? { estadoActual } : {}),
-        })),
-      );
-    }
 
     guardar$.subscribe({
       next: () => {

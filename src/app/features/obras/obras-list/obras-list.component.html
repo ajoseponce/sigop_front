@@ -14,7 +14,9 @@
   <div class="filtros-obras">
     <label>Buscar obra o empresa <input [(ngModel)]="busqueda" placeholder="Nombre, expediente, empresa…" /></label>
     <label>Año de obra <select [(ngModel)]="filtroAnio"><option value="">Todos</option>@for (anio of anios; track anio) { <option [value]="anio">{{ anio }}</option> }</select></label>
+    <label>Tipo de contratación <select [(ngModel)]="filtroTipoContratacion"><option value="">Todos</option>@for (tipo of tiposContratacion; track tipo) { <option [value]="tipo">{{ tipo }}</option> }</select></label>
     <label>Estado en Construcciones <select [(ngModel)]="filtroEstado"><option value="">Todos</option>@for (estado of estados; track estado) { <option [value]="estado">{{ estado }}</option> }</select></label>
+    <label>N.º de licitación / concurso <input [(ngModel)]="filtroNumeroLicitacionConcurso" placeholder="Ej.: 03/2025" /></label>
     <span>{{ obrasFiltradas.length }} obras</span>
   </div>
   <button mat-button (click)="cargarImportaciones()">{{ mostrarImportaciones ? 'Ocultar antecedentes importados' : 'Consultar antecedentes importados' }}</button>
@@ -57,8 +59,13 @@
       </ng-container>
 
       <ng-container matColumnDef="sistemaContratacion">
-        <th mat-header-cell *matHeaderCellDef>Contratación</th>
-        <td mat-cell *matCellDef="let o">{{ o.referenciaContratacion || formatoContratacion(o.sistemaContratacion) }}</td>
+        <th mat-header-cell *matHeaderCellDef>Forma de contratación</th>
+        <td mat-cell *matCellDef="let o">{{ o.modalidadContratacion?.nombre ?? o.referenciaContratacion ?? formatoContratacion(o.sistemaContratacion) }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="numeroContrato">
+        <th mat-header-cell *matHeaderCellDef>N.º de licitación / concurso</th>
+        <td mat-cell *matCellDef="let o">{{ o.numeroContrato ?? '—' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="numeroObra">

@@ -43,7 +43,7 @@ td.excede { color: #b91c1c; background: #fee2e2; font-weight: 700; }
 .resumen-montos span { display: flex; flex-direction: column; text-align: right; }
 .resumen-montos b { color: #111827; font-size: 13px; }
 .btn-imprimir { align-self: center; border: 1px solid #111827; border-radius: 8px; padding: 8px 12px; background: #fff; color: #111827; font-weight: 700; cursor: pointer; }
-.botones-impresion { display: flex; align-items: center; gap: 8px; }
+.botones-impresion{display:flex;flex-wrap:wrap;justify-content:end}
 .btn-imprimir.principal { background: #111827; color: #fff; }
 .btn-validacion { align-self: center; border: 1px solid #15803d; border-radius: 8px; padding: 8px 12px; background: #dcfce7; color: #166534; font-weight: 750; cursor: pointer; }
 .btn-validacion.quitar { border-color: #d97706; background: #fffbeb; color: #92400e; }

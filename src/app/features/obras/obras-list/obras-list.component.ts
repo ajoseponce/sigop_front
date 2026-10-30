@@ -59,6 +59,7 @@ export class ObrasListComponent implements OnInit {
   }
 
   columnas: string[] = [
+    'acciones',
     'nombre',
     'expediente',
     'empresa',
@@ -69,7 +70,6 @@ export class ObrasListComponent implements OnInit {
     'estadoSeguimiento',
     'financiamiento',
     'avance',
-    'acciones',
   ];
 
   readonly seccionesAvance = [
@@ -116,7 +116,4 @@ export class ObrasListComponent implements OnInit {
     this.router.navigate(['/obras', id, 'editar']);
   }
 
-  imprimirCaratula(id: number): void {
-    this.router.navigate(['/obras', id, 'caratula']);
-  }
 }

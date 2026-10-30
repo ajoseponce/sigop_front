@@ -10,6 +10,9 @@
 
 table { min-width: 1250px; }
 
+.mat-column-nombre { width: 160px; max-width: 160px; }
+.nombre-obra { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .mat-mdc-row:hover { background: #fdf5f9; }
 
 .empty-state {

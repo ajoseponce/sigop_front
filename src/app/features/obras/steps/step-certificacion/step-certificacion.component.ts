@@ -4,6 +4,7 @@ import { Component, Input, OnChanges, OnDestroy, SimpleChanges, inject } from '@
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormArray, FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
 import { forkJoin, Observable, of, switchMap } from 'rxjs';
 import { ApiService } from 'src/app/core/services/api.service';
 import {
@@ -166,7 +167,7 @@ interface Foja {
 @Component({
   selector: 'app-step-certificacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatSnackBarModule, MatIconModule],
   templateUrl: './step-certificacion.component.html',
   styleUrl: './step-certificacion.component.scss',
 })
@@ -387,6 +388,24 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       return;
     }
     descargarAnexoIIIPdf(this.datosAnexoIIIPdf(certificado));
+  }
+
+  descargarAnexoExcel(certificado: Certificado, anexo: 'anexo-i' | 'anexo-iii-b'): void {
+    if (!this.obraId || !this.estaValidado(certificado)) {
+      this.mostrarDescargaBloqueada();
+      return;
+    }
+    this.api.getBlob(`obras/${this.obraId}/certificados/${certificado.id}/anexos/${anexo}/excel`).subscribe({
+      next: (archivo) => {
+        const enlace = document.createElement('a');
+        const url = URL.createObjectURL(archivo);
+        enlace.href = url;
+        enlace.download = `${anexo}-certificado-${String(certificado.numero).padStart(2, '0')}.xlsx`;
+        enlace.click();
+        URL.revokeObjectURL(url);
+      },
+      error: (error) => this.snack.open(error?.error?.message || 'No se pudo generar el Excel', 'Cerrar', { duration: 4500 }),
+    });
   }
 
   estaValidado(certificado: Certificado): boolean {

@@ -173,10 +173,10 @@
                   </button>
                   @if (certificado.readecuacion?.estado === 'BORRADOR') {
                     <button type="button" class="btn-imprimir" [disabled]="generandoVistaPrevia" (click)="abrirVistaPrevia('readecuacion', certificado)">
-                      Vista previa readecuación
+                      <mat-icon>visibility</mat-icon> Vista Readec.
                     </button>
                     <button type="button" class="btn-imprimir" [disabled]="generandoVistaPrevia" (click)="abrirVistaPreviaAnexoII(certificado)">
-                      Vista previa Anexo II (FAP)
+                      <mat-icon>visibility</mat-icon> Vista Anexo II
                     </button>
                     <button type="button" class="btn-validacion" [disabled]="cambiandoValidacionId !== null" (click)="validarReadecuacion(certificado)">
                       Validar readecuación
@@ -186,10 +186,10 @@
                       Desvalidar readecuación
                     </button>
                     <button type="button" class="btn-imprimir principal" (click)="imprimirReadecuacion(certificado)">
-                      Descargar readecuación
+                      <mat-icon>picture_as_pdf</mat-icon> Readec.
                     </button>
                     <button type="button" class="btn-imprimir" [disabled]="generandoVistaPrevia" (click)="imprimirAnexoII(certificado)">
-                      {{ generandoVistaPrevia ? 'Generando Anexo II…' : 'Descargar Anexo II (FAP)' }}
+                      <mat-icon>picture_as_pdf</mat-icon> {{ generandoVistaPrevia ? 'Generando…' : 'Anexo II' }}
                     </button>
                   }
                   @if (puedeEditar(certificado)) {
@@ -203,16 +203,22 @@
                     </button>
                   }
                   <button type="button" class="btn-imprimir" (click)="imprimirFoja(certificado)">
-                    Descargar foja de medición
+                    <mat-icon>picture_as_pdf</mat-icon> Foja
                   </button>
                   <button type="button" class="btn-imprimir" (click)="imprimirCertificacion(certificado)">
-                    Descargar certificación
+                    <mat-icon>picture_as_pdf</mat-icon> Certif.
                   </button>
                   <button type="button" class="btn-imprimir" (click)="imprimirAnexoIIIB(certificado)">
-                    Anexo III-B
+                    <mat-icon>picture_as_pdf</mat-icon> Anexo III-B
+                  </button>
+                  <button type="button" class="btn-imprimir btn-excel" title="Descargar Anexo I en Excel" (click)="descargarAnexoExcel(certificado, 'anexo-i')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="#217346" d="M5 2h10l4 4v16H5z"/><path fill="#fff" d="M15 2v5h5z" opacity=".75"/><path fill="#fff" d="M8 9h2l1.2 2L12.5 9h2l-2.1 3.1L14.7 16h-2.1l-1.5-2.4L9.6 16H7.5l2.4-3.9z"/></svg> Anexo I
+                  </button>
+                  <button type="button" class="btn-imprimir btn-excel" title="Descargar Anexo III-B en Excel" (click)="descargarAnexoExcel(certificado, 'anexo-iii-b')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="#217346" d="M5 2h10l4 4v16H5z"/><path fill="#fff" d="M15 2v5h5z" opacity=".75"/><path fill="#fff" d="M8 9h2l1.2 2L12.5 9h2l-2.1 3.1L14.7 16h-2.1l-1.5-2.4L9.6 16H7.5l2.4-3.9z"/></svg> Anexo III-B
                   </button>
                   <button type="button" class="btn-imprimir principal" (click)="imprimirCertificado(certificado)">
-                    Descargar certificado
+                    <mat-icon>picture_as_pdf</mat-icon> Cert.
                   </button>
                 } @else {
                   @if (puedeEditar(certificado)) {
@@ -231,7 +237,7 @@
                     [disabled]="generandoVistaPrevia"
                     (click)="abrirVistaPrevia('foja', certificado)"
                   >
-                    Vista previa de foja
+                    <mat-icon>visibility</mat-icon> Vista Foja
                   </button>
                   <button
                     type="button"
@@ -239,7 +245,7 @@
                     [disabled]="generandoVistaPrevia"
                     (click)="abrirVistaPrevia('certificacion', certificado)"
                   >
-                    Vista previa de certificación
+                    <mat-icon>visibility</mat-icon> Vista Certif.
                   </button>
                   <button
                     type="button"
@@ -247,7 +253,7 @@
                     [disabled]="generandoVistaPrevia"
                     (click)="abrirVistaPrevia('anexo-iii-b', certificado)"
                   >
-                    Vista previa Anexo III-B
+                    <mat-icon>visibility</mat-icon> Vista Anexo III-B
                   </button>
                   <button
                     type="button"
@@ -255,7 +261,7 @@
                     [disabled]="generandoVistaPrevia"
                     (click)="abrirVistaPrevia('certificado', certificado)"
                   >
-                    Vista previa del certificado
+                    <mat-icon>visibility</mat-icon> Vista Cert.
                   </button>
                 }
               </div>

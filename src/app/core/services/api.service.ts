@@ -14,6 +14,10 @@ export class ApiService {
       .pipe(map(r => r.data));
   }
 
+  getBlob(path: string) {
+    return this.http.get(`${this.base}/${path}`, { responseType: 'blob' });
+  }
+
   post<T>(path: string, body: any) {
     return this.http.post<ApiResponse<T>>(`${this.base}/${path}`, body)
       .pipe(map(r => r.data));

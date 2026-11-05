@@ -1,12 +1,15 @@
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
+import { ObraResumenPdfData, crearResumenObraPdf } from './obra-resumen-pdf.util';
 
 @Component({
   selector: 'app-obras-list',
@@ -22,9 +25,11 @@ import { ApiService } from '../../../core/services/api.service';
   templateUrl: './obras-list.component.html',
   styleUrl: './obras-list.component.scss',
 })
-export class ObrasListComponent implements OnInit {
+export class ObrasListComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
   private router = inject(Router);
+  private sanitizer = inject(DomSanitizer);
+  private resumenObjectUrl: string | null = null;
 
   obras: any[] = [];
   cargando = false;
@@ -44,6 +49,9 @@ export class ObrasListComponent implements OnInit {
   filtroEstado = '';
   filtroTipoContratacion = '';
   filtroNumeroLicitacionConcurso = '';
+  vistaPreviaResumenUrl: SafeResourceUrl | null = null;
+  resumenParaDescarga: ObraResumenPdfData | null = null;
+  generandoResumen = false;
   get anios(): number[] { return [...new Set<number>(this.obras.map(o => o.anioObra).filter(Boolean))].sort((a, b) => b - a); }
   get estados(): string[] { return [...new Set<string>(this.obras.map(o => o.estadoSeguimiento?.nombre).filter(Boolean))].sort(); }
   get tiposContratacion(): string[] { return [...new Set<string>(this.obras.map(o => o.modalidadContratacion?.nombre).filter(Boolean))].sort(); }
@@ -114,6 +122,53 @@ export class ObrasListComponent implements OnInit {
 
   editarObra(id: number): void {
     this.router.navigate(['/obras', id, 'editar']);
+  }
+
+  imprimirResumenObra(id: number): void {
+    this.cerrarVistaPreviaResumen();
+    this.generandoResumen = true;
+    forkJoin({
+      obra: this.api.get<any>(`obras/${id}`),
+      certificados: this.api.get<any[]>(`obras/${id}/certificados`),
+    }).subscribe({
+      next: async ({ obra, certificados }) => {
+        try {
+          this.resumenParaDescarga = { obra, certificados };
+          const doc = await crearResumenObraPdf(this.resumenParaDescarga);
+          this.resumenObjectUrl = URL.createObjectURL(doc.output('blob'));
+          this.vistaPreviaResumenUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+            `${this.resumenObjectUrl}#toolbar=0&navpanes=0&scrollbar=1`,
+          );
+        } catch (error) {
+          console.error('No se pudo generar el informe resumido de la obra', error);
+        } finally {
+          this.generandoResumen = false;
+        }
+      },
+      error: (error) => {
+        this.generandoResumen = false;
+        console.error('No se pudo obtener la información para el informe resumido de la obra', error);
+      },
+    });
+  }
+
+  descargarResumen(): void {
+    if (!this.resumenParaDescarga) return;
+    void crearResumenObraPdf(this.resumenParaDescarga).then((doc) => {
+      const nombre = String(this.resumenParaDescarga?.obra.nombre ?? 'obra').replace(/[^a-z0-9]+/gi, '-').replace(/(^-|-$)/g, '').toLowerCase() || 'obra';
+      doc.save(`informe-resumen-${nombre}.pdf`);
+    });
+  }
+
+  cerrarVistaPreviaResumen(): void {
+    if (this.resumenObjectUrl) URL.revokeObjectURL(this.resumenObjectUrl);
+    this.resumenObjectUrl = null;
+    this.vistaPreviaResumenUrl = null;
+    this.resumenParaDescarga = null;
+  }
+
+  ngOnDestroy(): void {
+    this.cerrarVistaPreviaResumen();
   }
 
 }

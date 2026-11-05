@@ -115,6 +115,9 @@
           <button mat-icon-button (click)="editarObra(o.id)" matTooltip="Editar / continuar carga">
             <mat-icon>edit</mat-icon>
           </button>
+          <button mat-icon-button [disabled]="generandoResumen" (click)="imprimirResumenObra(o.id)" matTooltip="Vista previa del informe resumido">
+            <mat-icon>print</mat-icon>
+          </button>
         </td>
       </ng-container>
 
@@ -130,3 +133,21 @@
     }
   </div>
 </div>
+
+@if (vistaPreviaResumenUrl) {
+  <div class="preview-overlay" (click)="cerrarVistaPreviaResumen()">
+    <section class="preview-modal" role="dialog" aria-modal="true" aria-label="Vista previa del informe resumido" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <h3>Informe resumido de obra</h3>
+          <span>Vista previa en formato vertical</span>
+        </div>
+        <div class="preview-actions">
+          <button type="button" mat-icon-button aria-label="Descargar PDF" matTooltip="Descargar PDF" (click)="descargarResumen()"><mat-icon>print</mat-icon></button>
+          <button type="button" aria-label="Cerrar vista previa" (click)="cerrarVistaPreviaResumen()">×</button>
+        </div>
+      </header>
+      <iframe [src]="vistaPreviaResumenUrl" title="Vista previa del informe resumido de obra"></iframe>
+    </section>
+  </div>
+}

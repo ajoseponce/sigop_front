@@ -12,6 +12,7 @@ export interface UsuarioAuth {
     nombre: string;
     apellido: string;
     telefono?: string;
+    delegacion?: string | null;
     avatarUrl?: string;
     area: { id: number; nombre: string } | null;
   } | null;

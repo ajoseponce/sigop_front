@@ -113,6 +113,14 @@ export const routes: Routes = [
           import('./features/obras/obras-list/obras-list.component').then(m => m.ObrasListComponent),
       },
       {
+        path: 'reclamos-delegaciones/delegaciones',
+        loadComponent: () => import('./features/reclamos-delegaciones/delegaciones.component').then(m => m.DelegacionesComponent),
+      },
+      {
+        path: 'reclamos-delegaciones/reclamos',
+        loadComponent: () => import('./features/reclamos-delegaciones/reclamos.component').then(m => m.ReclamosComponent),
+      },
+      {
         path: 'obras/:id/editar',
         loadComponent: () =>
           import('./features/obras/obra-wizard/obra-wizard.component').then(m => m.ObraWizardComponent),

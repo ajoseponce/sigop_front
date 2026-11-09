@@ -111,7 +111,14 @@ get primerRol(): string {
   const roles = this.auth.usuario()?.roles;
   return roles && roles.length > 0 ? roles[0].nombre : '';
 }
-  toggleSubmenu(label: string) {
+  toggleSubmenu(item: NavItem) {
+    // Los operadores de delegación solo reciben un submenú: ir directo a Reclamos.
+    if (item.hijos?.length === 1 && item.hijos[0].ruta) {
+      this.router.navigate([item.hijos[0].ruta]);
+      this.cerrarSidebarMobile();
+      return;
+    }
+    const label = item.label;
     if (!this.sidebarAbierto()) {
       this.sidebarAbierto.set(true);
       this.submenuAbierto.set(label);

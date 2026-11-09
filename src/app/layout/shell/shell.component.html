@@ -30,7 +30,7 @@
             <!-- Item con submenú -->
             <div class="nav-group">
               <button class="nav-item nav-group-toggle"
-                      (click)="toggleSubmenu(item.label)"
+                      (click)="toggleSubmenu(item)"
                       [class.open]="submenuVisible(item)"
                       [class.active]="grupoActivo(item)"
                       [matTooltip]="!sidebarAbierto() ? item.label : ''"

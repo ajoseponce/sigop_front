@@ -28,6 +28,11 @@ export class ApiService {
       .pipe(map(r => r.data));
   }
 
+  patch<T>(path: string, body: any) {
+    return this.http.patch<ApiResponse<T>>(`${this.base}/${path}`, body)
+      .pipe(map(r => r.data));
+  }
+
   delete<T>(path: string) {
     return this.http.delete<ApiResponse<T>>(`${this.base}/${path}`)
       .pipe(map(r => r.data));

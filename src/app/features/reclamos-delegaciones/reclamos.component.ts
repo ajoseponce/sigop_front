@@ -19,7 +19,7 @@ export class ReclamosComponent implements OnInit {
   readonly delegaciones = DELEGACIONES; readonly tipos = TIPOS;
   delegacion = ''; barrio = ''; tipo = ''; detalle = ''; guardando = false; modalAbierto = false; cargando = false;
   reclamos: Reclamo[] = []; busqueda = '';
-  reclamoGestion: Reclamo | null = null; observacionEstado = ''; gestionando = false; validando = false;
+  reclamoGestion: Reclamo | null = null; observacionEstado = ''; gestionando = false; validando = false; soloSeguimiento = false;
   readonly etiquetas: Record<Estado, string> = { SOLICITADO: 'Solicitado', VISTO: 'Visto', EN_PROCESO: 'En proceso', RESUELTO: 'Terminado', VALIDADO: 'Validado' };
   get esOperadorDelegacion(): boolean { return this.auth.tieneRol('DELEGACION_RECLAMOS'); }
   get esAdmin(): boolean { return this.auth.tieneRol('ADMIN'); }
@@ -35,8 +35,9 @@ export class ReclamosComponent implements OnInit {
   guardar(): void { if (!this.delegacion || !this.barrio || !this.tipo || !this.detalle.trim()) return; this.guardando = true; this.api.post('reclamos-delegaciones', { delegacion: this.delegacion, barrio: this.barrio, tipo: this.tipo, detalle: this.detalle.trim() }).subscribe({ next: () => { this.snack.open('Reclamo registrado como solicitado', 'Cerrar', { duration: 3500 }); this.limpiar(); this.modalAbierto = false; this.guardando = false; this.cargar(); }, error: e => { this.snack.open(e?.error?.message || 'No se pudo registrar el reclamo', 'Cerrar', { duration: 4000 }); this.guardando = false; } }); }
   abrirModal(): void { this.limpiar(); this.delegacion = this.delegacionAsignada; this.modalAbierto = true; }
   cerrarModal(): void { if (!this.guardando) this.modalAbierto = false; }
-  abrirGestion(reclamo: Reclamo, validar = false): void { this.reclamoGestion = reclamo; this.validando = validar; this.observacionEstado = ''; }
-  cerrarGestion(): void { if (!this.gestionando) this.reclamoGestion = null; }
+  abrirGestion(reclamo: Reclamo, validar = false): void { this.reclamoGestion = reclamo; this.validando = validar; this.soloSeguimiento = false; this.observacionEstado = ''; }
+  verSeguimiento(reclamo: Reclamo): void { this.reclamoGestion = reclamo; this.soloSeguimiento = true; }
+  cerrarGestion(): void { if (!this.gestionando) { this.reclamoGestion = null; this.soloSeguimiento = false; } }
   guardarEstado(): void {
     if (!this.reclamoGestion || !this.proximoEstado || (this.requiereObservacion && !this.observacionEstado.trim())) return;
     this.gestionando = true;

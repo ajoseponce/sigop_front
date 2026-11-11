@@ -37,7 +37,7 @@ export class CombustibleComponent implements OnInit {
   columnas = ['fecha', 'hora', 'interno', 'kms', 'chofer', 'litros', 'puntoCarga', 'acciones'];
 
   form = this.fb.group({
-    fecha: [{ value: this.hoy(), disabled: true }],
+    fecha: [this.hoy(), Validators.required],
     hora: ['', [Validators.required, Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d$/)]],
     choferLegajo: ['', [Validators.required, Validators.pattern(/^\d{1,5}$/)]],
     choferNombre: [{ value: '', disabled: true }],
@@ -106,7 +106,7 @@ export class CombustibleComponent implements OnInit {
   guardar() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     const raw = this.form.getRawValue();
-    const body = { hora: raw.hora!, choferLegajo: raw.choferLegajo!, litros: Number(raw.litros),
+    const body = { fecha: raw.fecha!, hora: raw.hora!, choferLegajo: raw.choferLegajo!, litros: Number(raw.litros),
       puntoCargaId: Number(raw.puntoCargaId), interno: Number(raw.interno),
       ...(raw.kms !== null ? { kms: Number(raw.kms) } : {}) };
     const op = this.editando()

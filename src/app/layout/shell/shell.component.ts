@@ -35,7 +35,9 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
   { label: 'Obras', icon: 'engineering', hijos: [
     { label: 'Nueva Obra', icon: 'local_shipping', ruta: '/obras/nueva', roles: ['ADMIN','SUPERVISOR'] },
     { label: 'Lista de Obras', icon: 'list', ruta: '/obras', roles: ['ADMIN','SUPERVISOR'] },
-    { label: 'Pendientes de ejecución', icon: 'summarize', ruta: '/obras/informe-pendientes', roles: ['ADMIN','SUPERVISOR'] },
+    { label: 'Informes', icon: 'description', roles: ['ADMIN','SUPERVISOR'], hijos: [
+      { label: 'Pendientes de ejecución', icon: 'summarize', ruta: '/obras/informe-pendientes', roles: ['ADMIN','SUPERVISOR'] },
+    ] },
     { label: 'FAP', icon: 'query_stats', ruta: '/obras/fap', roles: ['ADMIN','SUPERVISOR'] },
     { label: 'Análisis documental', icon: 'difference', ruta: '/obras/analisis-documental', roles: ['ADMIN','SUPERVISOR'] },
   ]},
@@ -137,13 +139,12 @@ get primerRol(): string {
   }
 
   grupoActivo(item: NavItem): boolean {
-    return item.hijos?.some(hijo => hijo.ruta && this.router.url.startsWith(hijo.ruta)) ?? false;
+    return item.hijos?.some(hijo => (hijo.ruta && this.router.url.startsWith(hijo.ruta)) || this.grupoActivo(hijo)) ?? false;
   }
 
   private mapearMenu(items: MenuApiItem[]): NavItem[] {
     const ordenados = [...items].sort((a, b) => a.orden - b.orden);
     const porId = new Map<number, NavItem>();
-    const hijosPorPadre = new Map<number, NavItem[]>();
 
     for (const item of ordenados) {
       const navItem: NavItem = {
@@ -152,20 +153,19 @@ get primerRol(): string {
         ruta: item.ruta,
       };
       porId.set(item.id, navItem);
-      if (item.padre) {
-        const lista = hijosPorPadre.get(item.padre.id) ?? [];
-        lista.push(navItem);
-        hijosPorPadre.set(item.padre.id, lista);
+    }
+
+    for (const item of ordenados) {
+      if (!item.padre) continue;
+      const padre = porId.get(item.padre.id);
+      const hijo = porId.get(item.id)!;
+      if (padre) {
+        padre.hijos = [...(padre.hijos ?? []), hijo];
+        padre.ruta = undefined;
       }
     }
 
-    return ordenados
-      .filter(item => !item.padre)
-      .map(item => {
-        const navItem = porId.get(item.id)!;
-        const hijos = hijosPorPadre.get(item.id);
-        return hijos?.length ? { ...navItem, ruta: undefined, hijos } : navItem;
-      });
+    return ordenados.filter(item => !item.padre).map(item => porId.get(item.id)!);
   }
 
   logout() {

@@ -11,13 +11,15 @@
     </button>
   </div>
 
-  <div class="filtros-obras">
-    <label>Buscar obra o empresa <input [(ngModel)]="busqueda" placeholder="Nombre, expediente, empresa…" /></label>
-    <label>Año de obra <select [(ngModel)]="filtroAnio"><option value="">Todos</option>@for (anio of anios; track anio) { <option [value]="anio">{{ anio }}</option> }</select></label>
-    <label>Tipo de contratación <select [(ngModel)]="filtroTipoContratacion"><option value="">Todos</option>@for (tipo of tiposContratacion; track tipo) { <option [value]="tipo">{{ tipo }}</option> }</select></label>
-    <label>Estado en Construcciones <select [(ngModel)]="filtroEstado"><option value="">Todos</option>@for (estado of estados; track estado) { <option [value]="estado">{{ estado }}</option> }</select></label>
-    <label>N.º de licitación / concurso <input [(ngModel)]="filtroNumeroLicitacionConcurso" placeholder="Ej.: 03/2025" /></label>
-    <span>{{ obrasFiltradas.length }} obras</span>
+  <div class="filters-card card">
+    <div class="filters-header"><div><h2>Filtrar obras</h2><p>Aplicá uno o más criterios para encontrar una obra.</p></div><div class="filters-actions"><span>{{ obrasFiltradas.length }} obras</span><button mat-button type="button" (click)="limpiarFiltros()"><mat-icon>filter_alt_off</mat-icon> Limpiar</button></div></div>
+    <div class="filters-grid obras-filters">
+      <mat-form-field appearance="outline"><mat-label>Buscar obra o empresa</mat-label><input matInput [(ngModel)]="busqueda" placeholder="Nombre, expediente, empresa"><mat-icon matSuffix>search</mat-icon></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Año de obra</mat-label><mat-select [(ngModel)]="filtroAnio"><mat-option value="">Todos los años</mat-option>@for (anio of anios; track anio) { <mat-option [value]="anio">{{ anio }}</mat-option> }</mat-select></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Tipo de contratación</mat-label><mat-select [(ngModel)]="filtroTipoContratacion"><mat-option value="">Todos los tipos</mat-option>@for (tipo of tiposContratacion; track tipo) { <mat-option [value]="tipo">{{ tipo }}</mat-option> }</mat-select></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Estado en Construcciones</mat-label><mat-select [(ngModel)]="filtroEstado"><mat-option value="">Todos los estados</mat-option>@for (estado of estados; track estado) { <mat-option [value]="estado">{{ estado }}</mat-option> }</mat-select></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>N.º de licitación / concurso</mat-label><input matInput [(ngModel)]="filtroNumeroLicitacionConcurso" placeholder="Ej.: 03/2025"><mat-icon matSuffix>description</mat-icon></mat-form-field>
+    </div>
   </div>
   <button mat-button (click)="cargarImportaciones()">{{ mostrarImportaciones ? 'Ocultar antecedentes importados' : 'Consultar antecedentes importados' }}</button>
   @if (mostrarImportaciones) {
@@ -140,7 +142,7 @@
       <header>
         <div>
           <h3>Informe resumido de obra</h3>
-          <span>Vista previa en formato vertical</span>
+          <span>Vista previa en formato horizontal</span>
         </div>
         <div class="preview-actions">
           <button type="button" mat-icon-button aria-label="Descargar PDF" matTooltip="Descargar PDF" (click)="descargarResumen()"><mat-icon>print</mat-icon></button>

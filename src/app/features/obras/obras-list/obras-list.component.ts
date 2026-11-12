@@ -7,6 +7,9 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { ObraResumenPdfData, crearResumenObraPdf } from './obra-resumen-pdf.util';
@@ -21,6 +24,9 @@ import { ObraResumenPdfData, crearResumenObraPdf } from './obra-resumen-pdf.util
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
   ],
   templateUrl: './obras-list.component.html',
   styleUrl: './obras-list.component.scss',
@@ -64,6 +70,14 @@ export class ObrasListComponent implements OnInit, OnDestroy {
       && (!this.filtroTipoContratacion || o.modalidadContratacion?.nombre === this.filtroTipoContratacion)
       && (!numeroLicitacionConcurso || o.numeroContrato?.toLowerCase().includes(numeroLicitacionConcurso))
       && (!texto || [o.nombre, o.expediente, o.empresa?.razonSocial, o.empresaOrigen, o.referenciaContratacion].join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(texto)));
+  }
+
+  limpiarFiltros(): void {
+    this.busqueda = '';
+    this.filtroAnio = '';
+    this.filtroEstado = '';
+    this.filtroTipoContratacion = '';
+    this.filtroNumeroLicitacionConcurso = '';
   }
 
   columnas: string[] = [

@@ -44,13 +44,30 @@
                    [class.expanded]="submenuVisible(item) && sidebarAbierto()">
                 @for (hijo of item.hijos; track hijo.label) {
                   @if (puedeVer(hijo)) {
-                    <a class="nav-subitem"
-                       [routerLink]="hijo.ruta"
-                       (click)="cerrarSidebarMobile()"
-                       routerLinkActive="active">
-                      <mat-icon class="nav-icon">{{ hijo.icon }}</mat-icon>
-                      <span>{{ hijo.label }}</span>
-                    </a>
+                    @if (hijo.hijos) {
+                      <div class="nav-subgroup" [class.active]="grupoActivo(hijo)">
+                        <div class="nav-subgroup-title"><mat-icon class="nav-icon">{{ hijo.icon }}</mat-icon><span>{{ hijo.label }}</span></div>
+                        @for (nieto of hijo.hijos; track nieto.label) {
+                          @if (puedeVer(nieto)) {
+                            <a class="nav-subitem nav-subitem-nested"
+                               [routerLink]="nieto.ruta"
+                               (click)="cerrarSidebarMobile()"
+                               routerLinkActive="active">
+                              <mat-icon class="nav-icon">{{ nieto.icon }}</mat-icon>
+                              <span>{{ nieto.label }}</span>
+                            </a>
+                          }
+                        }
+                      </div>
+                    } @else {
+                      <a class="nav-subitem"
+                         [routerLink]="hijo.ruta"
+                         (click)="cerrarSidebarMobile()"
+                         routerLinkActive="active">
+                        <mat-icon class="nav-icon">{{ hijo.icon }}</mat-icon>
+                        <span>{{ hijo.label }}</span>
+                      </a>
+                    }
                   }
                 }
               </div>

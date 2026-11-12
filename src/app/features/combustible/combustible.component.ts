@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,7 +12,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 
-type Catalogo = { id: number; nombre: string };
+type Catalogo = { id: number; nombre: string; legajo?: string | null };
+type FiltrosConsumo = { fecha: string; interno: string; choferId: number | null; puntoCargaId: number | null };
 
 @Component({
   selector: 'app-combustible',
@@ -30,11 +31,32 @@ export class CombustibleComponent implements OnInit {
   consumos = signal<any[]>([]);
   choferes = signal<Catalogo[]>([]);
   puntosCarga = signal<Catalogo[]>([]);
+  filtros = signal<FiltrosConsumo>({ fecha: '', interno: '', choferId: null, puntoCargaId: null });
   estadoChofer = signal<'idle' | 'buscando' | 'encontrado' | 'no-encontrado'>('idle');
   cargando = signal(false);
   modalOpen = signal(false);
   editando = signal<any | null>(null);
   columnas = ['fecha', 'hora', 'interno', 'kms', 'chofer', 'litros', 'puntoCarga', 'acciones'];
+
+  filtrosForm = this.fb.group({
+    fecha: [''],
+    interno: [''],
+    choferId: [null as number | null],
+    puntoCargaId: [null as number | null],
+  });
+
+  consumosFiltrados = computed(() => {
+    const filtros = this.filtros();
+    const interno = filtros.interno.trim();
+    return this.consumos().filter(consumo => {
+      const fecha = String(consumo.fecha).slice(0, 10);
+      const coincideFecha = !filtros.fecha || fecha === filtros.fecha;
+      const coincideInterno = !interno || String(consumo.interno).includes(interno);
+      const coincideChofer = !filtros.choferId || (consumo.choferId ?? consumo.chofer?.id) === filtros.choferId;
+      const coincidePunto = !filtros.puntoCargaId || (consumo.puntoCargaId ?? consumo.puntoCarga?.id) === filtros.puntoCargaId;
+      return coincideFecha && coincideInterno && coincideChofer && coincidePunto;
+    });
+  });
 
   form = this.fb.group({
     fecha: [this.hoy(), Validators.required],
@@ -47,7 +69,19 @@ export class CombustibleComponent implements OnInit {
     kms: [null as number | null, [Validators.min(0), Validators.pattern(/^\d+$/)]],
   });
 
-  ngOnInit() { this.cargarTodo(); }
+  ngOnInit() {
+    this.filtrosForm.valueChanges.subscribe(valores => {
+      this.filtros.set({
+        fecha: valores.fecha ?? '',
+        interno: valores.interno?.replace(/\D/g, '').slice(0, 3) ?? '',
+        choferId: valores.choferId ?? null,
+        puntoCargaId: valores.puntoCargaId ?? null,
+      });
+    });
+    this.cargarTodo();
+  }
+
+  limpiarFiltros() { this.filtrosForm.reset({ fecha: '', interno: '', choferId: null, puntoCargaId: null }); }
 
   cargarTodo() {
     this.cargando.set(true);

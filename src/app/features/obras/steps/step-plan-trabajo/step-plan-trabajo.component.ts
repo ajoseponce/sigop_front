@@ -45,6 +45,8 @@ interface ObraPlan {
   seccion?: string | null;
   parcela?: string | null;
   calles?: string | null;
+  modalidadContratacion?: { nombre?: string } | null;
+  referenciaContratacion?: string | null;
   empresa?: { razonSocial?: string | null; cuit?: string | null } | null;
   contratos?: ContratoPlan[];
 }
@@ -278,6 +280,7 @@ export class StepPlanTrabajoComponent implements OnChanges, OnDestroy {
     return {
       nombreObra: this.obra?.nombre ?? '—',
       numeroContrato: this.contrato?.numeroContrato ?? undefined,
+      modalidadContratacion: this.obra?.modalidadContratacion?.nombre ?? this.obra?.referenciaContratacion ?? undefined,
       fechaInicio: this.obra?.fechaInicio,
       expediente: this.obra?.expediente,
       anioEmision: this.obra?.anioEmision,

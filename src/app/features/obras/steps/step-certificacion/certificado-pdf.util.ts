@@ -55,6 +55,7 @@ export interface MedicionPdfData {
   empresa?: string;
   empresaCuit?: string;
   numeroContrato?: string;
+  modalidadContratacion?: string;
   responsableLegal?: string;
   responsableTecnico?: string;
   ubicacion?: string;
@@ -207,6 +208,11 @@ function instrumentoAprobacion(tipo?: 'DECRETO' | 'RESOLUCION', numero?: string)
   return `${tipo === 'RESOLUCION' ? 'Resolución' : 'Decreto'} N° ${numero}`;
 }
 
+function modoEjecucion(data: MedicionPdfData): string {
+  const modalidad = data.modalidadContratacion?.trim() || '—';
+  return data.numeroContrato ? `${modalidad} ${data.numeroContrato}` : modalidad;
+}
+
 function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): number {
   const left = 16;
   const right = 10;
@@ -237,7 +243,7 @@ function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): nu
     ['Organismo otorgante', 'Municipalidad de Posadas'],
     ['Expediente madre N°', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
     ['Programa', 'Municipal'],
-    ['Modo de ejecución', data.numeroContrato ? `Concurso de precios ${data.numeroContrato}` : 'Concurso de precios'],
+    ['Modo de ejecución', modoEjecucion(data)],
     ['Ubicación', data.ubicacion ? sentenceCase(data.ubicacion) : '—'],
     ['Fecha de apertura', fechaTexto(data.fechaApertura)],
     ['Fecha de replanteo', fechaTexto(data.fechaInicio)],
@@ -335,7 +341,7 @@ function encabezadoCertificado(doc: jsPDF, data: MedicionPdfData, cabecera: stri
     ['Monto total', `$ ${money.format(totalContrato(data))}`],
     ['Monto provincia / Nación', '—'],
     ['Monto municipio', `$ ${money.format(totalContrato(data))}`],
-    ['Modo de ejecución', data.numeroContrato ? `Concurso de precios ${data.numeroContrato}` : 'Concurso de precios'],
+    ['Modo de ejecución', modoEjecucion(data)],
     ['Empresa', data.empresa ? sentenceCase(data.empresa) : '—'],
     ['CUIT', data.empresaCuit || '—'],
     ['Monto contrato original', `$ ${money.format(totalContrato(data))}`],
@@ -729,7 +735,7 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
   };
   const izquierda = [
     ['Organismo otorgante:', 'Municipalidad de Posadas'],
-    ['Convenio / proyecto:', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
+    ['Expediente madre N°:', `${data.expediente ?? '—'}${data.anioEmision ? ` / ${data.anioEmision}` : ''}`],
     ['Dispositivo de aprobación:', data.aprobacion ?? '—'],
     ['Obra:', data.nombreObra ? sentenceCase(data.nombreObra) : '—'],
     ['Programa:', 'Municipal'],

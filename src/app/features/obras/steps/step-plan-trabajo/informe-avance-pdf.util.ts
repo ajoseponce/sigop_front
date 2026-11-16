@@ -34,6 +34,7 @@ export interface InformeAvancePdfRubro {
 export interface InformeAvancePdfData {
   nombreObra: string;
   numeroContrato?: string;
+  modalidadContratacion?: string | null;
   fechaInicio?: string | null;
   expediente?: string | null;
   anioEmision?: number | null;
@@ -103,7 +104,8 @@ function encabezado(doc: jsPDF, cabecera: string, data: InformeAvancePdfData, ti
   fila('Ubicación', data.ubicacion ? sentenceCase(data.ubicacion) : '—', left + 2, datosY + 20.9, col1 - left - 34);
   fila('Monto total', formatoMonto(data.totalContrato), col1 + 2, datosY + 4.5, col2 - col1 - 34);
   fila('Monto municipio', formatoMonto(data.totalContrato), col1 + 2, datosY + 8.6, col2 - col1 - 34);
-  fila('Modo de ejecución', data.numeroContrato ? `Concurso ${data.numeroContrato}` : 'Concurso', col1 + 2, datosY + 12.7, col2 - col1 - 34);
+  const modalidad = data.modalidadContratacion?.trim() || '—';
+  fila('Modo de ejecución', data.numeroContrato ? `${modalidad} ${data.numeroContrato}` : modalidad, col1 + 2, datosY + 12.7, col2 - col1 - 34);
   fila('Empresa', data.empresa ? sentenceCase(data.empresa) : '—', col1 + 2, datosY + 16.8, col2 - col1 - 34);
   fila('CUIT', data.empresaCuit ?? '—', col1 + 2, datosY + 20.9, col2 - col1 - 34);
   fila('Certificado N°', data.numeroCertificado ? String(data.numeroCertificado) : '—', col2 + 2, datosY + 4.5, left + width - col2 - 34);

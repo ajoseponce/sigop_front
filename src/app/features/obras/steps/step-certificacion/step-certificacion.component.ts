@@ -72,6 +72,8 @@ interface ObraCertificacion {
   inspectorNombre?: string;
   localidad?: string;
   fechaInicio?: string;
+  modalidadContratacion?: { nombre?: string } | null;
+  referenciaContratacion?: string | null;
   empresa?: { razonSocial?: string; cuit?: string } | null;
   contratos?: ContratoObra[];
 }
@@ -771,6 +773,7 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       empresa: this.obra?.empresa?.razonSocial,
       empresaCuit: this.obra?.empresa?.cuit,
       numeroContrato: contrato?.numeroContrato,
+      modalidadContratacion: this.obra?.modalidadContratacion?.nombre ?? this.obra?.referenciaContratacion ?? undefined,
       responsableLegal: this.nombreResponsable(contrato?.responsableLegal),
       responsableTecnico: this.nombreResponsable(contrato?.responsableTecnico),
       aprobacion: contrato?.decretoContrato ?? contrato?.decretoAdjudicacion,

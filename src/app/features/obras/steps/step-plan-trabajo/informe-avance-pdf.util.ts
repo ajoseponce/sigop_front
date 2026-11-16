@@ -110,8 +110,7 @@ function encabezado(doc: jsPDF, cabecera: string, data: InformeAvancePdfData, ti
   fila('CUIT', data.empresaCuit ?? '—', col1 + 2, datosY + 20.9, col2 - col1 - 34);
   fila('Certificado N°', data.numeroCertificado ? String(data.numeroCertificado) : '—', col2 + 2, datosY + 4.5, left + width - col2 - 34);
   fila('Fecha de replanteo', fecha(data.fechaInicio), col2 + 2, datosY + 8.6, left + width - col2 - 34);
-  fila('Plazo de ejecución', data.plazoObraDias ? `${data.plazoObraDias} días` : '—', col2 + 2, datosY + 12.7, left + width - col2 - 34);
-  fila('Período', formatoPeriodo(data.periodoCertificado), col2 + 2, datosY + 16.8, left + width - col2 - 34);
+  fila('Período', formatoPeriodo(data.periodoCertificado), col2 + 2, datosY + 12.7, left + width - col2 - 34);
   return inicio + 50;
 }
 

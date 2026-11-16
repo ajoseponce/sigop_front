@@ -209,7 +209,7 @@ function instrumentoAprobacion(tipo?: 'DECRETO' | 'RESOLUCION', numero?: string)
 }
 
 function modoEjecucion(data: MedicionPdfData): string {
-  const modalidad = data.modalidadContratacion?.trim() || '—';
+  const modalidad = data.modalidadContratacion?.trim() ? sentenceCase(data.modalidadContratacion) : '—';
   return data.numeroContrato ? `${modalidad} ${data.numeroContrato}` : modalidad;
 }
 

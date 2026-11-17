@@ -751,6 +751,7 @@ export async function crearAnexoIIIPdf(data: AnexoIIIPdfData): Promise<jsPDF> {
     ['Mes y año certificado:', periodoTexto(data.periodo)],
     ['Fecha de replanteo:', fechaTexto(data.fechaInicio)],
     ['Plazo obra:', data.plazoObraDias ? `${data.plazoObraDias} días` : '—'],
+    ['Modo de ejecución:', modoEjecucion(data)],
     ['Monto total contrato:', `$ ${money.format(contrato)}`],
     ['Monto Nación / Provincia:', '—'],
     ['Monto Municipio:', `$ ${money.format(contrato)}`],

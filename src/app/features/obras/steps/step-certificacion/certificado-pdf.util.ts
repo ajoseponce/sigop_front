@@ -617,7 +617,7 @@ export async function crearCertificacionPdf(data: MedicionPdfData): Promise<jsPD
   doc.text(`CERTIFICADO DE OBRA N° ${data.numero} BÁSICO`, left + width / 2, y, { align: 'center' });
   y += 6;
   doc.setFontSize(8.4);
-  doc.text(`CONCURSO DE PRECIOS N° ${data.numeroContrato || '—'}`, left + width / 2, y, { align: 'center' });
+  doc.text(modoEjecucion(data).toLocaleUpperCase('es-AR'), left + width / 2, y, { align: 'center' });
   y += 6;
   doc.text(`Empresa: “${empresa}”`, left + width / 2, y, { align: 'center' });
   y += 10;

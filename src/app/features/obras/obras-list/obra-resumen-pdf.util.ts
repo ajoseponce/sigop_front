@@ -31,6 +31,13 @@ const fecha = (valor: string | null | undefined): string => {
 
 const texto = (valor: unknown): string => valor === null || valor === undefined || valor === '' ? '—' : String(valor);
 
+const expedienteCertificado = (certificado: any): string => {
+  if (certificado.nomenclaturaExpediente) return certificado.nomenclaturaExpediente;
+  if (!certificado.numeroExpediente) return '—';
+  const anio = certificado.fechaExpediente ? new Date(`${String(certificado.fechaExpediente).slice(0, 10)}T12:00:00`).getFullYear() : null;
+  return `Expediente N° ${certificado.numeroExpediente}${anio && Number.isFinite(anio) ? `/${anio}` : ''}`;
+};
+
 const ubicacionCompleta = (obra: any): string => {
   const partes = [obra.calles, obra.localidad, obra.municipio, obra.departamento]
     .filter((parte) => parte !== null && parte !== undefined && String(parte).trim() !== '')
@@ -100,6 +107,8 @@ export async function crearResumenObraPdf(data: ObraResumenPdfData): Promise<jsP
   const redeterminadoBruto = totalizar(certificadosRedeterminados, certificado => certificado.readecuacion?.incremento);
   const redeterminadoNeto = totalizar(certificadosRedeterminados, certificado => certificado.readecuacion?.incrementoNetoPagar);
   const redeterminadoFondoReparo = totalizar(certificadosRedeterminados, certificado => certificado.readecuacion?.deduccionFondoReparo);
+  const montoContratoActualizado = total + redeterminadoBruto;
+  const montoCertificadoActualizado = brutoAcumulado + redeterminadoBruto;
   const fisico = avanceFisico(contrato, certificados);
   const financiero = total > 0 ? brutoAcumulado * 100 / total : 0;
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -135,21 +144,24 @@ export async function crearResumenObraPdf(data: ObraResumenPdfData): Promise<jsP
     ]],
   });
 
-  y = encabezadoSeccion(doc, '01 | HITOS DE PLAZOS', finalTabla(doc, y) + 3, left, width);
+  y = encabezadoSeccion(doc, '01 | HITOS', finalTabla(doc, y) + 3, left, width);
   const hitos: string[][] = [];
+  const fechaReplanteo = obra.fechaInicio ?? contrato?.vigenciaDesde;
+  if (fechaReplanteo) hitos.push(['Replanteo', 'Acta de replanteo', fecha(fechaReplanteo), 'Inicio de ejecución']);
   if (obra.fechaAmpliacionPlazo) hitos.push(['Ampliación de plazo', texto(obra.modificacion), fecha(obra.fechaAmpliacionPlazo), contrato?.plazoObraDias ? `${contrato.plazoObraDias} días contractuales` : '—']);
   if (obra.fechaNeutralizacion || obra.fechaReinicio) hitos.push(['Neutralización / reinicio', texto(obra.modificacion), `${fecha(obra.fechaNeutralizacion)} / ${fecha(obra.fechaReinicio)}`, 'Período informado en seguimiento']);
   autoTable(doc, {
     startY: y, margin: { left, right }, theme: 'grid', styles: { fontSize: 5.8, cellPadding: 1.3 },
     headStyles: { fillColor: [232, 239, 241], textColor: [37, 54, 63], fontStyle: 'bold' }, head: [['Hito', 'Acto / respaldo', 'Fecha efectiva', 'Plazo / efecto']],
-    body: hitos.length ? hitos : [['Sin hitos de plazo informados', '—', '—', '—']],
+    body: hitos.length ? hitos : [['Sin hitos informados', '—', '—', '—']],
   });
 
   y = encabezadoSeccion(doc, '02 | CERTIFICADOS BÁSICOS', finalTabla(doc, y) + 3, left, width);
   let brutoAcum = 0; let afAcum = 0; let frAcum = 0;
   const filasBasicos = certificadosBasicos.map((certificado) => {
     brutoAcum += numero(certificado.montoBruto); afAcum += numero(certificado.deduccionAnticipo); frAcum += numero(certificado.deduccionFondoReparo);
-    return [`N° ${certificado.numero} / ${periodo(certificado.periodo)}`, texto(certificado.estado), monto(certificado.montoBruto), monto(brutoAcum), monto(certificado.deduccionAnticipo), monto(afAcum), monto(certificado.montoPostAnticipo), monto(certificado.deduccionFondoReparo), monto(frAcum), `${percent.format(financiero)}%`, 'Original', texto(certificado.nomenclaturaExpediente ?? certificado.numeroExpediente), '—'];
+    const avanceMensual = total > 0 ? numero(certificado.montoBruto) * 100 / total : 0;
+    return [`N° ${certificado.numero} / ${periodo(certificado.periodo)}`, texto(certificado.estado), monto(certificado.montoBruto), monto(brutoAcum), monto(certificado.deduccionAnticipo), monto(afAcum), monto(certificado.montoPostAnticipo), monto(certificado.deduccionFondoReparo), monto(frAcum), `${percent.format(avanceMensual)}%`, 'Original', expedienteCertificado(certificado), '—'];
   });
   filasBasicos.push(['TOTAL BÁSICOS', '', monto(brutoAcum), '', monto(afAcum), '', monto(totalizar(certificadosBasicos, certificado => certificado.montoPostAnticipo)), monto(frAcum), '', '', '', '', '']);
   autoTable(doc, {
@@ -163,7 +175,7 @@ export async function crearResumenObraPdf(data: ObraResumenPdfData): Promise<jsP
   const filasRedeterminados = certificadosRedeterminados.map((certificado) => {
     const redeterminacion = certificado.readecuacion;
     redeterminadoAcum += numero(redeterminacion?.incremento); redeterminadoFrAcum += numero(redeterminacion?.deduccionFondoReparo);
-    return [`N° ${certificado.numero} / ${periodo(certificado.periodo)}`, texto(certificado.estado), monto(redeterminacion?.incremento), monto(redeterminadoAcum), 'No aplica', 'No aplica', monto(redeterminacion?.incrementoNetoPagar), monto(redeterminacion?.deduccionFondoReparo), monto(redeterminadoFrAcum), 'No aplica', 'Original', texto(certificado.nomenclaturaExpediente ?? certificado.numeroExpediente), '—'];
+    return [`N° ${certificado.numero} / ${periodo(certificado.periodo)}`, texto(certificado.estado), monto(redeterminacion?.incremento), monto(redeterminadoAcum), 'No aplica', 'No aplica', monto(redeterminacion?.incrementoNetoPagar), monto(redeterminacion?.deduccionFondoReparo), monto(redeterminadoFrAcum), 'No aplica', 'Original', expedienteCertificado(certificado), '—'];
   });
   filasRedeterminados.push(['TOTAL REDETERM.', '', monto(redeterminadoBruto), '', 'No aplica', 'No aplica', monto(redeterminadoNeto), monto(redeterminadoFondoReparo), '', 'No aplica', '', '', '']);
   autoTable(doc, {
@@ -178,7 +190,7 @@ export async function crearResumenObraPdf(data: ObraResumenPdfData): Promise<jsP
     headStyles: { fillColor: [232, 239, 241], textColor: [37, 54, 63], fontStyle: 'bold' },
     head: [['ANTICIPO Y SALDO DE OBRA A PRECIOS BASE', 'CERTIFICACIÓN Y RETENCIONES']],
     body: [[
-      [`Anticipo financiero otorgado: ${monto(anticipoOtorgado || obra.montoAnticipo)}`, `Total deducido de AF: ${monto(anticipoDeducido)}`, `AF pendiente de deducción: ${monto(Math.max((anticipoOtorgado || numero(obra.montoAnticipo)) - anticipoDeducido, 0))}`, `Monto pendiente de ejecución a precios base: ${monto(Math.max(total - brutoAcumulado, 0))}`].join('\n'),
+      [`Anticipo financiero otorgado: ${monto(anticipoOtorgado || obra.montoAnticipo)}`, `Total deducido de AF: ${monto(anticipoDeducido)}`, `AF pendiente de deducción: ${monto(Math.max((anticipoOtorgado || numero(obra.montoAnticipo)) - anticipoDeducido, 0))}`, `Monto pendiente de ejecución a precios base: ${monto(Math.max(total - brutoAcumulado, 0))}`, `Monto pendiente de ejecución actualizado: ${monto(Math.max(montoContratoActualizado - montoCertificadoActualizado, 0))}`].join('\n'),
       [`Total bruto certificado (básicos + redeterminados): ${monto(brutoAcumulado + redeterminadoBruto)}`, `Total deducción de anticipo financiero: ${monto(anticipoDeducido)}`, `Total fondo de reparo retenido: ${monto(fondoReparo + redeterminadoFondoReparo)}`, `Total neto certificado (básicos + redeterminados): ${monto(netoAcumulado + redeterminadoNeto)}`].join('\n'),
     ]],
   });

@@ -9,6 +9,7 @@ export interface ObraResumenPdfData {
 
 const money = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const percent = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const factor = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 
 const numero = (valor: unknown): number => {
   const resultado = Number(valor);
@@ -67,8 +68,26 @@ function contratoVigente(obra: any): any {
 }
 
 function totalContrato(contrato: any): number {
+  // El monto contractual ya se persiste redondeado al cargar el cómputo.
+  // Recalcularlo en el navegador con números binarios puede introducir
+  // diferencias de centavos respecto del importe contractual vigente.
+  if (contrato?.montoDelta !== null && contrato?.montoDelta !== undefined) {
+    return numero(contrato.montoDelta);
+  }
   return (contrato?.rubros ?? []).flatMap((rubro: any) => rubro.items ?? [])
     .reduce((total: number, item: any) => total + numero(item.cantidad) * numero(item.precioUnitario), 0);
+}
+
+function ultimoFapConsolidado(obra: any, certificados: any[]): number {
+  const ultimoCertificadoConFap = certificados
+    .filter((certificado) => certificado.estado === 'APROBADO' && numero(certificado.readecuacion?.fapConsolidado) > 0)
+    .sort((a, b) => a.numero - b.numero)
+    .at(-1);
+  const fapCertificado = numero(ultimoCertificadoConFap?.readecuacion?.fapConsolidado);
+  if (fapCertificado > 0) return fapCertificado;
+
+  const fapManual = numero(obra.fapConsolidadoManual);
+  return fapManual > 0 ? fapManual : 1;
 }
 
 function avanceFisico(contrato: any, certificados: any[]): number {
@@ -107,8 +126,9 @@ export async function crearResumenObraPdf(data: ObraResumenPdfData): Promise<jsP
   const redeterminadoBruto = totalizar(certificadosRedeterminados, certificado => certificado.readecuacion?.incremento);
   const redeterminadoNeto = totalizar(certificadosRedeterminados, certificado => certificado.readecuacion?.incrementoNetoPagar);
   const redeterminadoFondoReparo = totalizar(certificadosRedeterminados, certificado => certificado.readecuacion?.deduccionFondoReparo);
-  const montoContratoActualizado = total + redeterminadoBruto;
-  const montoCertificadoActualizado = brutoAcumulado + redeterminadoBruto;
+  const saldoPreciosBase = Math.max(total - brutoAcumulado, 0);
+  const fapConsolidado = ultimoFapConsolidado(obra, certificados);
+  const saldoActualizado = saldoPreciosBase * fapConsolidado;
   const fisico = avanceFisico(contrato, certificados);
   const financiero = total > 0 ? brutoAcumulado * 100 / total : 0;
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -138,9 +158,9 @@ export async function crearResumenObraPdf(data: ObraResumenPdfData): Promise<jsP
     headStyles: { fillColor: [232, 239, 241], textColor: [37, 54, 63], fontStyle: 'bold' },
     head: [['IDENTIFICACIÓN', 'CONTRATO Y PLAZOS', 'SITUACIÓN A LA FECHA']],
     body: [[
-      [`Expediente madre: ${texto(obra.expediente)}${obra.anioEmision ? `/${obra.anioEmision}` : ''}`, `Contratista: ${texto(obra.empresa?.razonSocial)}`, `CUIT: ${texto(obra.empresa?.cuit)}`, `Ubicación: ${ubicacionCompleta(obra)}`, `Procedimiento: ${texto(obra.modalidadContratacion?.nombre ?? obra.referenciaContratacion)}`].join('\n'),
-      [`Contrato: ${texto(contrato?.numeroContrato)}`, `Monto contractual: ${monto(total)}`, `Plazo original: ${contrato?.plazoObraDias ? `${contrato.plazoObraDias} días` : '—'} - Replanteo: ${fecha(obra.fechaInicio ?? contrato?.vigenciaDesde)}`, `Anticipo financiero: ${monto(anticipoOtorgado || obra.montoAnticipo)} (${texto(obra.porcentajeAnticipo)}%)`].join('\n'),
-      [`Estado de obra: ${texto(obra.estadoSeguimiento?.nombre ?? obra.estadoActual ?? obra.estado)}`, `Avance físico: ${percent.format(fisico)}%`, `Bruto certificado: ${monto(brutoAcumulado + redeterminadoBruto)}`, `Neto certificado: ${monto(netoAcumulado + redeterminadoNeto)}`].join('\n'),
+      [`Expediente madre: ${texto(obra.expediente)}${obra.anioEmision ? `/${obra.anioEmision}` : ''}`, `Contratista: ${texto(obra.empresa?.razonSocial)}`, `CUIT: ${texto(obra.empresa?.cuit)}`, `Ubicación: ${ubicacionCompleta(obra)}`, `Procedimiento: ${texto(obra.modalidadContratacion?.nombre ?? obra.referenciaContratacion)}${contrato?.numeroContrato ? ` N° ${contrato.numeroContrato}` : ''}`].join('\n'),
+      [`Monto contractual: ${monto(total)}`, `Plazo original: ${contrato?.plazoObraDias ? `${contrato.plazoObraDias} días` : '—'} - Replanteo: ${fecha(obra.fechaInicio ?? contrato?.vigenciaDesde)}`, `Anticipo financiero: ${monto(anticipoOtorgado || obra.montoAnticipo)} (${texto(obra.porcentajeAnticipo)}%)`].join('\n'),
+      [`Estado de obra: ${texto(obra.estadoSeguimiento?.nombre ?? obra.estadoActual ?? obra.estado)}`, `Avance físico: ${percent.format(fisico)}%`, `Bruto certificado acumulado: ${monto(brutoAcumulado + redeterminadoBruto)}`, `Neto certificado acumulado: ${monto(netoAcumulado + redeterminadoNeto)}`].join('\n'),
     ]],
   });
 
@@ -190,8 +210,8 @@ export async function crearResumenObraPdf(data: ObraResumenPdfData): Promise<jsP
     headStyles: { fillColor: [232, 239, 241], textColor: [37, 54, 63], fontStyle: 'bold' },
     head: [['ANTICIPO Y SALDO DE OBRA A PRECIOS BASE', 'CERTIFICACIÓN Y RETENCIONES']],
     body: [[
-      [`Anticipo financiero otorgado: ${monto(anticipoOtorgado || obra.montoAnticipo)}`, `Total deducido de AF: ${monto(anticipoDeducido)}`, `AF pendiente de deducción: ${monto(Math.max((anticipoOtorgado || numero(obra.montoAnticipo)) - anticipoDeducido, 0))}`, `Monto pendiente de ejecución a precios base: ${monto(Math.max(total - brutoAcumulado, 0))}`, `Monto pendiente de ejecución actualizado: ${monto(Math.max(montoContratoActualizado - montoCertificadoActualizado, 0))}`].join('\n'),
-      [`Total bruto certificado (básicos + redeterminados): ${monto(brutoAcumulado + redeterminadoBruto)}`, `Total deducción de anticipo financiero: ${monto(anticipoDeducido)}`, `Total fondo de reparo retenido: ${monto(fondoReparo + redeterminadoFondoReparo)}`, `Total neto certificado (básicos + redeterminados): ${monto(netoAcumulado + redeterminadoNeto)}`].join('\n'),
+      [`Anticipo financiero otorgado: ${monto(anticipoOtorgado || obra.montoAnticipo)}`, `Total deducido de AF: ${monto(anticipoDeducido)}`, `AF pendiente de deducción: ${monto(Math.max((anticipoOtorgado || numero(obra.montoAnticipo)) - anticipoDeducido, 0))}`, `Monto pendiente de ejecución a precios base: ${monto(saldoPreciosBase)}`, `Monto pendiente de ejecución actualizado (FAP consolidado ${factor.format(fapConsolidado)}): ${monto(saldoActualizado)}`].join('\n'),
+      [`Total bruto certificado acumulado (básicos + redeterminados): ${monto(brutoAcumulado + redeterminadoBruto)}`, `Total deducción de anticipo financiero acumulada: ${monto(anticipoDeducido)}`, `Total fondo de reparo retenido acumulado: ${monto(fondoReparo + redeterminadoFondoReparo)}`, `Total neto certificado acumulado (básicos + redeterminados): ${monto(netoAcumulado + redeterminadoNeto)}`].join('\n'),
     ]],
   });
 

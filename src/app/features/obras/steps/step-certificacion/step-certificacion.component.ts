@@ -88,6 +88,7 @@ interface Certificado {
   numeroExpediente: string | null;
   fechaExpediente: string | null;
   referenciaExpediente: string | null;
+  numeroOrdenPago: string | null;
   nomenclaturaExpediente: string | null;
   porcentajeAnticipoSnapshot: string;
   montoBruto: string | null;
@@ -194,6 +195,8 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
 
   rubros: RubroObra[] = [];
   certificados: Certificado[] = [];
+  ordenesPago: Record<number, string> = {};
+  guardandoOrdenPagoId: number | null = null;
   fojas: Foja[] = [];
   cargando = false;
   guardando = false;
@@ -228,6 +231,24 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       .filter((item) => item.tipo === 'OBRA' && item.estado !== 'ANULADO')
       .map((item) => item.numero);
     return certificado.numero === Math.max(...numeros);
+  }
+
+  guardarOrdenPago(certificado: Certificado): void {
+    if (!this.obraId || this.guardandoOrdenPagoId !== null) return;
+    this.guardandoOrdenPagoId = certificado.id;
+    const numeroOrdenPago = this.ordenesPago[certificado.id]?.trim() || null;
+    this.api.put<Certificado>(`obras/${this.obraId}/certificados/${certificado.id}/orden-pago`, { numeroOrdenPago }).subscribe({
+      next: actualizado => {
+        this.certificados = this.certificados.map(item => item.id === actualizado.id ? actualizado : item);
+        this.ordenesPago[actualizado.id] = actualizado.numeroOrdenPago ?? '';
+        this.guardandoOrdenPagoId = null;
+        this.snack.open('Orden de pago guardada', 'Cerrar', { duration: 3000 });
+      },
+      error: error => {
+        this.guardandoOrdenPagoId = null;
+        this.snack.open(error?.error?.message || 'No se pudo guardar la orden de pago', 'Cerrar', { duration: 4500 });
+      },
+    });
   }
 
   get items(): FormArray {
@@ -831,6 +852,7 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
     }).subscribe({
       next: ({ certificados, fojas }) => {
         this.certificados = certificados;
+        this.ordenesPago = Object.fromEntries(certificados.map(certificado => [certificado.id, certificado.numeroOrdenPago ?? '']));
         this.fojas = fojas;
         this.rubros = this.contratoVigente()?.rubros ?? [];
         this.recrearControles();

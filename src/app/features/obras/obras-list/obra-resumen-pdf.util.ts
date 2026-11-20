@@ -181,7 +181,7 @@ export async function crearResumenObraPdf(data: ObraResumenPdfData): Promise<jsP
   const filasBasicos = certificadosBasicos.map((certificado) => {
     brutoAcum += numero(certificado.montoBruto); afAcum += numero(certificado.deduccionAnticipo); frAcum += numero(certificado.deduccionFondoReparo);
     const avanceMensual = total > 0 ? numero(certificado.montoBruto) * 100 / total : 0;
-    return [`N° ${certificado.numero} / ${periodo(certificado.periodo)}`, texto(certificado.estado), monto(certificado.montoBruto), monto(brutoAcum), monto(certificado.deduccionAnticipo), monto(afAcum), monto(certificado.montoPostAnticipo), monto(certificado.deduccionFondoReparo), monto(frAcum), `${percent.format(avanceMensual)}%`, 'Original', expedienteCertificado(certificado), '—'];
+    return [`N° ${certificado.numero} / ${periodo(certificado.periodo)}`, texto(certificado.estado), monto(certificado.montoBruto), monto(brutoAcum), monto(certificado.deduccionAnticipo), monto(afAcum), monto(certificado.montoPostAnticipo), monto(certificado.deduccionFondoReparo), monto(frAcum), `${percent.format(avanceMensual)}%`, 'Original', expedienteCertificado(certificado), texto(certificado.numeroOrdenPago)];
   });
   filasBasicos.push(['TOTAL BÁSICOS', '', monto(brutoAcum), '', monto(afAcum), '', monto(totalizar(certificadosBasicos, certificado => certificado.montoPostAnticipo)), monto(frAcum), '', '', '', '', '']);
   autoTable(doc, {
@@ -195,7 +195,7 @@ export async function crearResumenObraPdf(data: ObraResumenPdfData): Promise<jsP
   const filasRedeterminados = certificadosRedeterminados.map((certificado) => {
     const redeterminacion = certificado.readecuacion;
     redeterminadoAcum += numero(redeterminacion?.incremento); redeterminadoFrAcum += numero(redeterminacion?.deduccionFondoReparo);
-    return [`N° ${certificado.numero} / ${periodo(certificado.periodo)}`, texto(certificado.estado), monto(redeterminacion?.incremento), monto(redeterminadoAcum), 'No aplica', 'No aplica', monto(redeterminacion?.incrementoNetoPagar), monto(redeterminacion?.deduccionFondoReparo), monto(redeterminadoFrAcum), 'No aplica', 'Original', expedienteCertificado(certificado), '—'];
+    return [`N° ${certificado.numero} / ${periodo(certificado.periodo)}`, texto(certificado.estado), monto(redeterminacion?.incremento), monto(redeterminadoAcum), 'No aplica', 'No aplica', monto(redeterminacion?.incrementoNetoPagar), monto(redeterminacion?.deduccionFondoReparo), monto(redeterminadoFrAcum), 'No aplica', 'Original', expedienteCertificado(certificado), texto(certificado.numeroOrdenPago)];
   });
   filasRedeterminados.push(['TOTAL REDETERM.', '', monto(redeterminadoBruto), '', 'No aplica', 'No aplica', monto(redeterminadoNeto), monto(redeterminadoFondoReparo), '', 'No aplica', '', '', '']);
   autoTable(doc, {

@@ -200,7 +200,10 @@ export async function crearInformeAvancePdf(data: InformeAvancePdfData): Promise
       filaResumen('Inversión mensual real a precio base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.realMontoParcial) : '')),
       filaResumen('Deducción anticipo financiero', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.deduccionesParcial) : '')),
       filaResumen('Inversión real acumulada a precios base', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.inversionRealAcumuladaBase) : '')),
-      filaResumen('Readecuaciones emitidas', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.readecuacionesAcumuladas) : '')),
+      // Esta fila informa únicamente lo emitido en cada mes. El acumulado se usa
+      // después para la inversión real acumulada, pero no debe arrastrarse como
+      // una readecuación del certificado corriente.
+      filaResumen('Readecuaciones emitidas', grupo.map((fila) => fila.realDisponible && fila.readecuacionesParcial !== 0 ? formatoMonto(fila.readecuacionesParcial) : '')),
       filaResumen('Inversión real acumulada', grupo.map((fila) => fila.realDisponible ? formatoMonto(fila.inversionRealAcumulada) : ''), true),
     );
     const anchoTabla = doc.internal.pageSize.getWidth() - 20;

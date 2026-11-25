@@ -73,6 +73,7 @@ interface ObraCertificacion {
   localidad?: string;
   fechaInicio?: string;
   modalidadContratacion?: { nombre?: string } | null;
+  tipoObra?: { nombre?: string } | null;
   referenciaContratacion?: string | null;
   empresa?: { razonSocial?: string; cuit?: string } | null;
   contratos?: ContratoObra[];
@@ -796,6 +797,7 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       empresaCuit: this.obra?.empresa?.cuit,
       numeroContrato: contrato?.numeroContrato,
       modalidadContratacion: this.obra?.modalidadContratacion?.nombre ?? this.obra?.referenciaContratacion ?? undefined,
+      tipoObra: this.obra?.tipoObra?.nombre,
       responsableLegal: this.nombreResponsable(contrato?.responsableLegal),
       responsableTecnico: this.nombreResponsable(contrato?.responsableTecnico),
       aprobacion: contrato?.decretoContrato ?? contrato?.decretoAdjudicacion,
@@ -808,6 +810,7 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
       fechaInicio: this.obra?.fechaInicio ?? contrato?.vigenciaDesde,
       plazoObraDias: contrato?.plazoObraDias,
       ubicacion: [
+        this.obra?.localidad,
         this.obra?.seccion ? `Sección ${this.obra.seccion}` : '',
         this.obra?.parcela ? `Parcela ${this.obra.parcela}` : '',
         this.obra?.calles ? `Calles ${this.obra.calles}` : '',

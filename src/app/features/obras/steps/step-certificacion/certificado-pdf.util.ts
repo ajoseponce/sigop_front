@@ -56,6 +56,7 @@ export interface MedicionPdfData {
   empresaCuit?: string;
   numeroContrato?: string;
   modalidadContratacion?: string;
+  tipoObra?: string;
   responsableLegal?: string;
   responsableTecnico?: string;
   ubicacion?: string;
@@ -210,7 +211,10 @@ function instrumentoAprobacion(tipo?: 'DECRETO' | 'RESOLUCION', numero?: string)
 
 function modoEjecucion(data: MedicionPdfData): string {
   const modalidad = data.modalidadContratacion?.trim() ? sentenceCase(data.modalidadContratacion) : '—';
-  return data.numeroContrato ? `${modalidad} ${data.numeroContrato}` : modalidad;
+  const contratacion = data.numeroContrato ? `${modalidad} ${data.numeroContrato}` : modalidad;
+  // El año forma parte de la identificación de la contratación (p. ej. CP 04/2026).
+  if (!data.anioEmision || /\/(?:19|20)\d{2}\b/.test(contratacion)) return contratacion;
+  return `${contratacion}/${data.anioEmision}`;
 }
 
 function encabezadoFoja(doc: jsPDF, data: MedicionPdfData, cabecera: string): number {
@@ -852,7 +856,9 @@ export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<j
   const left = 5;
   const right = 5;
   const width = doc.internal.pageSize.getWidth() - left - right;
-  const inicio = dibujarCabeceraInstitucional(doc, cabecera, left, right, 0.5) + 2;
+  // En A4 apaisado el membrete debe ocupar todo el ancho útil, como en el resto
+  // de las planillas institucionales; al 50 % quedaba desproporcionadamente chico.
+  const inicio = dibujarCabeceraInstitucional(doc, cabecera, left, right) + 2;
   const r = data.readecuacion;
 
   doc.setDrawColor(40);
@@ -871,7 +877,7 @@ export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<j
     styles: { fontSize: 6.4, cellPadding: 1.1 },
     body: [
       ['Obra:', data.nombreObra ? sentenceCase(data.nombreObra) : '—', 'Monto contrato original:', `$ ${money.format(totalContrato(data))}`, 'Mes y año certificado:', periodoTexto(data.periodo)],
-      ['Organismo ejecutor:', 'Municipalidad de Posadas', 'Monto anticipo:', `$ ${money.format(n(data.deduccionAnticipo))}`, 'Nro. certificado:', String(data.numero)],
+      ['Organismo ejecutor:', 'Municipalidad de Posadas', 'Anticipo financiero:', `$ ${money.format(montoAnticipoFinanciero(data))}`, 'Nro. certificado:', String(data.numero)],
       ['Provincia:', 'Misiones', 'Empresa:', data.empresa ? sentenceCase(data.empresa) : '—', 'Tipo de certificado:', 'Actualización'],
       ['Municipio:', data.localidad ? sentenceCase(data.localidad) : 'Posadas', 'CUIT:', data.empresaCuit ?? '—', 'Fecha replanteo:', fechaTexto(data.fechaInicio)],
     ],
@@ -948,7 +954,7 @@ export async function crearAnexoIIPdf(data: AnexoIIPdfData): Promise<jsPDF> {
     body: [
       ['Obra:', data.nombreObra || '—', 'Empresa:', data.empresa || '—', 'CUIT:', data.empresaCuit || '—'],
       ['Certificado N°:', String(data.numero), 'Monto contrato original:', `$ ${money.format(totalContrato(data))}`, 'Período certificado:', periodoTexto(data.periodo)],
-      ['Mes base:', periodoTexto(p.mesBase), 'Mes de corte:', periodoTexto(p.mesCorte), 'Estructura:', 'FAP'],
+      ['Mes base:', periodoTexto(p.mesBase), 'Mes de corte:', periodoTexto(p.mesCorte), 'Estructura:', data.tipoObra ? sentenceCase(data.tipoObra) : '—'],
     ],
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 20 }, 1: { cellWidth: 48 }, 2: { fontStyle: 'bold', cellWidth: 20 }, 3: { cellWidth: 40 }, 4: { fontStyle: 'bold', cellWidth: 20 }, 5: { cellWidth: 38 } },
   });

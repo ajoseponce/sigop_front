@@ -856,9 +856,9 @@ export async function crearReadecuacionPdf(data: ReadecuacionPdfData): Promise<j
   const left = 5;
   const right = 5;
   const width = doc.internal.pageSize.getWidth() - left - right;
-  // En A4 apaisado el membrete debe ocupar todo el ancho útil, como en el resto
-  // de las planillas institucionales; al 50 % quedaba desproporcionadamente chico.
-  const inicio = dibujarCabeceraInstitucional(doc, cabecera, left, right) + 2;
+  // El archivo del membrete incluye márgenes blancos propios; al 100 % domina
+  // visualmente la hoja apaisada, por eso se conserva una proporción de 65 %.
+  const inicio = dibujarCabeceraInstitucional(doc, cabecera, left, right, 0.65) + 2;
   const r = data.readecuacion;
 
   doc.setDrawColor(40);
@@ -934,7 +934,9 @@ export async function crearAnexoIIPdf(data: AnexoIIPdfData): Promise<jsPDF> {
   const left = 8;
   const right = 8;
   const width = doc.internal.pageSize.getWidth() - left - right;
-  const inicio = dibujarCabeceraInstitucional(doc, cabecera, left, right, 1) + 3;
+  // El archivo del membrete incluye márgenes blancos propios; a ancho completo
+  // domina visualmente la hoja A4. Se reduce para equilibrarlo con la planilla.
+  const inicio = dibujarCabeceraInstitucional(doc, cabecera, left, right, 0.65) + 3;
   const p = data.planilla;
 
   doc.setDrawColor(45);

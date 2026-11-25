@@ -488,7 +488,8 @@ export class StepCertificacionComponent implements OnChanges, OnDestroy {
           const guardado = guardados.get(salto.orden);
           return {
             ...salto,
-            seleccionado: Boolean(guardado),
+            // Una readecuación nueva debe consolidar todos los saltos mensuales.
+            seleccionado: guardado ? true : !opciones.guardada,
             // Un valor automático se recalcula cuando aparecen índices que antes faltaban.
             // Los FAP cargados manualmente por el usuario se preservan.
             fap: guardado?.automatico && salto.fapCalculado !== null
